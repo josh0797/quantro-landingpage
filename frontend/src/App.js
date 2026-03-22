@@ -867,7 +867,7 @@ const PricingSection = () => {
   },
   {
     name: "Pro",
-    price: "Starting at $599",
+    price: "$299",
     period: "",
     description: "For growing teams.",
     features: [
