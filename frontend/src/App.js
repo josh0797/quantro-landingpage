@@ -47,13 +47,14 @@ const staggerContainer = {
 };
 
 // Animated Section Wrapper
-const AnimatedSection = ({ children, className = "" }) => {
+const AnimatedSection = ({ children, className = "", id = "" }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <motion.section
       ref={ref}
+      id={id}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
       variants={staggerContainer}
@@ -548,31 +549,108 @@ const CapabilitiesSection = () => {
 
 // Product Preview Section
 const ProductPreviewSection = () => {
-  const kpis = [
-  { label: "Monthly Revenue", value: "$847.2K", change: "+12.4%", positive: true },
-  { label: "Gross Margin", value: "67.3%", change: "+2.1%", positive: true },
-  { label: "Cash Runway", value: "18 mo", change: "-2 mo", positive: false },
-  { label: "Burn Multiple", value: "1.2x", change: "+0.3x", positive: false }];
+  const [activeTab, setActiveTab] = useState(0);
+  
+  const tabData = {
+    0: { // Overview
+      kpis: [
+        { label: "Monthly Revenue", value: "$847.2K", change: "+12.4%", positive: true },
+        { label: "Gross Margin", value: "67.3%", change: "+2.1%", positive: true },
+        { label: "Cash Runway", value: "18 mo", change: "-2 mo", positive: false },
+        { label: "Burn Multiple", value: "1.2x", change: "+0.3x", positive: false }
+      ],
+      actions: [
+        { priority: "high", action: "Renegotiate AWS contract", impact: "+$24K/yr" },
+        { priority: "high", action: "Convert 12 trial users", impact: "+$8.4K MRR" },
+        { priority: "medium", action: "Optimize ad spend in APAC", impact: "+31% ROI" },
+        { priority: "low", action: "Update payment terms", impact: "+5 days DSO" }
+      ]
+    },
+    1: { // Financials
+      kpis: [
+        { label: "Total Revenue", value: "$2.4M", change: "+18.2%", positive: true },
+        { label: "Net Margin", value: "42.1%", change: "+3.8%", positive: true },
+        { label: "EBITDA", value: "$892K", change: "+22.4%", positive: true },
+        { label: "DSO", value: "34 days", change: "-5 days", positive: true }
+      ],
+      actions: [
+        { priority: "high", action: "Review Q4 budget allocation", impact: "+$42K savings" },
+        { priority: "medium", action: "Accelerate AR collection", impact: "-8 days DSO" },
+        { priority: "medium", action: "Renegotiate vendor terms", impact: "+$18K/yr" },
+        { priority: "low", action: "Update expense categories", impact: "Better tracking" }
+      ]
+    },
+    2: { // Operations
+      kpis: [
+        { label: "Team Velocity", value: "94%", change: "+6.2%", positive: true },
+        { label: "Avg Cycle Time", value: "4.2 days", change: "-1.1 days", positive: true },
+        { label: "Support SLA", value: "98.4%", change: "+0.8%", positive: true },
+        { label: "Open Issues", value: "23", change: "+5", positive: false }
+      ],
+      actions: [
+        { priority: "high", action: "Resolve P1 customer issue", impact: "Retention risk" },
+        { priority: "high", action: "Complete Q4 hiring plan", impact: "+3 engineers" },
+        { priority: "medium", action: "Update runbooks", impact: "-15min MTTR" },
+        { priority: "low", action: "Schedule team retro", impact: "Team health" }
+      ]
+    },
+    3: { // Growth
+      kpis: [
+        { label: "New MRR", value: "$48.2K", change: "+24.1%", positive: true },
+        { label: "Churn Rate", value: "2.1%", change: "-0.4%", positive: true },
+        { label: "NPS Score", value: "72", change: "+8", positive: true },
+        { label: "Trial Conv.", value: "18.4%", change: "+2.1%", positive: true }
+      ],
+      actions: [
+        { priority: "high", action: "Launch enterprise campaign", impact: "+$120K pipeline" },
+        { priority: "high", action: "Onboard 5 enterprise leads", impact: "+$35K MRR" },
+        { priority: "medium", action: "Improve onboarding flow", impact: "+3% conversion" },
+        { priority: "low", action: "Update case studies", impact: "Social proof" }
+      ]
+    },
+    4: { // Scenarios
+      kpis: [
+        { label: "Best Case", value: "$3.2M", change: "+42%", positive: true },
+        { label: "Base Case", value: "$2.6M", change: "+18%", positive: true },
+        { label: "Conservative", value: "$2.1M", change: "+8%", positive: true },
+        { label: "Risk Score", value: "Low", change: "Stable", positive: true }
+      ],
+      actions: [
+        { priority: "high", action: "Model price increase impact", impact: "+$180K ARR" },
+        { priority: "medium", action: "Simulate churn scenario", impact: "Risk analysis" },
+        { priority: "medium", action: "Test expansion revenue", impact: "+$95K potential" },
+        { priority: "low", action: "Update assumptions", impact: "Accuracy" }
+      ]
+    }
+  };
 
-
-  const actions = [
-  { priority: "high", action: "Renegotiate AWS contract", impact: "+$24K/yr" },
-  { priority: "high", action: "Convert 12 trial users", impact: "+$8.4K MRR" },
-  { priority: "medium", action: "Optimize ad spend in APAC", impact: "+31% ROI" },
-  { priority: "low", action: "Update payment terms", impact: "+5 days DSO" }];
-
+  const tabs = ["Overview", "Financials", "Operations", "Growth", "Scenarios"];
+  const currentData = tabData[activeTab];
 
   const taskItems = [
-  { status: "running", name: "Generating Q4 forecast", progress: 67 },
-  { status: "queued", name: "Updating margin analysis", progress: 0 },
-  { status: "completed", name: "Customer segment report", progress: 100 }];
+    { status: "running", name: "Generating Q4 forecast", progress: 67 },
+    { status: "queued", name: "Updating margin analysis", progress: 0 },
+    { status: "completed", name: "Customer segment report", progress: 100 }
+  ];
 
+  // Generate realistic heatmap data with varied colors
+  const heatmapLabels = ["Revenue", "Margin", "OKRs", "Cash"];
+  const weekLabels = ["W1", "W2", "W3", "W4", "W5", "W6", "W7"];
+  
+  // Seeded realistic data for consistent display
+  const heatmapData = [
+    [0.85, 0.72, 0.88, 0.65, 0.78, 0.92, 0.71],
+    [0.45, 0.52, 0.38, 0.61, 0.55, 0.48, 0.42],
+    [0.92, 0.88, 0.75, 0.82, 0.95, 0.78, 0.89],
+    [0.25, 0.35, 0.42, 0.28, 0.55, 0.62, 0.48]
+  ];
 
-
-  // Generate heatmap data
-  const heatmapData = Array(7).fill(null).map(() =>
-  Array(12).fill(null).map(() => Math.random())
-  );
+  const getHeatmapColor = (val) => {
+    if (val >= 0.8) return "#10B981"; // Green - excellent
+    if (val >= 0.6) return "#22D3EE"; // Teal - good
+    if (val >= 0.4) return "#F59E0B"; // Amber - warning
+    return "#EF4444"; // Red - poor
+  };
 
   return (
     <AnimatedSection id="product" className="py-24 px-6">
@@ -606,16 +684,20 @@ const ProductPreviewSection = () => {
             {/* Sidebar */}
             <div className="dashboard-sidebar p-4 hidden lg:block">
               <div className="space-y-2">
-                {["Overview", "Financials", "Operations", "Growth", "Scenarios"].map((item, i) =>
-                <div
-                  key={i}
-                  className={`px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
-                  i === 0 ? "bg-blue-500/10 text-blue-400" : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/50"}`
-                  }>
-
+                {tabs.map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setActiveTab(i)}
+                    className={`w-full px-3 py-2 rounded-lg text-sm text-left transition-all duration-200 ${
+                      i === activeTab 
+                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" 
+                        : "text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent"
+                    }`}
+                    data-testid={`tab-${item.toLowerCase()}`}
+                  >
                     {item}
-                  </div>
-                )}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -623,8 +705,8 @@ const ProductPreviewSection = () => {
             <div className="lg:col-span-3 p-6 space-y-6">
               {/* KPI Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {kpis.map((kpi, i) =>
-                <div key={i} className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 kpi-card" data-testid={`kpi-card-${i}`}>
+                {currentData.kpis.map((kpi, i) => (
+                  <div key={i} className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 kpi-card" data-testid={`kpi-card-${i}`}>
                     <div className="text-xs text-slate-500 mb-1">{kpi.label}</div>
                     <div className="font-mono text-xl text-white">{kpi.value}</div>
                     <div className={`text-xs flex items-center gap-1 mt-1 ${kpi.positive ? "text-emerald-400" : "text-amber-400"}`}>
@@ -632,32 +714,45 @@ const ProductPreviewSection = () => {
                       {kpi.change}
                     </div>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6">
-                {/* Heatmap */}
+                {/* Heatmap with proper labels */}
                 <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
                   <div className="text-sm font-medium text-white mb-4">Performance Heatmap</div>
-                  <div className="space-y-1">
-                    {heatmapData.map((row, i) =>
-                    <div key={i} className="flex gap-1">
-                        {row.map((val, j) =>
-                      <div
-                        key={j}
-                        className="heatmap-cell"
-                        style={{
-                          backgroundColor: val > 0.7 ? "#10B981" : val > 0.4 ? "#2563EB" : val > 0.2 ? "#1E40AF" : "#1E293B",
-                          opacity: 0.3 + val * 0.7
-                        }} />
-
-                      )}
-                      </div>
-                    )}
+                  
+                  {/* Week Headers */}
+                  <div className="flex mb-2">
+                    <div className="w-16" /> {/* Spacer for row labels */}
+                    {weekLabels.map((week, j) => (
+                      <div key={j} className="flex-1 text-center text-xs text-slate-500">{week}</div>
+                    ))}
                   </div>
-                  <div className="flex justify-between mt-3 text-xs text-slate-500">
-                    <span>Jan</span>
-                    <span>Dec</span>
+                  
+                  {/* Heatmap rows with labels */}
+                  <div className="space-y-1">
+                    {heatmapData.map((row, i) => (
+                      <div key={i} className="flex items-center gap-1">
+                        <div className="w-16 text-xs text-slate-500 pr-2 text-right">{heatmapLabels[i]}</div>
+                        {row.map((val, j) => (
+                          <div
+                            key={j}
+                            className="flex-1 h-8 rounded-sm transition-transform hover:scale-110 cursor-pointer"
+                            style={{ backgroundColor: getHeatmapColor(val) }}
+                            title={`${heatmapLabels[i]} - ${weekLabels[j]}: ${Math.round(val * 100)}%`}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex items-center justify-end gap-4 mt-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-red-500" /> Poor</div>
+                    <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-amber-500" /> Warning</div>
+                    <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-cyan-400" /> Good</div>
+                    <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-500" /> Excellent</div>
                   </div>
                 </div>
 
@@ -665,18 +760,18 @@ const ProductPreviewSection = () => {
                 <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
                   <div className="text-sm font-medium text-white mb-4">Suggested Actions</div>
                   <div className="space-y-3">
-                    {actions.map((item, i) =>
-                    <div key={i} className="action-item flex items-center justify-between p-2 rounded cursor-pointer">
+                    {currentData.actions.map((item, i) => (
+                      <div key={i} className="action-item flex items-center justify-between p-2 rounded cursor-pointer">
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full ${
-                        item.priority === "high" ? "bg-red-400" :
-                        item.priority === "medium" ? "bg-amber-400" : "bg-slate-500"}`
-                        } />
+                            item.priority === "high" ? "bg-red-400" :
+                            item.priority === "medium" ? "bg-amber-400" : "bg-slate-500"
+                          }`} />
                           <span className="text-sm text-slate-300">{item.action}</span>
                         </div>
                         <span className="text-xs font-mono text-emerald-400">{item.impact}</span>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
@@ -690,15 +785,15 @@ const ProductPreviewSection = () => {
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {taskItems.map((item, i) =>
-                  <div key={i} className="flex items-center gap-4">
+                  {taskItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-4">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                    item.status === "completed" ? "bg-emerald-500/20" :
-                    item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"}`
-                    }>
+                        item.status === "completed" ? "bg-emerald-500/20" :
+                        item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"
+                      }`}>
                         {item.status === "completed" ? <Check className="text-emerald-400" size={12} /> :
-                      item.status === "running" ? <Play className="text-blue-400" size={12} /> :
-                      <Clock className="text-slate-500" size={12} />}
+                         item.status === "running" ? <Play className="text-blue-400" size={12} /> :
+                         <Clock className="text-slate-500" size={12} />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
@@ -707,15 +802,15 @@ const ProductPreviewSection = () => {
                         </div>
                         <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
                           <div
-                          className={`h-full transition-all duration-500 ${
-                          item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"}`
-                          }
-                          style={{ width: `${item.progress}%` }} />
-
+                            className={`h-full transition-all duration-500 ${
+                              item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"
+                            }`}
+                            style={{ width: `${item.progress}%` }}
+                          />
                         </div>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
@@ -881,7 +976,7 @@ const PricingSection = () => {
   },
   {
     name: "Enterprise",
-    price: "$599",
+    price: "$599+",
     period: "",
     description: "For scaling businesses.",
     features: [
@@ -1072,7 +1167,7 @@ const Footer = () => {
         </div>
 
         <div className="text-sm text-slate-600">
-          © 2024 Quantro. All rights reserved.
+          © 2026 Quantro. All rights reserved.
         </div>
       </div>
     </footer>);
