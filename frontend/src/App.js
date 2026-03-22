@@ -881,7 +881,7 @@ const PricingSection = () => {
   },
   {
     name: "Enterprise",
-    price: "Starting at $599",
+    price: "$599",
     period: "",
     description: "For scaling businesses.",
     features: [
