@@ -1,0 +1,97 @@
+{
+  "theme": "dark",
+  "project_name": "Quantro",
+  "archetype": "SWISS & HIGH-CONTRAST mixed with THE TRACING BEAM (Apple/Stripe/Linear style)",
+  "emotion": "Authority, Precision, High-End Enterprise, Trust",
+  "typography": {
+    "fonts": [
+      {
+        "family": "DM Serif Display",
+        "purpose": "Headlines, Hero Text, Section Titles",
+        "url": "https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap"
+      },
+      {
+        "family": "Inter",
+        "purpose": "Body text, UI elements, buttons, standard data",
+        "url": "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      },
+      {
+        "family": "JetBrains Mono",
+        "purpose": "Terminal UI, code snippets, live numbers/metrics",
+        "url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+      }
+    ],
+    "rules": [
+      "CRITICAL: Headings MUST use DM Serif Display. Do NOT use Inter for main headings.",
+      "Headlines > 32px must use tracking-tight or tracking-tighter.",
+      "Overlines/Labels must be uppercase, tiny (text-xs), wide spacing (tracking-[0.2em]).",
+      "Terminal and metric numbers must use JetBrains Mono."
+    ]
+  },
+  "colors": {
+    "background": "#030712",
+    "surface": "#0F172A",
+    "surface_glass": "rgba(15, 23, 42, 0.7)",
+    "border": "#1E293B",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "#94A3B8",
+    "accent_primary": "#2563EB",
+    "accent_primary_glow": "rgba(37, 99, 235, 0.15)",
+    "accent_secondary": "#10B981",
+    "accent_secondary_glow": "rgba(16, 185, 129, 0.15)",
+    "rules": [
+      "NO massive colorful gradients. Stick to deep navy/black.",
+      "Electric blue (#2563EB) is for primary CTAs and active states.",
+      "Subtle green (#10B981) is for positive terminal outputs, success metrics, and 'running' statuses."
+    ]
+  },
+  "visual_enhancers": {
+    "hero_background": "Implement a pure CSS animated grid background. Use `bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]`. Overlay with a radial-gradient mask-image to fade it out at the edges.",
+    "glassmorphism": "For sticky nav and overlays: `bg-slate-950/60 backdrop-blur-xl border-b border-white/5`. MUST NOT use fully transparent backgrounds behind text.",
+    "glow_effects": "Use VERY subtle box shadows for highlighted elements (e.g., `shadow-[0_0_40px_-15px_rgba(37,99,235,0.3)]`). No harsh neon.",
+    "noise": "Add a fixed `pointer-events-none` <div> with a subtle SVG noise filter overlay (opacity 0.03) to break digital flatness."
+  },
+  "layouts": {
+    "spacing": "Extremely generous. Use `py-24` or `py-32` for sections. `gap-8` or `gap-12` in bento grids.",
+    "grid_bento": "Problem & Capabilities sections must use asymmetric Bento grids (e.g., span-8, span-4, span-7, span-5) to create tension.",
+    "container": "Use `max-w-7xl mx-auto px-6` for standard sections. DO NOT center-align all text; left-align content blocks for a technical feel."
+  },
+  "components": {
+    "hero_section": "Asymmetric layout. Left: Headline ('Your business. Running itself.'), subtext, two pill-shaped CTAs (Primary blue, Secondary outline). Right: Floating Abstract tech metrics or mini-dashboard widgets.",
+    "problem_cards": "3 tall bento cards. Deep slate backgrounds (`bg-slate-900/50`), 1px `border-slate-800`. Hover effect: gentle lift and border brightens to slate-600.",
+    "terminal_ui": "A window block with Mac-like dots in the top-left (red, yellow, green). Inside: JetBrains Mono text. `quantro execute --strategy aggressive` -> returns success logs in green. Typing animation using framer-motion or standard CSS steps.",
+    "capabilities_grid": "4 bento cards. Mix of square and wide rectangular shapes. Use Phosphor or Lucide icons.",
+    "product_preview": "A 'High Density Grid' mockup. A large container styled as an app window. Inside: Sidebar (col-span-1), Main area (col-span-3) with KPI cards and a Recharts line chart.",
+    "differentiation_table": "3-column CSS grid table. The 'Quantro' column must have a subtle `bg-blue-900/10` background, electric blue top border, and glow to stand out against competitors.",
+    "investor_metrics": "Grid of large numbers (JetBrains Mono) with small overlines (tracking-[0.2em]). E.g., '$5.2B TAM'.",
+    "pricing_tiers": "3 vertical cards. The 'Pro' card must be scaled up slightly (`scale-105`), have a border of `border-blue-500/50`, and a 'Most Popular' badge.",
+    "buttons": "Pill-shaped (`rounded-full`). Primary: `bg-blue-600 hover:bg-blue-500 text-white transition-all`. Secondary: `border border-slate-700 bg-transparent hover:bg-slate-800 text-white`."
+  },
+  "animations": {
+    "scroll": "Use framer-motion for `whileInView` fade-ups (`y: 20, opacity: 0` to `y: 0, opacity: 1`) on section wrappers.",
+    "hover": "Interactive cards should translate-y-1 and increase border opacity. Subtle, enterprise-grade motion.",
+    "terminal_typing": "Use simple keyframe animation or Framer Motion for the command line typing effect in the Solution section."
+  },
+  "media_and_icons": {
+    "icons": "lucide-react for all standard UI icons (Check, ArrowRight, BarChart, etc). Keep stroke-width to 1.5 for a premium feel.",
+    "images": "No specific stock photos needed. Rely on CSS-based UI mockups, terminal UI, and grid patterns to represent the 'SaaS' product. This creates the 'Linear/Stripe' look much better than generic stock images."
+  },
+  "accessibility": {
+    "contrast": "Ensure white text on the #030712 background passes WCAG AAA. Secondary text (#94A3B8) must pass AA.",
+    "interactive": "All buttons/links MUST have focus-visible outlines (`focus-visible:ring-2 focus-visible:ring-blue-500`).",
+    "testing": "All interactive elements MUST include `data-testid` (e.g., `data-testid=\"hero-cta-button\"`)."
+  },
+  "instructions_to_main_agent": [
+    "Load DM Serif Display, Inter, and JetBrains Mono from Google Fonts in index.html or global CSS.",
+    "Build the page as a single smooth-scrolling landing page.",
+    "Create custom layout structures using pure Tailwind grid/flexbox. Do NOT wrap entire sections in basic Shadcn Cards; use raw divs for maximum layout flexibility and overlap.",
+    "Implement the 'Product Preview' as a set of nested flex/grid divs to look like a real dashboard mockup, NOT a static image.",
+    "Implement the Terminal UI with absolute positioning for the 'Mac dots' and pure text for the code.",
+    "Ensure the hero background grid has a radial gradient mask so it fades to black at the edges, preventing a 'boxy' look.",
+    "Include a placeholder download button for the Investor Deck (`<a href='#' download>`).",
+    "Use 'lucide-react' for crisp, minimalist icons.",
+    "Do NOT apply a global `transition: all`. Use specific transitions like `transition-colors` or `transition-transform`.",
+    "Do NOT center-align the main App container. Everything should be left-aligned or intentionally positioned.",
+    "Ensure `data-testid` is added to all buttons, links, and forms for testing."
+  ]
+}
