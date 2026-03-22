@@ -75,7 +75,7 @@ class QuantroAPITester:
             "Early Access Invalid Email",
             "POST",
             "api/early-access",
-            422,  # FastAPI validation error
+            400,  # Bad Request for invalid email format
             data={"email": "invalid-email"}
         )
 

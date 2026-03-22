@@ -37,8 +37,19 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+from email_validator import validate_email, EmailNotValidError
+from fastapi import HTTPException
+
 class EarlyAccessRequest(BaseModel):
     email: str
+    
+    @classmethod
+    def validate_email_format(cls, email: str) -> str:
+        try:
+            validate_email(email, check_deliverability=False)
+            return email
+        except EmailNotValidError:
+            raise ValueError("Invalid email format")
 
 class EarlyAccessResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -78,6 +89,12 @@ async def get_status_checks():
 
 @api_router.post("/early-access", response_model=EarlyAccessResponse)
 async def submit_early_access(request: EarlyAccessRequest):
+    # Validate email format
+    try:
+        EarlyAccessRequest.validate_email_format(request.email)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
     response_obj = EarlyAccessResponse(email=request.email)
     
     # Convert to dict and serialize datetime to ISO string for MongoDB
