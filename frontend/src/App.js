@@ -562,10 +562,11 @@ const ProductPreviewSection = () => {
   { priority: "low", action: "Update payment terms", impact: "+5 days DSO" }];
 
 
-  const executingActions = [
-  { status: "running", name: "Sending renewal reminders", progress: 67 },
-  { status: "queued", name: "Generating Q4 forecast", progress: 0 },
-  { status: "completed", name: "Updated pricing tier", progress: 100 }];
+  const taskItems = [
+    { status: "running", name: "Generating Q4 forecast", progress: 67 },
+    { status: "queued", name: "Updating margin analysis", progress: 0 },
+    { status: "completed", name: "Customer segment report", progress: 100 }
+  ];
 
 
   // Generate heatmap data
@@ -680,24 +681,24 @@ const ProductPreviewSection = () => {
                 </div>
               </div>
 
-              {/* Execution Panel */}
+              {/* Task Queue Panel */}
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="text-sm font-medium text-white">Execution Queue</div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    Auto-pilot ON
+                  <div className="text-sm font-medium text-white">Task Queue</div>
+                  <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    3 Active
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {executingActions.map((item, i) =>
-                  <div key={i} className="flex items-center gap-4">
+                  {taskItems.map((item, i) => (
+                    <div key={i} className="flex items-center gap-4">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                    item.status === "completed" ? "bg-emerald-500/20" :
-                    item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"}`
-                    }>
+                        item.status === "completed" ? "bg-emerald-500/20" :
+                        item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"
+                      }`}>
                         {item.status === "completed" ? <Check className="text-emerald-400" size={12} /> :
-                      item.status === "running" ? <Play className="text-blue-400" size={12} /> :
-                      <Clock className="text-slate-500" size={12} />}
+                         item.status === "running" ? <Play className="text-blue-400" size={12} /> :
+                         <Clock className="text-slate-500" size={12} />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
@@ -706,15 +707,15 @@ const ProductPreviewSection = () => {
                         </div>
                         <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
                           <div
-                          className={`h-full transition-all duration-500 ${
-                          item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"}`
-                          }
-                          style={{ width: `${item.progress}%` }} />
-
+                            className={`h-full transition-all duration-500 ${
+                              item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"
+                            }`}
+                            style={{ width: `${item.progress}%` }}
+                          />
                         </div>
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
