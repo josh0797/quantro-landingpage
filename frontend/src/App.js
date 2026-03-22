@@ -733,7 +733,7 @@ const DifferentiationSection = () => {
 const InvestorSection = () => {
   const metrics = [
   { label: "TAM", value: "$5.2B", description: "Total Addressable Market" },
-  { label: "SAM", value: "$890M", description: "Serviceable Market" },
+  { label: "SAM", value: "$590M", description: "Serviceable Market" },
   { label: "Target ARR", value: "$50M", description: "Year 3 Revenue Goal" },
   { label: "NRR", value: "135%", description: "Net Revenue Retention" }];
 
