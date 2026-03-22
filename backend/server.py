@@ -37,6 +37,16 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+class EarlyAccessRequest(BaseModel):
+    email: str
+
+class EarlyAccessResponse(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    email: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
@@ -65,6 +75,27 @@ async def get_status_checks():
             check['timestamp'] = datetime.fromisoformat(check['timestamp'])
     
     return status_checks
+
+@api_router.post("/early-access", response_model=EarlyAccessResponse)
+async def submit_early_access(request: EarlyAccessRequest):
+    response_obj = EarlyAccessResponse(email=request.email)
+    
+    # Convert to dict and serialize datetime to ISO string for MongoDB
+    doc = response_obj.model_dump()
+    doc['created_at'] = doc['created_at'].isoformat()
+    
+    await db.early_access.insert_one(doc)
+    return response_obj
+
+@api_router.get("/early-access", response_model=List[EarlyAccessResponse])
+async def get_early_access_signups():
+    signups = await db.early_access.find({}, {"_id": 0}).to_list(1000)
+    
+    for signup in signups:
+        if isinstance(signup.get('created_at'), str):
+            signup['created_at'] = datetime.fromisoformat(signup['created_at'])
+    
+    return signups
 
 # Include the router in the main app
 app.include_router(api_router)
