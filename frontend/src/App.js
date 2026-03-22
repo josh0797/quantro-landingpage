@@ -31,8 +31,8 @@ import {
   Sparkles,
   Grid3X3,
   Scissors,
-  Bot
-} from "lucide-react";
+  Bot } from
+"lucide-react";
 import { Input } from "@/components/ui/input";
 
 // Animation variants
@@ -149,16 +149,16 @@ const HeroSection = () => {
   };
 
   const stats = [
-    { value: "+34%", label: "Margin Improvement" },
-    { value: "4.2x", label: "Faster Decisions" },
-    { value: "89%", label: "Less Meeting Follow-up" }
-  ];
+  { value: "+34%", label: "Margin Improvement" },
+  { value: "4.2x", label: "Faster Decisions" },
+  { value: "89%", label: "Less Meeting Follow-up" }];
+
 
   const scorecardMetrics = [
-    { label: "Revenue Growth", status: "green" },
-    { label: "Cash Flow", status: "yellow" },
-    { label: "Customer Retention", status: "green" }
-  ];
+  { label: "Revenue Growth", status: "green" },
+  { label: "Cash Flow", status: "yellow" },
+  { label: "Customer Retention", status: "green" }];
+
 
   return (
     <section className="relative min-h-screen flex items-center pt-24 overflow-hidden" data-testid="hero-section">
@@ -229,12 +229,12 @@ const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="flex flex-wrap gap-8">
-            {stats.map((stat, i) => (
-              <div key={i} className="text-left" data-testid={`hero-stat-${i}`}>
+            {stats.map((stat, i) =>
+            <div key={i} className="text-left" data-testid={`hero-stat-${i}`}>
                 <div className="font-mono text-2xl text-white font-medium">{stat.value}</div>
                 <div className="text-sm text-slate-500">{stat.label}</div>
               </div>
-            ))}
+            )}
           </motion.div>
         </div>
 
@@ -277,15 +277,15 @@ const HeroSection = () => {
               <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
                 <div className="text-xs text-slate-500 mb-3 uppercase tracking-wide">Key Metrics Status</div>
                 <div className="space-y-2">
-                  {scorecardMetrics.map((metric, i) => (
-                    <div key={i} className="flex items-center justify-between">
+                  {scorecardMetrics.map((metric, i) =>
+                  <div key={i} className="flex items-center justify-between">
                       <span className="text-sm text-slate-300">{metric.label}</span>
                       <span className={`w-3 h-3 rounded-full ${
-                        metric.status === "green" ? "bg-emerald-400" :
-                        metric.status === "yellow" ? "bg-amber-400" : "bg-red-400"
-                      }`} />
+                    metric.status === "green" ? "bg-emerald-400" :
+                    metric.status === "yellow" ? "bg-amber-400" : "bg-red-400"}`
+                    } />
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -309,8 +309,8 @@ const HeroSection = () => {
           </div>
         </motion.div>
       </div>
-    </section>
-  );
+    </section>);
+
 };
 
 // Problem Section
@@ -370,11 +370,11 @@ const ProblemSection = () => {
 // Solution Section with Feature Cards
 const SolutionSection = () => {
   const solutionCards = [
-    { icon: <Gauge className="text-blue-400" size={24} />, title: "Live Scorecard", description: "Real-time metrics that matter" },
-    { icon: <Mountain className="text-emerald-400" size={24} />, title: "90-Day Rocks", description: "Strategic priorities at a glance" },
-    { icon: <ListTodo className="text-blue-400" size={24} />, title: "Issues Tracker", description: "Surface and solve blockers fast" },
-    { icon: <MessageSquare className="text-emerald-400" size={24} />, title: "AI Meeting Extractor", description: "Turn meetings into action items" }
-  ];
+  { icon: <Gauge className="text-blue-400" size={24} />, title: "Live Scorecard", description: "Real-time metrics that matter" },
+  { icon: <Mountain className="text-emerald-400" size={24} />, title: "90-Day Rocks", description: "Strategic priorities at a glance" },
+  { icon: <ListTodo className="text-blue-400" size={24} />, title: "Issues Tracker", description: "Surface and solve blockers fast" },
+  { icon: <MessageSquare className="text-emerald-400" size={24} />, title: "AI Meeting Extractor", description: "Turn meetings into action items" }];
+
 
   return (
     <AnimatedSection id="solution" className="py-24 px-6 relative">
@@ -392,56 +392,56 @@ const SolutionSection = () => {
         </motion.div>
 
         <motion.div variants={fadeInUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl" data-testid="solution-cards">
-          {solutionCards.map((card, i) => (
-            <div
-              key={i}
-              className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 card-hover text-center"
-              data-testid={`solution-card-${i}`}>
+          {solutionCards.map((card, i) =>
+          <div
+            key={i}
+            className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 card-hover text-center"
+            data-testid={`solution-card-${i}`}>
               <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center mx-auto mb-4">
                 {card.icon}
               </div>
               <h3 className="text-sm font-medium text-white mb-1">{card.title}</h3>
               <p className="text-xs text-slate-500">{card.description}</p>
             </div>
-          ))}
+          )}
         </motion.div>
       </div>
-    </AnimatedSection>
-  );
+    </AnimatedSection>);
+
 };
 
 // Star Features Section
 const StarFeaturesSection = () => {
   const features = [
-    {
-      icon: <Sparkles className="text-blue-400" size={24} />,
-      name: "Smart Yield",
-      tagline: "Know where your money actually comes from.",
-      description: "Quintile Matrix classifies every customer and product by revenue and margin — showing exactly which to grow, re-price, or cut.",
-      accentColor: "blue"
-    },
-    {
-      icon: <Grid3X3 className="text-emerald-400" size={24} />,
-      name: "Quintile Matrix",
-      tagline: "Your 5×5 value map.",
-      description: "An interactive heatmap that reveals where 80% of your business value lives — and where the complexity is killing your margins.",
-      accentColor: "green"
-    },
-    {
-      icon: <Scissors className="text-blue-400" size={24} />,
-      name: "Dirty Dozen",
-      tagline: "12 tactics. One click.",
-      description: "Apply proven simplification actions — eliminate low-margin products, set minimum orders, stop discounting B customers — directly to your workflow.",
-      accentColor: "blue"
-    },
-    {
-      icon: <Bot className="text-emerald-400" size={24} />,
-      name: "EMS Coach AI",
-      tagline: "Your 24/7 strategic consultant.",
-      description: "Ask \"What should I eliminate this month?\" or \"How do I improve Quad 2 margins?\" — and get answers grounded in your actual business data.",
-      accentColor: "green"
-    }
-  ];
+  {
+    icon: <Sparkles className="text-blue-400" size={24} />,
+    name: "Smart Yield",
+    tagline: "Know where your money actually comes from.",
+    description: "Quintile Matrix classifies every customer and product by revenue and margin — showing exactly which to grow, re-price, or cut.",
+    accentColor: "blue"
+  },
+  {
+    icon: <Grid3X3 className="text-emerald-400" size={24} />,
+    name: "Quintile Matrix",
+    tagline: "Your 5×5 value map.",
+    description: "An interactive heatmap that reveals where 80% of your business value lives — and where the complexity is killing your margins.",
+    accentColor: "green"
+  },
+  {
+    icon: <Scissors className="text-blue-400" size={24} />,
+    name: "Dirty Dozen",
+    tagline: "12 tactics. One click.",
+    description: "Apply proven simplification actions — eliminate low-margin products, set minimum orders, stop discounting B customers — directly to your workflow.",
+    accentColor: "blue"
+  },
+  {
+    icon: <Bot className="text-emerald-400" size={24} />,
+    name: "EMS Coach AI",
+    tagline: "Your 24/7 strategic consultant.",
+    description: "Ask \"What should I eliminate this month?\" or \"How do I improve Quad 2 margins?\" — and get answers grounded in your actual business data.",
+    accentColor: "green"
+  }];
+
 
   return (
     <AnimatedSection id="features" className="py-24 px-6 bg-slate-950/50">
@@ -454,62 +454,62 @@ const StarFeaturesSection = () => {
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {features.map((feature, i) => (
-            <motion.div
-              key={i}
-              variants={fadeInUp}
-              className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 card-hover"
-              data-testid={`star-feature-${i}`}>
+          {features.map((feature, i) =>
+          <motion.div
+            key={i}
+            variants={fadeInUp}
+            className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 card-hover"
+            data-testid={`star-feature-${i}`}>
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  feature.accentColor === "blue" ? "bg-blue-500/10" : "bg-emerald-500/10"
-                }`}>
+              feature.accentColor === "blue" ? "bg-blue-500/10" : "bg-emerald-500/10"}`
+              }>
                   {feature.icon}
                 </div>
                 <div>
                   <h3 className="text-xl font-medium text-white mb-1">{feature.name}</h3>
                   <p className={`text-sm font-medium mb-2 ${
-                    feature.accentColor === "blue" ? "text-blue-400" : "text-emerald-400"
-                  }`}>{feature.tagline}</p>
+                feature.accentColor === "blue" ? "text-blue-400" : "text-emerald-400"}`
+                }>{feature.tagline}</p>
                   <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
                 </div>
               </div>
             </motion.div>
-          ))}
+          )}
         </div>
       </div>
-    </AnimatedSection>
-  );
+    </AnimatedSection>);
+
 };
 
 // Capabilities Section
 const CapabilitiesSection = () => {
   const capabilities = [
-    {
-      icon: <LineChart className="text-blue-400" size={24} />,
-      title: "See what matters",
-      description: "Cut through noise to surface the metrics that actually drive your business.",
-      tag: "Scorecard"
-    },
-    {
-      icon: <Brain className="text-blue-400" size={24} />,
-      title: "Know what to do",
-      description: "AI-generated action plans ranked by impact, risk, and feasibility.",
-      tag: "Decision AI"
-    },
-    {
-      icon: <Layers className="text-blue-400" size={24} />,
-      title: "Simulate before acting",
-      description: "Model outcomes across scenarios before committing resources.",
-      tag: "Scenario Lab"
-    },
-    {
-      icon: <Target className="text-emerald-400" size={24} />,
-      title: "Focus with confidence",
-      description: "Clear priorities and insights to guide your team's decisions.",
-      tag: "Clarity Engine"
-    }
-  ];
+  {
+    icon: <LineChart className="text-blue-400" size={24} />,
+    title: "See what matters",
+    description: "Cut through noise to surface the metrics that actually drive your business.",
+    tag: "Scorecard"
+  },
+  {
+    icon: <Brain className="text-blue-400" size={24} />,
+    title: "Know what to do",
+    description: "AI-generated action plans ranked by impact, risk, and feasibility.",
+    tag: "Decision AI"
+  },
+  {
+    icon: <Layers className="text-blue-400" size={24} />,
+    title: "Simulate before acting",
+    description: "Model outcomes across scenarios before committing resources.",
+    tag: "Scenario Lab"
+  },
+  {
+    icon: <Target className="text-emerald-400" size={24} />,
+    title: "Focus with confidence",
+    description: "Clear priorities and insights to guide your team's decisions.",
+    tag: "Clarity Engine"
+  }];
+
 
 
   return (
@@ -563,10 +563,10 @@ const ProductPreviewSection = () => {
 
 
   const taskItems = [
-    { status: "running", name: "Generating Q4 forecast", progress: 67 },
-    { status: "queued", name: "Updating margin analysis", progress: 0 },
-    { status: "completed", name: "Customer segment report", progress: 100 }
-  ];
+  { status: "running", name: "Generating Q4 forecast", progress: 67 },
+  { status: "queued", name: "Updating margin analysis", progress: 0 },
+  { status: "completed", name: "Customer segment report", progress: 100 }];
+
 
 
   // Generate heatmap data
@@ -690,15 +690,15 @@ const ProductPreviewSection = () => {
                   </span>
                 </div>
                 <div className="space-y-3">
-                  {taskItems.map((item, i) => (
-                    <div key={i} className="flex items-center gap-4">
+                  {taskItems.map((item, i) =>
+                  <div key={i} className="flex items-center gap-4">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        item.status === "completed" ? "bg-emerald-500/20" :
-                        item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"
-                      }`}>
+                    item.status === "completed" ? "bg-emerald-500/20" :
+                    item.status === "running" ? "bg-blue-500/20" : "bg-slate-700"}`
+                    }>
                         {item.status === "completed" ? <Check className="text-emerald-400" size={12} /> :
-                         item.status === "running" ? <Play className="text-blue-400" size={12} /> :
-                         <Clock className="text-slate-500" size={12} />}
+                      item.status === "running" ? <Play className="text-blue-400" size={12} /> :
+                      <Clock className="text-slate-500" size={12} />}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
@@ -707,15 +707,15 @@ const ProductPreviewSection = () => {
                         </div>
                         <div className="h-1 bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className={`h-full transition-all duration-500 ${
-                              item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"
-                            }`}
-                            style={{ width: `${item.progress}%` }}
-                          />
+                          className={`h-full transition-all duration-500 ${
+                          item.status === "completed" ? "bg-emerald-500" : "bg-blue-500"}`
+                          }
+                          style={{ width: `${item.progress}%` }} />
+
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -729,13 +729,13 @@ const ProductPreviewSection = () => {
 // Differentiation Section
 const DifferentiationSection = () => {
   const features = [
-    "Data aggregation",
-    "Real-time analytics",
-    "AI recommendations",
-    "Scenario modeling",
-    "Decision support",
-    "Continuous learning"
-  ];
+  "Data aggregation",
+  "Real-time analytics",
+  "AI recommendations",
+  "Scenario modeling",
+  "Decision support",
+  "Continuous learning"];
+
 
   const comparisons = {
     traditional: [true, false, false, false, false, false],
@@ -851,49 +851,49 @@ const InvestorSection = () => {
 // Pricing Section
 const PricingSection = () => {
   const tiers = [
-    {
-      name: "Starter",
-      price: "Starting at $599",
-      period: "",
-      description: "For solo operators and small teams.",
-      features: [
-        "Scorecard",
-        "Rocks (90-day priorities)",
-        "Issues Tracker",
-        "To-Dos",
-        "Full Accounting Integration"
-      ],
-      highlighted: false
-    },
-    {
-      name: "Pro",
-      price: "Starting at $599",
-      period: "",
-      description: "For growing teams.",
-      features: [
-        "Everything in Starter",
-        "Org Chart",
-        "AI Meeting Extractor",
-        "AI Agents",
-        "Priority Support"
-      ],
-      highlighted: true
-    },
-    {
-      name: "Enterprise",
-      price: "Starting at $599",
-      period: "",
-      description: "For scaling businesses.",
-      features: [
-        "Everything in Pro",
-        "Smart Yield",
-        "Lean Analysis",
-        "Multi-user (5 seats)",
-        "Dedicated Success Manager"
-      ],
-      highlighted: false
-    }
-  ];
+  {
+    name: "Starter",
+    price: "$59",
+    period: "",
+    description: "For solo operators and small teams.",
+    features: [
+    "Scorecard",
+    "Rocks (90-day priorities)",
+    "Issues Tracker",
+    "To-Dos",
+    "Full Accounting Integration"],
+
+    highlighted: false
+  },
+  {
+    name: "Pro",
+    price: "Starting at $599",
+    period: "",
+    description: "For growing teams.",
+    features: [
+    "Everything in Starter",
+    "Org Chart",
+    "AI Meeting Extractor",
+    "AI Agents",
+    "Priority Support"],
+
+    highlighted: true
+  },
+  {
+    name: "Enterprise",
+    price: "Starting at $599",
+    period: "",
+    description: "For scaling businesses.",
+    features: [
+    "Everything in Pro",
+    "Smart Yield",
+    "Lean Analysis",
+    "Multi-user (5 seats)",
+    "Dedicated Success Manager"],
+
+    highlighted: false
+  }];
+
 
 
   return (
@@ -1097,8 +1097,8 @@ function App() {
       <PricingSection />
       <FinalCTASection />
       <Footer />
-    </div>
-  );
+    </div>);
+
 }
 
 export default App;
