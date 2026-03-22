@@ -23,8 +23,16 @@ import {
   Percent,
   ChevronRight,
   Menu,
-  X } from
-"lucide-react";
+  X,
+  Gauge,
+  Mountain,
+  ListTodo,
+  MessageSquare,
+  Sparkles,
+  Grid3X3,
+  Scissors,
+  Bot
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 // Animation variants
@@ -90,14 +98,14 @@ const Navbar = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           <button onClick={() => scrollToSection("solution")} className="text-slate-400 hover:text-white transition-colors text-sm" data-testid="nav-solution">Solution</button>
+          <button onClick={() => scrollToSection("features")} className="text-slate-400 hover:text-white transition-colors text-sm" data-testid="nav-features">Features</button>
           <button onClick={() => scrollToSection("product")} className="text-slate-400 hover:text-white transition-colors text-sm" data-testid="nav-product">Product</button>
           <button onClick={() => scrollToSection("pricing")} className="text-slate-400 hover:text-white transition-colors text-sm" data-testid="nav-pricing">Pricing</button>
-          <button onClick={() => scrollToSection("investors")} className="text-slate-400 hover:text-white transition-colors text-sm" data-testid="nav-investors">Investors</button>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
           <button onClick={() => scrollToSection("early-access")} className="btn-primary text-sm" data-testid="nav-cta">
-            Get Early Access
+            Start Free Trial
           </button>
         </div>
 
@@ -122,10 +130,10 @@ const Navbar = () => {
 
             <div className="px-6 py-4 flex flex-col gap-4">
               <button onClick={() => scrollToSection("solution")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Solution</button>
+              <button onClick={() => scrollToSection("features")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Features</button>
               <button onClick={() => scrollToSection("product")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Product</button>
               <button onClick={() => scrollToSection("pricing")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Pricing</button>
-              <button onClick={() => scrollToSection("investors")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Investors</button>
-              <button onClick={() => scrollToSection("early-access")} className="btn-primary text-sm w-full mt-2">Get Early Access</button>
+              <button onClick={() => scrollToSection("early-access")} className="btn-primary text-sm w-full mt-2">Start Free Trial</button>
             </div>
           </motion.div>
         }
@@ -141,10 +149,16 @@ const HeroSection = () => {
   };
 
   const stats = [
-  { value: "+27%", label: "Cash Flow" },
-  { value: "4.2x", label: "Faster Decisions" },
-  { value: "89%", label: "Accuracy Rate" }];
+    { value: "+34%", label: "Margin Improvement" },
+    { value: "4.2x", label: "Faster Decisions" },
+    { value: "89%", label: "Less Meeting Follow-up" }
+  ];
 
+  const scorecardMetrics = [
+    { label: "Revenue Growth", status: "green" },
+    { label: "Cash Flow", status: "yellow" },
+    { label: "Customer Retention", status: "green" }
+  ];
 
   return (
     <section className="relative min-h-screen flex items-center pt-24 overflow-hidden" data-testid="hero-section">
@@ -163,10 +177,9 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="mb-6">
-
             <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium tracking-wide uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Autonomous Business OS
+              Business Operating System
             </span>
           </motion.div>
 
@@ -176,9 +189,8 @@ const HeroSection = () => {
             transition={{ delay: 0.3 }}
             className="font-serif text-5xl sm:text-6xl lg:text-7xl text-white leading-[1.1] tracking-tight mb-6"
             data-testid="hero-headline">
-
             Your business.<br />
-            <span className="gradient-text">Running itself.</span>
+            <span className="gradient-text">Finally, clarity.</span>
           </motion.h1>
 
           <motion.p
@@ -187,8 +199,7 @@ const HeroSection = () => {
             transition={{ delay: 0.4 }}
             className="text-lg text-slate-400 max-w-xl mb-8 leading-relaxed"
             data-testid="hero-subheadline">
-
-            Quantro analyzes your data, makes intelligent decisions, and executes actions automatically. The operating system your business deserves.
+            Quantro is the operating system for your business. Track what matters, identify where your value is, and let AI tell you exactly what to do next.
           </motion.p>
 
           <motion.div
@@ -196,13 +207,11 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
             className="flex flex-wrap gap-4 mb-12">
-
             <button
               onClick={() => scrollToSection("early-access")}
               className="btn-primary flex items-center gap-2"
               data-testid="hero-cta-early-access">
-
-              Get Early Access
+              Start Free Trial
               <ArrowRight size={16} />
             </button>
             <a
@@ -210,7 +219,6 @@ const HeroSection = () => {
               download
               className="btn-secondary flex items-center gap-2"
               data-testid="hero-cta-investor-deck">
-
               <Download size={16} />
               View Investor Deck
             </a>
@@ -221,31 +229,29 @@ const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
             className="flex flex-wrap gap-8">
-
-            {stats.map((stat, i) =>
-            <div key={i} className="text-left" data-testid={`hero-stat-${i}`}>
+            {stats.map((stat, i) => (
+              <div key={i} className="text-left" data-testid={`hero-stat-${i}`}>
                 <div className="font-mono text-2xl text-white font-medium">{stat.value}</div>
                 <div className="text-sm text-slate-500">{stat.label}</div>
               </div>
-            )}
+            ))}
           </motion.div>
         </div>
 
-        {/* Right Content - Mini Dashboard Preview */}
+        {/* Right Content - Scorecard Widget */}
         <motion.div
           initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
           className="hidden lg:block">
-
           <div className="relative">
             <div className="dashboard-window p-6 glow-blue">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                  <Activity className="text-blue-400" size={20} />
+                  <Gauge className="text-blue-400" size={20} />
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">Live Metrics</div>
+                  <div className="text-sm font-medium text-white">Business Scorecard</div>
                   <div className="text-xs text-slate-500">Updated 2s ago</div>
                 </div>
               </div>
@@ -259,44 +265,52 @@ const HeroSection = () => {
                   </div>
                 </div>
                 <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
-                  <div className="text-xs text-slate-500 mb-1">Active Users</div>
-                  <div className="font-mono text-xl text-white">24,891</div>
+                  <div className="text-xs text-slate-500 mb-1">Gross Margin</div>
+                  <div className="font-mono text-xl text-white">67.3%</div>
                   <div className="text-xs text-emerald-400 flex items-center gap-1 mt-1">
-                    <TrendingUp size={12} /> +8.2%
+                    <TrendingUp size={12} /> +2.1%
                   </div>
                 </div>
               </div>
 
-              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
-                <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                  <Zap size={14} />
-                  <span>3 actions executing automatically</span>
+              {/* Scorecard Status Widget */}
+              <div className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-4">
+                <div className="text-xs text-slate-500 mb-3 uppercase tracking-wide">Key Metrics Status</div>
+                <div className="space-y-2">
+                  {scorecardMetrics.map((metric, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <span className="text-sm text-slate-300">{metric.label}</span>
+                      <span className={`w-3 h-3 rounded-full ${
+                        metric.status === "green" ? "bg-emerald-400" :
+                        metric.status === "yellow" ? "bg-amber-400" : "bg-red-400"
+                      }`} />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Floating Action Card */}
+            {/* Floating Insight Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
               className="absolute -bottom-8 -left-8 bg-slate-900 border border-slate-700 rounded-lg p-4 shadow-2xl">
-
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Check className="text-emerald-400" size={14} />
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <Brain className="text-blue-400" size={14} />
                 </div>
                 <div>
-                  <div className="text-sm text-white">Invoice #4821 sent</div>
-                  <div className="text-xs text-slate-500">Auto-executed 3s ago</div>
+                  <div className="text-sm text-white">AI Recommendation</div>
+                  <div className="text-xs text-slate-500">Focus on Quad 2 margins</div>
                 </div>
               </div>
             </motion.div>
           </div>
         </motion.div>
       </div>
-    </section>);
-
+    </section>
+  );
 };
 
 // Problem Section
@@ -353,31 +367,14 @@ const ProblemSection = () => {
 
 };
 
-// Solution Section with Terminal
+// Solution Section with Feature Cards
 const SolutionSection = () => {
-  const [currentLine, setCurrentLine] = useState(0);
-  const terminalRef = useRef(null);
-  const isInView = useInView(terminalRef, { once: true });
-
-  const terminalLines = [
-  { type: "command", text: "quantro → analyze cash_flow --period Q4" },
-  { type: "output", text: "Analyzing 847 transactions across 12 accounts..." },
-  { type: "success", text: "✓ Found 3 optimization opportunities worth $42.8K" },
-  { type: "command", text: "quantro → execute action_plan --mode aggressive" },
-  { type: "output", text: "Executing 7 automated actions..." },
-  { type: "success", text: "✓ Invoice #4821 sent to Acme Corp" },
-  { type: "success", text: "✓ Subscription upgraded for 23 high-value accounts" },
-  { type: "success", text: "✓ Payment reminder scheduled for $18.2K receivables" }];
-
-
-  useEffect(() => {
-    if (isInView && currentLine < terminalLines.length) {
-      const timer = setTimeout(() => {
-        setCurrentLine((prev) => prev + 1);
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isInView, currentLine, terminalLines.length]);
+  const solutionCards = [
+    { icon: <Gauge className="text-blue-400" size={24} />, title: "Live Scorecard", description: "Real-time metrics that matter" },
+    { icon: <Mountain className="text-emerald-400" size={24} />, title: "90-Day Rocks", description: "Strategic priorities at a glance" },
+    { icon: <ListTodo className="text-blue-400" size={24} />, title: "Issues Tracker", description: "Surface and solve blockers fast" },
+    { icon: <MessageSquare className="text-emerald-400" size={24} />, title: "AI Meeting Extractor", description: "Turn meetings into action items" }
+  ];
 
   return (
     <AnimatedSection id="solution" className="py-24 px-6 relative">
@@ -387,72 +384,132 @@ const SolutionSection = () => {
         <motion.div variants={fadeInUp} className="max-w-2xl mb-16">
           <span className="text-xs font-medium tracking-[0.2em] uppercase text-slate-500 mb-4 block">The Solution</span>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-tight mb-6">
-            An OS that thinks and acts for you.
+            An OS that shows you exactly where to focus.
           </h2>
           <p className="text-lg text-slate-400">
-            Quantro continuously analyzes your business, identifies opportunities, simulates outcomes, and executes decisions—all autonomously.
+            Quantro connects your operations, finances, and strategy in one place — then surfaces the insights and actions that actually move the needle.
           </p>
         </motion.div>
 
-        <motion.div variants={fadeInUp} ref={terminalRef} className="terminal-window max-w-3xl" data-testid="terminal-ui">
-          <div className="terminal-header">
-            <div className="terminal-dot terminal-dot-red" />
-            <div className="terminal-dot terminal-dot-yellow" />
-            <div className="terminal-dot terminal-dot-green" />
-            <span className="ml-4 text-xs text-slate-500 font-mono">quantro-cli — bash</span>
-          </div>
-          
-          <div className="p-6 font-mono text-sm min-h-[300px]">
-            {terminalLines.slice(0, currentLine).map((line, i) =>
-            <div key={i} className={`mb-2 ${
-            line.type === "command" ? "text-white" :
-            line.type === "success" ? "text-emerald-400" :
-            "text-slate-400"}`
-            }>
-                {line.type === "command" && <span className="text-blue-400">$ </span>}
-                {line.text}
+        <motion.div variants={fadeInUp} className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl" data-testid="solution-cards">
+          {solutionCards.map((card, i) => (
+            <div
+              key={i}
+              className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 card-hover text-center"
+              data-testid={`solution-card-${i}`}>
+              <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                {card.icon}
               </div>
-            )}
-            {currentLine < terminalLines.length &&
-            <div className="text-white">
-                <span className="text-blue-400">$ </span>
-                <span className="typing-cursor"></span>
-              </div>
-            }
-          </div>
+              <h3 className="text-sm font-medium text-white mb-1">{card.title}</h3>
+              <p className="text-xs text-slate-500">{card.description}</p>
+            </div>
+          ))}
         </motion.div>
       </div>
-    </AnimatedSection>);
+    </AnimatedSection>
+  );
+};
 
+// Star Features Section
+const StarFeaturesSection = () => {
+  const features = [
+    {
+      icon: <Sparkles className="text-blue-400" size={24} />,
+      name: "Smart Yield",
+      tagline: "Know where your money actually comes from.",
+      description: "Quintile Matrix classifies every customer and product by revenue and margin — showing exactly which to grow, re-price, or cut.",
+      accentColor: "blue"
+    },
+    {
+      icon: <Grid3X3 className="text-emerald-400" size={24} />,
+      name: "Quintile Matrix",
+      tagline: "Your 5×5 value map.",
+      description: "An interactive heatmap that reveals where 80% of your business value lives — and where the complexity is killing your margins.",
+      accentColor: "green"
+    },
+    {
+      icon: <Scissors className="text-blue-400" size={24} />,
+      name: "Dirty Dozen",
+      tagline: "12 tactics. One click.",
+      description: "Apply proven simplification actions — eliminate low-margin products, set minimum orders, stop discounting B customers — directly to your workflow.",
+      accentColor: "blue"
+    },
+    {
+      icon: <Bot className="text-emerald-400" size={24} />,
+      name: "EMS Coach AI",
+      tagline: "Your 24/7 strategic consultant.",
+      description: "Ask \"What should I eliminate this month?\" or \"How do I improve Quad 2 margins?\" — and get answers grounded in your actual business data.",
+      accentColor: "green"
+    }
+  ];
+
+  return (
+    <AnimatedSection id="features" className="py-24 px-6 bg-slate-950/50">
+      <div className="max-w-7xl mx-auto">
+        <motion.div variants={fadeInUp} className="max-w-2xl mb-16">
+          <span className="text-xs font-medium tracking-[0.2em] uppercase text-slate-500 mb-4 block">Star Features</span>
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-tight">
+            Tools that drive real decisions.
+          </h2>
+        </motion.div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {features.map((feature, i) => (
+            <motion.div
+              key={i}
+              variants={fadeInUp}
+              className="bg-slate-900/50 border border-slate-800 rounded-xl p-8 card-hover"
+              data-testid={`star-feature-${i}`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  feature.accentColor === "blue" ? "bg-blue-500/10" : "bg-emerald-500/10"
+                }`}>
+                  {feature.icon}
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium text-white mb-1">{feature.name}</h3>
+                  <p className={`text-sm font-medium mb-2 ${
+                    feature.accentColor === "blue" ? "text-blue-400" : "text-emerald-400"
+                  }`}>{feature.tagline}</p>
+                  <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </AnimatedSection>
+  );
 };
 
 // Capabilities Section
 const CapabilitiesSection = () => {
   const capabilities = [
-  {
-    icon: <LineChart className="text-blue-400" size={24} />,
-    title: "See what matters",
-    description: "Cut through noise to surface the metrics that actually drive your business.",
-    tag: "Quad Engine"
-  },
-  {
-    icon: <Brain className="text-blue-400" size={24} />,
-    title: "Know what to do",
-    description: "AI-generated action plans ranked by impact, risk, and feasibility.",
-    tag: "Decision AI"
-  },
-  {
-    icon: <Layers className="text-blue-400" size={24} />,
-    title: "Simulate before acting",
-    description: "Model outcomes across scenarios before committing resources.",
-    tag: "Scenario Lab"
-  },
-  {
-    icon: <Zap className="text-emerald-400" size={24} />,
-    title: "Act with confidence",
-    description: "Autonomous execution of approved decisions with full audit trails.",
-    tag: "Auto Execute"
-  }];
+    {
+      icon: <LineChart className="text-blue-400" size={24} />,
+      title: "See what matters",
+      description: "Cut through noise to surface the metrics that actually drive your business.",
+      tag: "Scorecard"
+    },
+    {
+      icon: <Brain className="text-blue-400" size={24} />,
+      title: "Know what to do",
+      description: "AI-generated action plans ranked by impact, risk, and feasibility.",
+      tag: "Decision AI"
+    },
+    {
+      icon: <Layers className="text-blue-400" size={24} />,
+      title: "Simulate before acting",
+      description: "Model outcomes across scenarios before committing resources.",
+      tag: "Scenario Lab"
+    },
+    {
+      icon: <Target className="text-emerald-400" size={24} />,
+      title: "Focus with confidence",
+      description: "Clear priorities and insights to guide your team's decisions.",
+      tag: "Clarity Engine"
+    }
+  ];
 
 
   return (
@@ -461,7 +518,7 @@ const CapabilitiesSection = () => {
         <motion.div variants={fadeInUp} className="max-w-2xl mb-16">
           <span className="text-xs font-medium tracking-[0.2em] uppercase text-slate-500 mb-4 block">Capabilities</span>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-tight">
-            Built for autonomous operations.
+            Built for clarity and action.
           </h2>
         </motion.div>
 
@@ -671,13 +728,13 @@ const ProductPreviewSection = () => {
 // Differentiation Section
 const DifferentiationSection = () => {
   const features = [
-  "Data aggregation",
-  "Real-time analytics",
-  "AI recommendations",
-  "Scenario modeling",
-  "Autonomous execution",
-  "Continuous learning"];
-
+    "Data aggregation",
+    "Real-time analytics",
+    "AI recommendations",
+    "Scenario modeling",
+    "Decision support",
+    "Continuous learning"
+  ];
 
   const comparisons = {
     traditional: [true, false, false, false, false, false],
@@ -793,51 +850,49 @@ const InvestorSection = () => {
 // Pricing Section
 const PricingSection = () => {
   const tiers = [
-  {
-    name: "Starter",
-    price: "$59",
-    period: "/month",
-    description: "For growing businesses ready to automate.",
-    features: [
-    "Up to 5 data sources",
-    "Basic analytics",
-    "Weekly AI reports",
-    "Email support",
-    "1 user seat"],
-
-    highlighted: false
-  },
-  {
-    name: "Pro",
-    price: "$299",
-    period: "/month",
-    description: "For teams who need full autonomous operations.",
-    features: [
-    "Unlimited data sources",
-    "Real-time analytics",
-    "Daily AI recommendations",
-    "Autonomous execution",
-    "Scenario modeling",
-    "Priority support",
-    "10 user seats"],
-
-    highlighted: true
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    period: "",
-    description: "For organizations with complex requirements.",
-    features: [
-    "Everything in Pro",
-    "Custom integrations",
-    "Dedicated success manager",
-    "SLA guarantees",
-    "On-premise option",
-    "Unlimited seats"],
-
-    highlighted: false
-  }];
+    {
+      name: "Starter",
+      price: "Starting at $599",
+      period: "",
+      description: "For solo operators and small teams.",
+      features: [
+        "Scorecard",
+        "Rocks (90-day priorities)",
+        "Issues Tracker",
+        "To-Dos",
+        "Full Accounting Integration"
+      ],
+      highlighted: false
+    },
+    {
+      name: "Pro",
+      price: "Starting at $599",
+      period: "",
+      description: "For growing teams.",
+      features: [
+        "Everything in Starter",
+        "Org Chart",
+        "AI Meeting Extractor",
+        "AI Agents",
+        "Priority Support"
+      ],
+      highlighted: true
+    },
+    {
+      name: "Enterprise",
+      price: "Starting at $599",
+      period: "",
+      description: "For scaling businesses.",
+      features: [
+        "Everything in Pro",
+        "Smart Yield",
+        "Lean Analysis",
+        "Multi-user (5 seats)",
+        "Dedicated Success Manager"
+      ],
+      highlighted: false
+    }
+  ];
 
 
   return (
@@ -950,7 +1005,7 @@ const FinalCTASection = () => {
             <span className="gradient-text">Start executing.</span>
           </h2>
           <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
-            Join the waitlist for early access to Quantro. Be among the first to run your business on autopilot.
+            Join thousands of businesses using Quantro to gain clarity and make better decisions.
           </p>
         </motion.div>
 
@@ -973,7 +1028,7 @@ const FinalCTASection = () => {
               className="btn-primary flex items-center justify-center gap-2 h-12 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               data-testid="submit-button">
 
-                {loading ? "Submitting..." : "Get Early Access"}
+                {loading ? "Submitting..." : "Start Free Trial"}
                 {!loading && <ArrowRight size={16} />}
               </button>
             </form> :
@@ -983,7 +1038,7 @@ const FinalCTASection = () => {
                 <Check size={24} />
                 <span className="text-lg font-medium">You're on the list!</span>
               </div>
-              <p className="text-slate-400 mt-2 text-sm">We'll be in touch soon with your early access invite.</p>
+              <p className="text-slate-400 mt-2 text-sm">We'll be in touch soon with your free trial access.</p>
             </div>
           }
           {error &&
@@ -1034,15 +1089,15 @@ function App() {
       <HeroSection />
       <ProblemSection />
       <SolutionSection />
+      <StarFeaturesSection />
       <CapabilitiesSection />
       <ProductPreviewSection />
       <DifferentiationSection />
-      <InvestorSection />
       <PricingSection />
       <FinalCTASection />
       <Footer />
-    </div>);
-
+    </div>
+  );
 }
 
 export default App;
