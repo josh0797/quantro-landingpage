@@ -809,7 +809,7 @@ const PricingSection = () => {
   },
   {
     name: "Pro",
-    price: "$1,499",
+    price: "$299",
     period: "/month",
     description: "For teams who need full autonomous operations.",
     features: [
