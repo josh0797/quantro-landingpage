@@ -35,6 +35,17 @@ import {
 "lucide-react";
 import { Input } from "@/components/ui/input";
 
+// GA4 CTA Click Tracking
+const trackCTAClick = (ctaLocation) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', 'cta_click', {
+      event_category: 'engagement',
+      event_label: ctaLocation,
+      cta_text: 'Start Free Trial'
+    });
+  }
+};
+
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
@@ -105,7 +116,14 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
-          <button onClick={() => scrollToSection("early-access")} className="btn-primary text-sm" data-testid="nav-cta">
+          <button 
+            onClick={() => {
+              trackCTAClick('navbar');
+              scrollToSection("early-access");
+            }} 
+            className="btn-primary text-sm" 
+            data-testid="nav-cta"
+          >
             Start Free Trial
           </button>
         </div>
@@ -134,7 +152,15 @@ const Navbar = () => {
               <button onClick={() => scrollToSection("features")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Features</button>
               <button onClick={() => scrollToSection("product")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Product</button>
               <button onClick={() => scrollToSection("pricing")} className="text-slate-400 hover:text-white transition-colors text-left py-2">Pricing</button>
-              <button onClick={() => scrollToSection("early-access")} className="btn-primary text-sm w-full mt-2">Start Free Trial</button>
+              <button 
+                onClick={() => {
+                  trackCTAClick('mobile_menu');
+                  scrollToSection("early-access");
+                }} 
+                className="btn-primary text-sm w-full mt-2"
+              >
+                Start Free Trial
+              </button>
             </div>
           </motion.div>
         }
@@ -209,7 +235,10 @@ const HeroSection = () => {
             transition={{ delay: 0.5 }}
             className="flex flex-wrap gap-4 mb-12">
             <button
-              onClick={() => scrollToSection("early-access")}
+              onClick={() => {
+                trackCTAClick('hero');
+                scrollToSection("early-access");
+              }}
               className="btn-primary flex items-center gap-2"
               data-testid="hero-cta-early-access">
               Start Free Trial
@@ -1065,6 +1094,9 @@ const FinalCTASection = () => {
     e.preventDefault();
     if (!email) return;
 
+    // Track CTA click
+    trackCTAClick('footer_form');
+    
     setLoading(true);
     setError("");
 
