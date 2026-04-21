@@ -137,8 +137,8 @@ export const PricingSection = () => {
           <Sparkles size={14} className="text-[#00F5FF]" />
           <span>
             {isEs
-              ? "Incluye Quantro OS + Flow + Intelligence en todos los planes."
-              : "Includes Quantro OS + Flow + Intelligence in every plan."}
+              ? "Quantro Flow + Intelligence disponible a partir del plan Pro."
+              : "Quantro Flow + Intelligence available from the Pro plan."}
           </span>
         </motion.div>
 
