@@ -1,6 +1,5 @@
 import React from "react";
 import "@/App.css";
-import { LanguageProvider } from "@/hooks/useLanguage";
 import Navbar from "@/components/Navbar";
 import PaymentReturnModal from "@/components/PaymentReturnModal";
 import HeroSection from "@/components/sections/HeroSection";
@@ -14,9 +13,11 @@ import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
 import PricingSection from "@/components/sections/PricingSection";
+import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
 
-function AppContent() {
+// Landing page (routed at "/"). LanguageProvider + Router live in index.js.
+export default function App() {
   return (
     <div className="min-h-screen bg-[#030712]">
       {/* Noise overlay */}
@@ -34,6 +35,7 @@ function AppContent() {
       <StarFeaturesSection />
       <DifferentiationSection />
       <PricingSection />
+      <FAQSection />
       <Footer />
 
       {/* Stripe return modal — reads ?payment=success|cancel from URL */}
@@ -41,14 +43,3 @@ function AppContent() {
     </div>
   );
 }
-
-// Main App Component with Language Provider
-function App() {
-  return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
-  );
-}
-
-export default App;

@@ -1,0 +1,26 @@
+{
+  "summary": "Frontend-only testing for iteration 7 (legal pages routing + FAQ section + footer link updates). All 3 feature groups PASS: (a) router paths /privacidad, /terminos, /contacto and English aliases /privacy, /terms, /contact render their respective pages with correct headings; (b) Footer links are react-router <Link> with href values /privacidad, /terminos, /contacto and navigate via SPA (URL changes without full reload); (c) FAQ section rendered at #faq below Pricing and above Footer, with exactly 10 items, first-open default behavior, open/close toggle, closing-previous behavior, rotating +→× icon (rotate-45 class). i18n bilingual content verified in both ES and EN. Language toggle persists to localStorage ('quantro-language') and updates all content including FAQ. Landing page still renders all sections (hero, pricing, faq, footer, etc.).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Landing / global", "issues": ["Default language follows browser locale (detectBrowserLanguage in useLanguage.js); in English-locale browsers the landing initially renders in EN even though the PRD states default should be 'es'. Not a regression introduced in this iteration, but worth noting — if strict ES default is required, change getInitialLanguage() to ignore navigator.language until the user opts in."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "LegalPageLayout 'Volver al inicio' label is hard-coded in Spanish. Since LanguageProvider now wraps legal pages (moved to index.js), this label should come from t('legal.backHome') or similar to honor the EN alias routes.",
+    "LegalPageLayout footer has copy '© 2026 Quantro. Todos los derechos reservados.' hard-coded in Spanish — also should use t('footer.rights').",
+    "PrivacyPage, TermsPage, and ContactPage bodies are 100% Spanish only. The English alias routes (/privacy, /terms, /contact) resolve to the same components and therefore display Spanish content — consider either (a) adding EN copy via tObj or (b) removing the English aliases if EN copy is not yet ready.",
+    "FAQ header uses inline language conditional instead of t()/tObj — minor consistency nit; works correctly but diverges from pattern used elsewhere."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per instructions)", "frontend": "100% on required checks"},
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 7 scope was pure frontend: router (/privacidad /terminos /contacto + EN aliases), Footer Link updates, FAQSection with 10 items. All verified. One gotcha: Playwright's locator.click(force=True) on the ES LanguageSwitcher motion.button did not fire the React onClick in some sessions (likely a framer-motion animated indicator intercepting events), but page.mouse.click(x,y) and direct DOM .click() both work, confirming real users can switch languages. If future tests need to toggle language, prefer evaluating esBtn.click() in the page. Default language in the preview browser resolves to 'en' because of navigator.language — this is by design in useLanguage.js (getInitialLanguage → detectBrowserLanguage). No backend testing performed this iteration (Stripe/backend unchanged per instructions).",
+  "rca of the issue": "No blocking issues found. Noted hard-coded Spanish strings on legal pages + layout which will be visible to users landing on the English alias routes."
+}
