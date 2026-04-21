@@ -4,10 +4,11 @@
 const translations = {
   es: {
     // Hero Section
-    "hero.title": "Quantro runs your business.",
-    "hero.subtitle": "From data to decisions to execution — automatically.",
-    "hero.secondary": "Data overload ends here. Just clear actions to grow your business.",
-    "hero.cta": "Join the waitlist",
+    "hero.eyebrow": "Quantro OS · Powered by AOS",
+    "hero.title": "Despierta con decisiones listas para actuar.",
+    "hero.subtitle": "Quantro OS conecta tus datos, detecta oportunidades y te propone acciones claras — y con Quantro Flow, las ejecuta por ti.",
+    "hero.cta.primary": "Empieza por $1 USD",
+    "hero.cta.secondary": "Ver cómo funciona",
     
     // Navigation
     "nav.solution": "Solución",
@@ -127,10 +128,11 @@ const translations = {
   
   en: {
     // Hero Section
-    "hero.title": "Quantro runs your business.",
-    "hero.subtitle": "From data to decisions to execution — automatically.",
-    "hero.secondary": "Data overload ends here. Just clear actions to grow your business.",
-    "hero.cta": "Join the waitlist",
+    "hero.eyebrow": "Quantro OS · Powered by AOS",
+    "hero.title": "Wake up with ready decisions to act.",
+    "hero.subtitle": "Quantro OS connects your data, detects opportunities and proposes clear actions — and with Quantro Flow, executes them for you.",
+    "hero.cta.primary": "Start for $1 USD",
+    "hero.cta.secondary": "See how it works",
     
     // Navigation
     "nav.solution": "Solution",
