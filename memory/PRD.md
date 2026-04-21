@@ -1,104 +1,102 @@
 # Quantro Landing Page - PRD
 
 ## Original Problem Statement
-Premium SaaS landing page for "Quantro" — an "Autonomous Business Operating System" that analyzes data, makes decisions, and executes actions automatically. Style: ultra-clean, minimal, high-end (Apple/Stripe/Linear), dark theme with electric blue + subtle green/violet accents. Spanish primary language, ES/EN toggle.
+Premium SaaS landing page for "Quantro" — "Autonomous Business Operating System". Dark theme, Apple/Stripe premium style. Spanish primary, ES/EN toggle. Features: Hero, Problem, Solution, Capabilities, Product Preview, Differentiation, Investor, Pricing sections, interactive dashboard mockups, smooth scrolling, micro-animations, i18n.
 
-## User Personas
-- Enterprise businesses looking for autonomous operations
-- Investors seeking fintech/AI opportunities
-- C-level executives and business analysts
+## Tech Stack
+- Frontend: React + Tailwind + Framer Motion + Shadcn UI + react-i18n (custom hook)
+- Backend: FastAPI + MongoDB + emergentintegrations (Stripe) + Resend (transactional email)
 
-## Core Tech Stack
-- Frontend: React + Tailwind + Framer Motion + Shadcn UI
-- Backend: FastAPI + MongoDB + Motor + emergentintegrations (Stripe)
-- i18n: custom hook-based (ES default, EN toggle)
-
-## Code Architecture (post-refactor Feb 2026)
+## Code Architecture
 ```
-/app/frontend/src/
-├── App.js                              # slim orchestrator (~55 lines)
-├── hooks/useLanguage.js                # i18n context (ES default)
-├── i18n/index.js                       # ES/EN translations
-├── lib/
-│   ├── animations.js                   # framer-motion variants
-│   ├── analytics.js                    # GA4 trackCTAClick
-│   └── stripe.js                       # startStripeCheckout, pollCheckoutStatus
-└── components/
-    ├── AnimatedSection.jsx             # scroll-triggered motion wrapper (fwds testids)
-    ├── QuantroLogoMark.jsx
-    ├── HeroDashboardPreview.jsx
-    ├── Navbar.jsx
-    ├── LanguageSwitcher.jsx
-    ├── QuantroMorningDemo.jsx          # interactive demo (MOCKED state)
-    ├── PaymentReturnModal.jsx          # reads ?payment=success|cancel
-    └── sections/
-        ├── HeroSection.jsx             # Stripe CTA wired
-        ├── SocialProofSection.jsx      # live animated counter
-        ├── HeroTransitionSection.jsx
-        ├── ProductComparisonSection.jsx
-        ├── BetterTogetherSection.jsx
-        ├── QuantroIntelligenceSection.jsx
-        ├── MorningSnapshotSection.jsx
-        ├── SuccessStoriesSection.jsx
-        ├── StarFeaturesSection.jsx     # localized
-        ├── DifferentiationSection.jsx  # localized
-        ├── PricingSection.jsx          # localized + Stripe CTA
-        ├── FinalCTASection.jsx
-        └── Footer.jsx
+/app/backend/
+├── server.py            # Main FastAPI app with Stripe + early-access
+├── emails.py            # Resend welcome email template + send helper
+├── .env                 # STRIPE_API_KEY, RESEND_API_KEY, SENDER_EMAIL
+
+/app/frontend/
+├── public/
+│   └── assets/quantro-os-overview.pdf
+└── src/
+    ├── App.js                      # slim orchestrator (~50 lines)
+    ├── hooks/useLanguage.js        # ES/EN context (ES default)
+    ├── i18n/index.js               # translations dictionary
+    ├── lib/
+    │   ├── animations.js           # framer-motion variants
+    │   ├── analytics.js            # GA4 event helpers
+    │   └── stripe.js               # checkout helpers
+    └── components/
+        ├── AnimatedSection.jsx
+        ├── Navbar.jsx              # CTA → Stripe direct
+        ├── PaymentReturnModal.jsx  # ?payment=success|cancel
+        ├── LanguageSwitcher.jsx
+        ├── QuantroLogoMark.jsx
+        ├── HeroDashboardPreview.jsx
+        ├── QuantroMorningDemo.jsx  # interactive demo (MOCKED state)
+        └── sections/
+            ├── HeroSection.jsx                # PDF download link
+            ├── SocialProofSection.jsx         # animated live counter
+            ├── HeroTransitionSection.jsx
+            ├── ProductComparisonSection.jsx
+            ├── BetterTogetherSection.jsx
+            ├── QuantroIntelligenceSection.jsx
+            ├── MorningSnapshotSection.jsx
+            ├── SuccessStoriesSection.jsx
+            ├── StarFeaturesSection.jsx        # localized
+            ├── DifferentiationSection.jsx     # localized
+            ├── PricingSection.jsx             # Monthly/Annual toggle + Stripe/mailto CTAs
+            └── Footer.jsx
 ```
 
 ## Backend APIs
-- `POST /api/early-access` — email waitlist signup
+- `POST /api/early-access` — email waitlist (deprecated but still live for legacy)
 - `POST /api/stripe/create-checkout` — creates $1 USD Stripe session; body `{package_id, origin_url, email?}`
-- `GET /api/stripe/checkout-status/{session_id}` — polls payment status (idempotent)
-- `POST /api/webhook/stripe` — Stripe webhook handler (idempotent)
-- `GET /api/stripe/payments/count` — returns `{count: N+127}` for live social proof
+- `GET /api/stripe/checkout-status/{session_id}` — polls status; idempotently updates DB and sends welcome email on first paid transition
+- `POST /api/webhook/stripe` — Stripe webhook; same idempotent + email send logic
+- `GET /api/stripe/payments/count` — `{count: paid_transactions + 127}` for social proof
 
 ## MongoDB Collections
-- `early_access` — email signups
-- `payment_transactions` — Stripe session records (pending/paid/expired)
+- `early_access` — legacy email signups
+- `payment_transactions` — Stripe sessions: `{session_id, package_id, amount, currency, email, metadata, payment_status, status, welcome_email_sent, welcome_email_id, ...}`
 
 ## What's Been Implemented
 
+### Feb 21, 2026 — P2 PDF + Email + P3 Pricing toggle + Remove FinalCTA
+- **PDF Download**: `/public/assets/quantro-os-overview.pdf` (15KB) linked from Hero (`hero-pdf-link` testid)
+- **Resend email**: Welcome email in Spanish with Quantro branding sent from `no-reply@quantroos.com` on first paid transition (idempotent via `welcome_email_sent` flag)
+- **Removed FinalCTASection**: Navbar CTA now triggers Stripe directly; Enterprise CTA → `mailto:ventas@quantroos.com`
+- **Pricing Monthly/Annual toggle**: pill selector (`billing-toggle-monthly`/`billing-toggle-annual`), "2 meses gratis" badge on annual, animated price swap (`AnimatedPrice` with framer-motion), card min-h to prevent layout shift
+- Testing: 11/11 pytest backend + full frontend E2E (iteration_6.json)
+
+### Feb 21, 2026 — GA4 Funnel Tracking (P3)
+- Real GA4 ID: `G-NLF6B56ZG6`
+- Events: `checkout_started` + `begin_checkout` on CTA click, `checkout_paid` + `purchase` on success, `checkout_cancelled` on cancel
+
 ### Feb 21, 2026 — Stripe + i18n + Social Proof (P1/P2/P3)
-- **P1 Stripe Checkout ($1 USD)**: Backend endpoints via `emergentintegrations`, Hero CTA wired to redirect to Stripe, PaymentReturnModal for success/cancel, transaction tracking in Mongo with idempotent updates. Security: amount fixed server-side (`STRIPE_PACKAGES`), dynamic success/cancel URLs from frontend origin. Pricing tier CTAs (Starter/Pro) also trigger Stripe checkout.
-- **P2 Localization**: Pricing, StarFeatures, Differentiation sections fully wired to `t()` / i18n keys. New keys: `pricing.*.f1..f5`, `starfeatures.*`, `diff.*`, `payment.*`, `social.*`.
-- **P3 Live Social Proof**: `SocialProofSection` with pulsing dot + animated tween counter fetching `/api/stripe/payments/count` every 30s.
-- Testing: 100% pass on backend (6/6) + frontend E2E (iteration_5.json).
+- Stripe $1 USD checkout, localized 3 sections, live social proof counter
 
 ### Feb 21, 2026 — App.js Modular Refactor
-- `App.js`: 1850 → ~55 lines. Split into 12 section components + shared lib/components.
-- Removed dead code (unused sections).
+- 1850 → 50 lines; 12 section components + shared lib/components
 
 ### March 22, 2026 — Initial MVP
-- Full landing page with Hero, Transition, ProductComparison, BetterTogether, QuantroIntelligence, MorningSnapshot demo, SuccessStories, StarFeatures, Differentiation, Pricing, FinalCTA, Footer.
-- ES/EN toggle, GA4, SEO, Apple/Stripe premium aesthetic.
+- Full landing page, ES/EN toggle, SEO, Apple/Stripe aesthetic
 
 ## Prioritized Backlog
 
-### P0 - DONE
-- [x] Landing page structure and copy
-- [x] Email capture + Stripe $1 USD checkout
-- [x] Mobile responsiveness
-- [x] Hero Apple/Stripe 2-col redesign
-- [x] Modular component architecture
-
-### P1 - DONE
-- [x] Stripe $1 USD integration
-- [x] Localize Pricing / StarFeatures / Differentiation
+### P0/P1/P2/P3 DONE
+- [x] Landing page structure
+- [x] Stripe $1 USD integration + funnel tracking
+- [x] i18n (ES/EN) across all sections
 - [x] Live social proof
+- [x] Modular architecture
+- [x] PDF overview download
+- [x] Resend post-payment welcome email
+- [x] Pricing Monthly/Annual toggle
+- [x] Remove FinalCTA section
 
-### P2 - Remaining
+### Remaining
 - [ ] Connect QuantroMorningDemo to live backend data (currently MOCKED)
 - [ ] Wire Footer Privacy/Terms/Contact links to real pages
-- [ ] Add investor deck PDF download
-- [ ] Email confirmation (SendGrid/Resend) after payment
-
-### P3 - Ideas
-- [x] Track Stripe checkout funnel events in GA4 (Feb 21, 2026) — `checkout_started`/`begin_checkout`, `checkout_paid`/`purchase`, `checkout_cancelled`
+- [ ] Add investor deck PDF download (separate from overview)
 - [ ] A/B test Hero primary CTA copy
-- [ ] Add testimonial carousel / logo row on scroll
-
-## GA4 Configuration
-- Measurement ID: `G-NLF6B56ZG6` (production)
-- Standard events emitted: `page_view`, `cta_click`, `checkout_started`, `begin_checkout`, `checkout_paid`, `purchase`, `checkout_cancelled`
+- [ ] Testimonial carousel / logo row
