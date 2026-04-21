@@ -1,7 +1,7 @@
 # Quantro Landing Page - PRD
 
 ## Original Problem Statement
-Premium SaaS landing page for "Quantro" — "Autonomous Business Operating System". Dark theme, Apple/Stripe premium style. Spanish primary, ES/EN toggle. Features: Hero, Problem, Solution, Capabilities, Product Preview, Differentiation, Investor, Pricing sections, interactive dashboard mockups, smooth scrolling, micro-animations, i18n.
+Premium SaaS landing page for "Quantro" — "Autonomous Business Operating System". Dark theme, Apple/Stripe premium style. Spanish primary, ES/EN toggle. Features: Hero, Transition, ProductComparison, BetterTogether, QuantroIntelligence, MorningSnapshot demo, SuccessStories, StarFeatures, Differentiation, Pricing (Monthly/Annual toggle), FAQ, Footer + routed legal pages (/privacidad, /terminos, /contacto).
 
 ## Tech Stack
 - Frontend: React + Tailwind + Framer Motion + Shadcn UI + react-i18n (custom hook)
@@ -61,6 +61,17 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
+### Feb 21, 2026 — Legal pages + FAQ + cleanup
+- **Router**: `react-router-dom` with `BrowserRouter` at `index.js` root; `LanguageProvider` moved to root so routed pages also have i18n
+- **Legal pages**: `/privacidad`, `/terminos`, `/contacto` (+ English aliases `/privacy`, `/terms`, `/contact`) with shared `LegalPageLayout` component (minimal top bar, back-home link, content, footer)
+- **PrivacyPage**: Full aviso de privacidad en ES (8 secciones: quiénes somos, datos, uso, compartir, ARCO, seguridad, retención, cambios)
+- **TermsPage**: 13 secciones (aceptación, prueba $1, planes, cancelación, uso aceptable, propiedad de datos, limitación, contacto)
+- **ContactPage**: 4 tarjetas contacto (Ventas, Soporte, Prensa, Privacidad) + CTA "Agendar llamada"
+- **Footer**: links actualizados a `<Link>` de react-router (navegación SPA sin reload)
+- **FAQSection**: sección "Antes de empezar" debajo de Pricing. 10 FAQs bilingües (ES/EN) inline. Acordeón minimalista con ícono `+` circular que rota a `×` (rotate-45) al abrir. Primera pregunta abierta por default. Animación framer-motion height+opacity 0.35s cubic-bezier. Separadores finos. Título H2 grande serif "Antes de empezar".
+- **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
+- Testing: 100% frontend (iteration_7.json), 0 issues
+
 ### Feb 21, 2026 — P2 PDF + Email + P3 Pricing toggle + Remove FinalCTA
 - **PDF Download**: `/public/assets/quantro-os-overview.pdf` (15KB) linked from Hero (`hero-pdf-link` testid)
 - **Resend email**: Welcome email in Spanish with Quantro branding sent from `no-reply@quantroos.com` on first paid transition (idempotent via `welcome_email_sent` flag)
@@ -96,7 +107,6 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ### Remaining
 - [ ] Connect QuantroMorningDemo to live backend data (currently MOCKED)
-- [ ] Wire Footer Privacy/Terms/Contact links to real pages
-- [ ] Add investor deck PDF download (separate from overview)
 - [ ] A/B test Hero primary CTA copy
-- [ ] Testimonial carousel / logo row
+- [ ] Testimonial carousel / logo row on scroll
+- [ ] Internal admin dashboard at /admin (revenue, paid users, funnel)
