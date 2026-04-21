@@ -14,13 +14,14 @@ import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
 
 // Tool positions around the center (percentages) — scattered premium layout
+// Costs sum to $399/mo, the user-specified pre-Quantro baseline
 const TOOLS = [
-  { label: "CRM", icon: Users, x: 8, y: 15, cost: 79 },
-  { label: "BI Tool", icon: BarChart3, x: 80, y: 10, cost: 89 },
+  { label: "CRM", icon: Users, x: 8, y: 15, cost: 99 },
+  { label: "BI Tool", icon: BarChart3, x: 80, y: 10, cost: 119 },
   { label: "Forecasts", icon: TrendingUp, x: 72, y: 78, cost: 59 },
   { label: "Spreadsheets", icon: FileSpreadsheet, x: 3, y: 72, cost: 25 },
   { label: "Chat Ops", icon: MessageSquare, x: 88, y: 45, cost: 39 },
-  { label: "Email Mgmt", icon: Mail, x: 15, y: 48, cost: 19 },
+  { label: "Email Mgmt", icon: Mail, x: 15, y: 48, cost: 29 },
   { label: "Task Tracker", icon: ClipboardList, x: 55, y: 88, cost: 29 },
 ];
 
@@ -191,31 +192,60 @@ const SavingsCard = ({ isEs }) => {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ delay: 2.2, duration: 0.5 }}
-      className="relative rounded-2xl p-8 bg-gradient-to-br from-[#00F5FF]/[0.04] via-slate-900/60 to-[#A020FF]/[0.04] border border-slate-800/70 overflow-hidden"
+      className="relative rounded-2xl p-7 bg-gradient-to-br from-[#00F5FF]/[0.04] via-slate-900/60 to-[#A020FF]/[0.04] border border-slate-800/70 overflow-hidden"
       data-testid="value-stack-savings"
     >
       <div className="absolute top-0 right-0 w-48 h-48 bg-[#00F5FF]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative">
-        <span className="text-xs font-medium tracking-[0.2em] uppercase text-emerald-400 mb-4 block">
-          {isEs ? "Ahorro mensual estimado" : "Estimated monthly savings"}
-        </span>
-        <div className="flex items-baseline gap-2 mb-3">
-          <span className="font-satoshi font-bold text-6xl text-white tabular-nums">
-            ${savings}
-          </span>
-          <span className="text-slate-500 text-lg">/mes</span>
+      <div className="relative space-y-6">
+        {/* Before */}
+        <div>
+          <p className="text-xs text-slate-500 mb-1.5 leading-snug">
+            {isEs
+              ? "Lo que antes necesitaba múltiples herramientas"
+              : "What used to need multiple tools"}
+          </p>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-satoshi font-bold text-2xl text-slate-400 line-through tabular-nums">
+              ${savings}
+            </span>
+            <span className="text-xs text-slate-500">/mes</span>
+          </div>
         </div>
-        <p className="text-slate-400 text-sm leading-relaxed">
-          {isEs
-            ? "vs. el costo promedio de mantener 7 herramientas por separado."
-            : "vs. the average cost of maintaining 7 separate tools."}
-        </p>
+
+        {/* Arrow separator */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+            {isEs ? "con Quantro" : "with Quantro"}
+          </span>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+        </div>
+
+        {/* After */}
+        <div>
+          <p className="text-xs text-emerald-400 font-medium mb-1.5 leading-snug">
+            {isEs
+              ? "Ahora funciona todo en un solo sistema"
+              : "Now everything works in one system"}
+          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="font-satoshi font-bold text-5xl text-white tabular-nums">
+              $59
+            </span>
+            <span className="text-slate-500 text-base">/mes</span>
+          </div>
+          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+            {isEs
+              ? "Menos herramientas que pagar. Más resultados en marcha."
+              : "Fewer tools to pay for. More results in motion."}
+          </p>
+        </div>
       </div>
     </motion.div>
   );
 };
 
-// Value Stack Section — "Un sistema. No 7 herramientas."
+// Value Stack Section — "De múltiples herramientas a un solo sistema."
 export const ValueStackSection = () => {
   const { language } = useLanguage();
   const isEs = language === "es";
@@ -229,29 +259,35 @@ export const ValueStackSection = () => {
       <div className="max-w-6xl mx-auto">
         <motion.div variants={fadeInUp} className="max-w-3xl mb-12">
           <span className="text-xs font-medium tracking-[0.2em] uppercase text-[#C084FC] mb-4 block">
-            {isEs ? "Value stack" : "Value stack"}
+            {isEs ? "Un solo sistema" : "One system"}
           </span>
           <h2 className="font-satoshi font-bold text-4xl sm:text-5xl lg:text-6xl text-white leading-[1.05] tracking-tight mb-5">
             {isEs ? (
               <>
-                Un sistema.{" "}
-                <span className="text-slate-500">No 7 herramientas.</span>
+                De múltiples herramientas
+                <br />
+                <span className="bg-gradient-to-r from-[#00F5FF] to-[#A020FF] bg-clip-text text-transparent">
+                  a un solo sistema.
+                </span>
               </>
             ) : (
               <>
-                One system.{" "}
-                <span className="text-slate-500">Not 7 tools.</span>
+                From multiple tools
+                <br />
+                <span className="bg-gradient-to-r from-[#00F5FF] to-[#A020FF] bg-clip-text text-transparent">
+                  to one system.
+                </span>
               </>
             )}
           </h2>
           <p className="text-lg text-slate-400 max-w-xl">
             {isEs
-              ? "Menos herramientas que pagar. Más progreso y resultados."
-              : "Fewer tools to pay for. More progress and results."}
+              ? "Todo tu negocio, en un solo lugar."
+              : "Your entire business, in one place."}
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+        <div className="grid lg:grid-cols-[1fr_340px] gap-6">
           <motion.div variants={fadeInUp}>
             <ValueStackCanvas />
           </motion.div>

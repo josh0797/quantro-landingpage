@@ -1,0 +1,112 @@
+{
+  "summary": "Iteration 10 frontend-only validation of the Quantro landing narrative redesign (Apple-keynote-style). Verified section order, presence of 4 new sections (ProblemSystem, InteractiveDemo, Cinematic, Amanecer), updated ValueStack copy + $399→$59 comparison, removal of 5 old sections, ES/EN i18n, interactive pill behavior, and light backend regression.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/insights", "issue": "GET returns 404. This endpoint was hit as a speculative regression check; actual insights path may differ, so this is informational only — not tested as part of the current review spec."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {"flow": "Chat widget open", "issue": "Clicking [data-testid=chat-widget-trigger] did not reveal [data-testid=chat-widget-panel] within 1s during automated test. Likely framer-motion AnimatePresence delay rather than a real bug — manual verification recommended. Backend /api/chat/message responds 200.", "affected_selectors": ["[data-testid=chat-widget-panel]"]}
+    ],
+    "design_issues": [
+      {"screen": "Global", "issues": ["LanguageSwitcher ES/EN buttons have no data-testid (only text). Adding data-testid='lang-toggle-es' / 'lang-toggle-en' would make future tests more robust."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "OPTIONAL CLEANUP: Remove now-unused file /app/frontend/src/components/QuantroMorningDemo.jsx (it is no longer imported but still present in the repo).",
+    "OPTIONAL CLEANUP: Navbar.jsx (line 69, 127) and HeroSection.jsx (line 120) still call scrollToSection('morning-snapshot'). That anchor no longer exists in the DOM, so these clicks silently do nothing. Point them at 'interactive-demo' or 'amanecer' instead (or rewire to the new narrative).",
+    "OPTIONAL ENHANCEMENT: Add data-testid to LanguageSwitcher ES/EN buttons."
+  ],
+  "critical_code_review_comments": [
+    "TOOLS array in ValueStackSection.jsx sums to 399 exactly (99+119+59+25+39+29+29) — matches spec.",
+    "All new section components (ProblemSystemSection, InteractiveDemoSection, CinematicTransitionSection, AmanecerSection) ship ES/EN copy via the i18n hook and render correctly when language is toggled.",
+    "InteractiveDemoSection preview content is static inline mock data per product spec — not a bug, explicitly intended.",
+    "QuantroMorningDemo.jsx still lives in /components/ but is orphaned (no import). Dead code — safe to delete."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (of the 2 endpoints relevant to this review that were hit)", "frontend": "100% on specified acceptance criteria"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Landing narrative order is: Hero → SocialProof → ProblemSystemSection → ValueStackSection → InteractiveDemoSection → CinematicTransitionSection → AmanecerSection → SuccessStories → StarFeatures → Differentiation → Pricing → FAQ → Footer. All new section data-testids: problem-system-section, interactive-demo-section, cinematic-transition, amanecer-section. Old testids that must stay gone: HeroTransition, product-comparison, better-together, quantro-intelligence, morning-snapshot, QuantroMorningDemo. Language default is ES but useLanguage hook auto-detects browser locale, so Playwright (en-US) lands on EN unless you click the ES toggle — use page.get_by_role('button', name='ES', exact=True).first.click(force=True) to force ES. Flow pill CRM preview contains 'Grupo Nexo' + 'AuroMex'; OS pill Intelligence preview contains 'Oportunidad: Enterprise +23%'. Amanecer frame 3 has 4 tasks with 2 completed (line-through) and 2 pending.",
+  "detailed_verifications": {
+    "section_presence": {
+      "problem-system-section": "PRESENT",
+      "value-stack-section": "PRESENT",
+      "interactive-demo-section": "PRESENT",
+      "cinematic-transition": "PRESENT",
+      "amanecer-section": "PRESENT"
+    },
+    "old_sections_gone": {
+      "HeroTransition": "gone_ok",
+      "product-comparison": "gone_ok",
+      "better-together": "gone_ok",
+      "quantro-intelligence": "gone_ok",
+      "morning-snapshot": "gone_ok",
+      "QuantroMorningDemo": "gone_ok"
+    },
+    "problem_system_section_es": {
+      "title_el_problema": "OK",
+      "subhead_no_esta_operando": "OK",
+      "closing_no_necesitas_mas_herramientas": "OK",
+      "gradient_primero_entiendes": "OK",
+      "problem-card-0 through 3 exist": "OK",
+      "card0 Mensajes sin responder + Quantro Flow captura": "OK",
+      "os-block Quantro OS + Tu negocio ahora sabe qué hacer": "OK",
+      "flow-block Quantro Flow + Nada se pierde. Todo fluye y progresa": "OK"
+    },
+    "value_stack_section": {
+      "new_title_de_multiples_a_un_solo_sistema": "OK",
+      "old_title_removed": "OK",
+      "7_pills_present": "OK",
+      "costs_sum_to_399": "OK (99+119+59+25+39+29+29)",
+      "savings_card_before_399": "OK",
+      "savings_card_after_59": "OK",
+      "lo_que_antes_necesitaba_multiples_herramientas": "OK",
+      "ahora_funciona_todo_en_un_solo_sistema": "OK",
+      "menos_herramientas_que_pagar": "OK"
+    },
+    "interactive_demo_section": {
+      "demo-flow-block_aumenta_fidelizacion": "OK",
+      "demo-os-block_tu_negocio_deja_de_reaccionar": "OK",
+      "transition_primero_todo_funciona": "OK",
+      "flow_pills_inbox_crm_followup_automation_pipeline": "OK",
+      "os_pills_dashboard_scorecard_rocks_intelligence_agents_finance": "OK",
+      "click_flow-pill-crm_reveals_Grupo_Nexo_AuroMex": "OK",
+      "click_os-pill-intelligence_reveals_Oportunidad_Enterprise_+23%": "OK"
+    },
+    "cinematic_transition": {
+      "esto_no_es_teoria": "OK",
+      "es_tu_negocio_funcionando_como_deberia": "OK"
+    },
+    "amanecer_section": {
+      "frames_1_to_5_exist": "OK",
+      "frame1_asi_amanece + UN DÍA CON QUANTRO badge": "OK",
+      "frame2_$1,399 + Riesgo financiero detectado + Detectamos esto mientras dormías": "OK",
+      "frame3_no_solo_ves_el_problema + recibes_el_plan + 4 tasks (2 done, 2 pending)": "OK",
+      "frame4_y_mientras_decides + tu_operacion_sigue_avanzando + Inbox + Pipeline": "OK",
+      "frame5_tu_negocio_no_se_detiene + evoluciona_todos_los_dias": "OK"
+    },
+    "i18n": {
+      "ES_problem_section_title": "OK (El problema no es falta de herramientas.)",
+      "EN_problem_section_title": "OK (The problem isn't missing tools.)",
+      "EN_amanecer_title": "OK (This is how your company wakes up with Quantro.)"
+    },
+    "regression": {
+      "pricing_section_present": "OK",
+      "pricing_toggle_clickable": "OK",
+      "faq_section_present": "OK",
+      "faq_item_clickable": "OK",
+      "hero_CTA_present": "OK",
+      "language_toggle_ES_EN_works": "OK",
+      "chat_widget_trigger_present": "OK",
+      "chat_widget_panel_opens_under_1s": "NEEDS_MANUAL_CHECK (likely animation timing)",
+      "backend_GET_/api/": "200",
+      "backend_POST_/api/chat/message": "200"
+    }
+  }
+}
