@@ -18,6 +18,8 @@ const LanguageSwitcher = ({ className = '' }) => {
     <div className={`flex items-center gap-1 bg-slate-800/50 border border-slate-700/50 rounded-full p-1 ${className}`}>
       <motion.button
         onClick={() => setLanguage('es')}
+        data-testid="lang-toggle-es"
+        aria-label="Switch to Spanish"
         className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
           language === 'es' 
             ? 'text-[#0A0F1C]' 
@@ -39,6 +41,8 @@ const LanguageSwitcher = ({ className = '' }) => {
       
       <motion.button
         onClick={() => setLanguage('en')}
+        data-testid="lang-toggle-en"
+        aria-label="Switch to English"
         className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
           language === 'en' 
             ? 'text-[#0A0F1C]' 

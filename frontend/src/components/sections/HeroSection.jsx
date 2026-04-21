@@ -117,7 +117,7 @@ export const HeroSection = () => {
                   : "Start for $1 USD"}
               </button>
               <button
-                onClick={() => scrollToSection("morning-snapshot")}
+                onClick={() => scrollToSection("interactive-demo")}
                 className="px-6 py-3.5 border border-slate-600 text-white font-medium text-base rounded-xl hover:border-slate-500 hover:bg-slate-800/30 transition-all duration-200"
                 data-testid="hero-cta-secondary"
               >

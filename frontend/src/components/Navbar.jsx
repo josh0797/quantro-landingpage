@@ -66,7 +66,7 @@ export const Navbar = () => {
             {language === "es" ? "Características" : "Features"}
           </button>
           <button
-            onClick={() => scrollToSection("morning-snapshot")}
+            onClick={() => scrollToSection("interactive-demo")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-product"
           >
@@ -124,7 +124,7 @@ export const Navbar = () => {
                 {language === "es" ? "Características" : "Features"}
               </button>
               <button
-                onClick={() => scrollToSection("morning-snapshot")}
+                onClick={() => scrollToSection("interactive-demo")}
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
                 {language === "es" ? "Producto" : "Product"}

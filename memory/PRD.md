@@ -61,6 +61,18 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
+### Feb 21, 2026 — Apple Keynote Narrative Redesign
+Full narrative restructure into a continuous story (Problem → System → Value → Product → Cinematic → Amanecer):
+- **ProblemSystemSection (NEW)**: "El problema no es falta de herramientas." 4 problem→solution blocks with red/green state pills, transition headline, OS + Flow mini-blocks, gradient closing "Primero entiendes. Luego ejecutas."
+- **ValueStackSection (UPDATED copy)**: Title "De múltiples herramientas a un solo sistema." Comparison card shows **$399/mes** (line-through) → **$59/mes** with copy "Menos herramientas que pagar. Más resultados en marcha." Pill costs adjusted to sum to 399.
+- **InteractiveDemoSection (NEW)**: Two blocks — Quantro Flow (violeta: Inbox/CRM/Seguimiento/Automatización/Pipeline) and Quantro OS (cyan: Dashboard/Scorecard/Rocks/Intelligence/Agentes/Finanzas). Each pill click swaps a live-styled preview frame. Transition text "Primero todo funciona. Luego todo mejora."
+- **CinematicTransitionSection (NEW)**: Dramatic dark break with staggered reveal "Esto no es teoría." → "Es tu negocio funcionando como debería." (gradient).
+- **AmanecerSection (NEW)**: 5-frame narrative: opening badge + title, risk detection ($1,399 financial risk card), auto-generated action plan with 4 checkable tasks, Flow working in parallel (Inbox + Pipeline mini cards), closing "Tu negocio no se detiene. / Evoluciona todos los días."
+- **Removed**: `HeroTransitionSection`, `ProductComparisonSection`, `BetterTogetherSection`, `QuantroIntelligenceSection`, `MorningSnapshotSection`, `QuantroMorningDemo` component
+- **Fixed**: All stale `scrollToSection("morning-snapshot")` anchors in Navbar/Hero rewired to `interactive-demo`
+- **Added**: `data-testid` on LanguageSwitcher buttons (`lang-toggle-es` / `lang-toggle-en`)
+- Testing iteration_10: 100% pass, 0 critical issues
+
 ### Feb 21, 2026 — Admin Insights + Section Redesigns (P2/P3)
 - **NEW endpoint `GET /api/admin/chat/insights`** (HTTP Basic auth via `ADMIN_USER`/`ADMIN_PASSWORD` env):
   - Returns `{window_days, total_user_messages, distinct_sessions, top_questions}`
