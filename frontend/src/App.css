@@ -1,5 +1,272 @@
 /* Additional App-specific styles */
 
+/* ====== FUTURISTIC HERO STYLES ====== */
+
+/* Void background */
+.hero-void-bg {
+  background: linear-gradient(180deg, #0A0F1C 0%, #050810 100%);
+}
+
+/* Particle canvas container */
+.particle-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Cyan glow text effect */
+.text-glow-cyan {
+  text-shadow: 0 0 40px rgba(0, 245, 255, 0.15), 0 0 80px rgba(0, 245, 255, 0.1);
+}
+
+/* Subtle cyan outline for headline */
+.headline-outline {
+  -webkit-text-stroke: 0.5px rgba(0, 245, 255, 0.1);
+}
+
+/* Electric cyan CTA button */
+.btn-cyan {
+  background: #00F5FF;
+  color: #0A0F1C;
+  font-family: 'Satoshi', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  padding: 18px 48px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+  box-shadow: 0 0 30px -10px rgba(0, 245, 255, 0.4);
+}
+
+.btn-cyan:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 50px -5px rgba(0, 245, 255, 0.6), 0 0 80px -10px rgba(160, 32, 255, 0.3);
+  background: linear-gradient(135deg, #00F5FF 0%, #00D4E0 50%, #A020FF 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 2s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Hexagon Q Logo */
+.hexagon-logo {
+  width: 220px;
+  height: 220px;
+  position: relative;
+  filter: drop-shadow(0 0 30px rgba(0, 245, 255, 0.3));
+}
+
+@media (max-width: 768px) {
+  .hexagon-logo {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .btn-cyan {
+    width: 100%;
+    font-size: 18px;
+    padding: 16px 32px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hexagon-logo {
+    width: 180px;
+    height: 180px;
+  }
+}
+
+/* Particle animation keyframes */
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.2;
+    transform: translateY(90vh) scale(1);
+  }
+  90% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: translateY(-10vh) scale(0.5);
+    opacity: 0;
+  }
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #00F5FF;
+  border-radius: 50%;
+  animation: float-up linear infinite;
+  opacity: 0;
+}
+
+/* Generate multiple particles with staggered delays */
+.particle:nth-child(1) { left: 5%; animation-duration: 15s; animation-delay: 0s; }
+.particle:nth-child(2) { left: 10%; animation-duration: 18s; animation-delay: 2s; }
+.particle:nth-child(3) { left: 15%; animation-duration: 12s; animation-delay: 4s; }
+.particle:nth-child(4) { left: 20%; animation-duration: 20s; animation-delay: 1s; }
+.particle:nth-child(5) { left: 25%; animation-duration: 16s; animation-delay: 3s; }
+.particle:nth-child(6) { left: 30%; animation-duration: 14s; animation-delay: 5s; }
+.particle:nth-child(7) { left: 35%; animation-duration: 19s; animation-delay: 0.5s; }
+.particle:nth-child(8) { left: 40%; animation-duration: 17s; animation-delay: 2.5s; }
+.particle:nth-child(9) { left: 45%; animation-duration: 13s; animation-delay: 4.5s; }
+.particle:nth-child(10) { left: 50%; animation-duration: 21s; animation-delay: 1.5s; }
+.particle:nth-child(11) { left: 55%; animation-duration: 15s; animation-delay: 3.5s; }
+.particle:nth-child(12) { left: 60%; animation-duration: 18s; animation-delay: 0.2s; }
+.particle:nth-child(13) { left: 65%; animation-duration: 14s; animation-delay: 2.2s; }
+.particle:nth-child(14) { left: 70%; animation-duration: 20s; animation-delay: 4.2s; }
+.particle:nth-child(15) { left: 75%; animation-duration: 16s; animation-delay: 1.2s; }
+.particle:nth-child(16) { left: 80%; animation-duration: 19s; animation-delay: 3.2s; }
+.particle:nth-child(17) { left: 85%; animation-duration: 12s; animation-delay: 5.2s; }
+.particle:nth-child(18) { left: 90%; animation-duration: 17s; animation-delay: 0.7s; }
+.particle:nth-child(19) { left: 95%; animation-duration: 21s; animation-delay: 2.7s; }
+.particle:nth-child(20) { left: 8%; animation-duration: 13s; animation-delay: 4.7s; }
+
+/* Mobile: reduce animation speed */
+@media (max-width: 768px) {
+  .particle {
+    animation-duration: 30s !important;
+  }
+}
+
+/* ====== END FUTURISTIC HERO STYLES ====== */
+
+/* ====== QUANTRO FLOW INTEGRATION STYLES ====== */
+
+/* Product comparison cards */
+.product-card-os {
+  background: linear-gradient(135deg, rgba(0, 245, 255, 0.05) 0%, rgba(0, 245, 255, 0.02) 100%);
+  border: 1px solid rgba(0, 245, 255, 0.2);
+}
+
+.product-card-flow {
+  background: linear-gradient(135deg, rgba(160, 32, 255, 0.05) 0%, rgba(160, 32, 255, 0.02) 100%);
+  border: 1px solid rgba(160, 32, 255, 0.2);
+}
+
+.product-card-os:hover {
+  border-color: rgba(0, 245, 255, 0.4);
+  box-shadow: 0 0 40px -15px rgba(0, 245, 255, 0.3);
+}
+
+.product-card-flow:hover {
+  border-color: rgba(160, 32, 255, 0.4);
+  box-shadow: 0 0 40px -15px rgba(160, 32, 255, 0.3);
+}
+
+/* Dashboard snapshot window */
+.snapshot-window {
+  background: linear-gradient(180deg, #0F172A 0%, #0A0F1C 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.snapshot-browser-bar {
+  background: #1E293B;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.browser-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.browser-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.browser-url {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #64748B;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Alert badge */
+.alert-badge {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+/* Priority cards */
+.priority-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.priority-card:hover {
+  border-color: rgba(0, 245, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Suggestion items */
+.suggestion-item {
+  background: rgba(0, 245, 255, 0.05);
+  border: 1px solid rgba(0, 245, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background: rgba(0, 245, 255, 0.1);
+  border-color: rgba(0, 245, 255, 0.3);
+}
+
+/* Success story cards */
+.success-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 28, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  transition: all 0.3s ease;
+}
+
+.success-card:hover {
+  border-color: rgba(0, 245, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+}
+
+/* Connection line animation */
+@keyframes pulse-line {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+.connection-line {
+  animation: pulse-line 2s ease-in-out infinite;
+}
+
+/* ====== END QUANTRO FLOW STYLES ====== */
+
 /* Animated gradient orb */
 .gradient-orb {
   position: absolute;
