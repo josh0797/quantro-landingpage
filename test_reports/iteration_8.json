@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 8 full-stack testing (chat widget + testimonial carousel). All 8 backend pytest cases PASS (chat ES basic, multi-turn context, EN mode, empty validation 422, too-long 422, session limit code-path via seeded mongo doc, Stripe create-checkout regression, Stripe payments/count regression with count=128). All 20 frontend checks PASS via Playwright: floating chat-widget-trigger renders bottom-right on landing with pulsing emerald dot; panel opens with correct ES/EN header ('Soporte Quantro' / 'Quantro Support'); 3 suggestion chips in both languages with correct copy; clicking suggestion sends message and assistant reply arrives; session_id is persisted to localStorage key 'quantro-chat-session' (verified uuid stored); close+reopen preserves conversation in state; custom input + Enter/send button works and receives reply. Testimonial carousel: correct ES first title 'De caos operativo a control total' and EN first title 'From operational chaos to total control'; next/prev arrows advance/back; dots navigate; active dot width 40px vs inactive 10px; auto-advance moves 0→1 after 8s wait; chat widget does NOT render on /privacidad legal page (trigger count = 0).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_chat_and_regression.py",
+    "/app/test_reports/pytest/iter8_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "chat.py rate-limit check for IP uses count_documents on chat_messages with created_at $gte today_start — that's fine, but created_at is stored as ISO string; ISO string comparison happens to work for UTC zulu-format, but prefer storing BSON datetime for robust range queries and index usage.",
+    "Session count is updated AFTER LLM call succeeds. If a paid LLM call succeeds but the subsequent DB write fails, user is not charged a slot — acceptable, but means you cannot rely on counter alone to prevent over-billing in rare failure modes.",
+    "SupportChatWidget sends language from React state at send time; if user switches language mid-conversation, subsequent replies are in new language but prior bubbles retain old language — by design, just noting.",
+    "BigMetric uses performance.now/requestAnimationFrame — fine, but the effect runs on every `numeric` change; since metric value is recomputed per render when stories array rebuilds (language toggle), tween restarts correctly."
+  ],
+  "updated_files": ["/app/backend/tests/test_chat_and_regression.py"],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "100% (20/20 checks)"},
+  "seed_data_creation": "Created and cleaned up one seeded chat_sessions doc with session_id='TEST_limit_session_iter8' and user_message_count=20 to validate the limit-reached code path without burning 20 real LLM calls.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Chat endpoint is /api/chat/message; rate limits 20/session and 50/IP/day. Backend test file at /app/backend/tests/test_chat_and_regression.py is the regression baseline — re-run with `pytest /app/backend/tests/test_chat_and_regression.py -v`. Each run costs ~4 real GPT-4o-mini calls, so keep re-tests targeted. Language toggle works via localStorage key 'quantro-language' (falls back to browser locale). Chat widget is intentionally NOT mounted on /privacidad, /terminos, /contacto — verified. Emergent badge covers bottom-right corner of preview; remove with `document.getElementById('emergent-badge')?.remove()` before clicking chat-widget-trigger.",
+  "rca of the issue": "No issues found."
+}

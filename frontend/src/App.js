@@ -2,6 +2,7 @@ import React from "react";
 import "@/App.css";
 import Navbar from "@/components/Navbar";
 import PaymentReturnModal from "@/components/PaymentReturnModal";
+import SupportChatWidget from "@/components/SupportChatWidget";
 import HeroSection from "@/components/sections/HeroSection";
 import SocialProofSection from "@/components/sections/SocialProofSection";
 import HeroTransitionSection from "@/components/sections/HeroTransitionSection";
@@ -40,6 +41,9 @@ export default function App() {
 
       {/* Stripe return modal — reads ?payment=success|cancel from URL */}
       <PaymentReturnModal />
+
+      {/* Floating AI support chat */}
+      <SupportChatWidget />
     </div>
   );
 }

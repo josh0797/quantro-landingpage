@@ -16,6 +16,7 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutStatusResponse,
 )
 from emails import send_welcome_email
+from chat import register_chat_routes
 
 
 ROOT_DIR = Path(__file__).parent
@@ -304,6 +305,9 @@ async def stripe_payments_count():
     return {"count": count + 127}
 
 # Include the router in the main app
+# Register modular route groups
+register_chat_routes(api_router, db)
+
 app.include_router(api_router)
 
 app.add_middleware(
