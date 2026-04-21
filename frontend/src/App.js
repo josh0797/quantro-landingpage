@@ -2,7 +2,9 @@ import React from "react";
 import "@/App.css";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import Navbar from "@/components/Navbar";
+import PaymentReturnModal from "@/components/PaymentReturnModal";
 import HeroSection from "@/components/sections/HeroSection";
+import SocialProofSection from "@/components/sections/SocialProofSection";
 import HeroTransitionSection from "@/components/sections/HeroTransitionSection";
 import ProductComparisonSection from "@/components/sections/ProductComparisonSection";
 import BetterTogetherSection from "@/components/sections/BetterTogetherSection";
@@ -23,6 +25,7 @@ function AppContent() {
 
       <Navbar />
       <HeroSection />
+      <SocialProofSection />
       <HeroTransitionSection />
       <ProductComparisonSection />
       <BetterTogetherSection />
@@ -34,6 +37,9 @@ function AppContent() {
       <PricingSection />
       <FinalCTASection />
       <Footer />
+
+      {/* Stripe return modal — reads ?payment=success|cancel from URL */}
+      <PaymentReturnModal />
     </div>
   );
 }

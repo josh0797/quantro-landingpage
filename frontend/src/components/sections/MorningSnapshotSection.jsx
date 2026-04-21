@@ -10,7 +10,7 @@ export const MorningSnapshotSection = () => {
   const { t } = useLanguage();
 
   return (
-    <AnimatedSection id="morning-snapshot" className="py-24 px-6">
+    <AnimatedSection id="morning-snapshot" data-testid="morning-snapshot" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
         <motion.div variants={fadeInUp} className="text-center mb-16">
           <h2 className="font-satoshi font-bold text-3xl sm:text-4xl lg:text-5xl text-white mb-6">

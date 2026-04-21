@@ -3,42 +3,41 @@ import { motion } from "framer-motion";
 import { Sparkles, Grid3X3, Scissors, Bot } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
+import { useLanguage } from "../../hooks/useLanguage";
 
 // Star Features Section
 export const StarFeaturesSection = () => {
+  const { t } = useLanguage();
+
   const features = [
     {
       icon: <Sparkles className="text-blue-400" size={24} />,
-      name: "Smart Yield",
-      tagline: "Know where your money actually comes from.",
-      description:
-        "Quintile Matrix classifies every customer and product by revenue and margin — showing exactly which to grow, re-price, or cut.",
-      accentColor: "blue"
+      name: t("starfeatures.smart_yield.name"),
+      tagline: t("starfeatures.smart_yield.tagline"),
+      description: t("starfeatures.smart_yield.description"),
+      accentColor: "blue",
     },
     {
       icon: <Grid3X3 className="text-emerald-400" size={24} />,
-      name: "Quintile Matrix",
-      tagline: "Your 5×5 value map.",
-      description:
-        "An interactive heatmap that reveals where 80% of your business value lives — and where the complexity is killing your margins.",
-      accentColor: "green"
+      name: t("starfeatures.quintile.name"),
+      tagline: t("starfeatures.quintile.tagline"),
+      description: t("starfeatures.quintile.description"),
+      accentColor: "green",
     },
     {
       icon: <Scissors className="text-blue-400" size={24} />,
-      name: "Dirty Dozen",
-      tagline: "12 tactics. One click.",
-      description:
-        "Apply proven simplification actions — eliminate low-margin products, set minimum orders, stop discounting B customers — directly to your workflow.",
-      accentColor: "blue"
+      name: t("starfeatures.dirty.name"),
+      tagline: t("starfeatures.dirty.tagline"),
+      description: t("starfeatures.dirty.description"),
+      accentColor: "blue",
     },
     {
       icon: <Bot className="text-emerald-400" size={24} />,
-      name: "EMS Coach AI",
-      tagline: "Your 24/7 strategic consultant.",
-      description:
-        'Ask "What should I eliminate this month?" or "How do I improve Quad 2 margins?" — and get answers grounded in your actual business data.',
-      accentColor: "green"
-    }
+      name: t("starfeatures.coach.name"),
+      tagline: t("starfeatures.coach.tagline"),
+      description: t("starfeatures.coach.description"),
+      accentColor: "green",
+    },
   ];
 
   return (
@@ -46,10 +45,10 @@ export const StarFeaturesSection = () => {
       <div className="max-w-7xl mx-auto">
         <motion.div variants={fadeInUp} className="max-w-2xl mb-16">
           <span className="text-xs font-medium tracking-[0.2em] uppercase text-slate-500 mb-4 block">
-            Star Features
+            {t("starfeatures.label")}
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-tight">
-            Tools that drive real decisions.
+            {t("starfeatures.title")}
           </h2>
         </motion.div>
 

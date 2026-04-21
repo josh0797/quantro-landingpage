@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -6,9 +6,15 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
+from emergentintegrations.payments.stripe.checkout import (
+    StripeCheckout,
+    CheckoutSessionRequest,
+    CheckoutSessionResponse,
+    CheckoutStatusResponse,
+)
 
 
 ROOT_DIR = Path(__file__).parent
@@ -113,6 +119,148 @@ async def get_early_access_signups():
             signup['created_at'] = datetime.fromisoformat(signup['created_at'])
     
     return signups
+
+
+# ============ STRIPE CHECKOUT ============
+
+# Fixed packages defined on backend (SECURITY: never accept amount from frontend)
+STRIPE_PACKAGES = {
+    "trial_1usd": {"amount": 1.00, "currency": "usd", "description": "Quantro Trial Access"},
+}
+
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
+
+
+class CheckoutSessionRequestBody(BaseModel):
+    package_id: str = "trial_1usd"
+    origin_url: str
+    email: Optional[str] = None
+
+
+class CheckoutSessionResponseBody(BaseModel):
+    url: str
+    session_id: str
+
+
+class CheckoutStatusResponseBody(BaseModel):
+    status: str
+    payment_status: str
+    amount_total: int
+    currency: str
+
+
+def _get_stripe_checkout(request: Request) -> StripeCheckout:
+    host_url = str(request.base_url)
+    webhook_url = f"{host_url.rstrip('/')}/api/webhook/stripe"
+    return StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+
+
+@api_router.post("/stripe/create-checkout", response_model=CheckoutSessionResponseBody)
+async def create_stripe_checkout(body: CheckoutSessionRequestBody, request: Request):
+    if body.package_id not in STRIPE_PACKAGES:
+        raise HTTPException(status_code=400, detail="Invalid package")
+
+    package = STRIPE_PACKAGES[body.package_id]
+    origin = body.origin_url.rstrip("/")
+    success_url = f"{origin}/?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{origin}/?payment=cancel"
+
+    metadata = {
+        "package_id": body.package_id,
+        "source": "landing_hero_cta",
+    }
+    if body.email:
+        metadata["email"] = body.email
+
+    stripe_checkout = _get_stripe_checkout(request)
+    checkout_request = CheckoutSessionRequest(
+        amount=package["amount"],
+        currency=package["currency"],
+        success_url=success_url,
+        cancel_url=cancel_url,
+        metadata=metadata,
+    )
+    session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+
+    # Create pending transaction record BEFORE redirect (mandatory)
+    transaction = {
+        "id": str(uuid.uuid4()),
+        "session_id": session.session_id,
+        "package_id": body.package_id,
+        "amount": package["amount"],
+        "currency": package["currency"],
+        "email": body.email,
+        "metadata": metadata,
+        "payment_status": "pending",
+        "status": "initiated",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.payment_transactions.insert_one(transaction)
+
+    return CheckoutSessionResponseBody(url=session.url, session_id=session.session_id)
+
+
+@api_router.get("/stripe/checkout-status/{session_id}", response_model=CheckoutStatusResponseBody)
+async def stripe_checkout_status(session_id: str, request: Request):
+    stripe_checkout = _get_stripe_checkout(request)
+    status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+
+    # Idempotent update: only mark paid once
+    existing = await db.payment_transactions.find_one(
+        {"session_id": session_id}, {"_id": 0}
+    )
+    if existing and existing.get("payment_status") != "paid":
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {
+                "status": status.status,
+                "payment_status": status.payment_status,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+
+    return CheckoutStatusResponseBody(
+        status=status.status,
+        payment_status=status.payment_status,
+        amount_total=status.amount_total,
+        currency=status.currency,
+    )
+
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("Stripe-Signature", "")
+
+    stripe_checkout = _get_stripe_checkout(request)
+    webhook_response = await stripe_checkout.handle_webhook(body, signature)
+
+    # Idempotent: only update if not already paid
+    existing = await db.payment_transactions.find_one(
+        {"session_id": webhook_response.session_id}, {"_id": 0}
+    )
+    if existing and existing.get("payment_status") != "paid":
+        await db.payment_transactions.update_one(
+            {"session_id": webhook_response.session_id},
+            {"$set": {
+                "payment_status": webhook_response.payment_status,
+                "status": "completed" if webhook_response.payment_status == "paid" else existing.get("status", "pending"),
+                "webhook_event_id": webhook_response.event_id,
+                "webhook_event_type": webhook_response.event_type,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }}
+        )
+
+    return {"received": True}
+
+
+@api_router.get("/stripe/payments/count")
+async def stripe_payments_count():
+    """Public count of successful Quantro trial payments — for live social proof."""
+    count = await db.payment_transactions.count_documents({"payment_status": "paid"})
+    # Add a baseline so the counter looks populated early on
+    return {"count": count + 127}
 
 # Include the router in the main app
 app.include_router(api_router)

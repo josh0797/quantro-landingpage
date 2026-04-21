@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../hooks/useLanguage";
 import { trackCTAClick } from "../../lib/analytics";
+import { startStripeCheckout } from "../../lib/stripe";
 import HeroDashboardPreview from "../HeroDashboardPreview";
 
 // Hero Section - Premium Apple/Stripe Style
 export const HeroSection = () => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -92,14 +94,26 @@ export const HeroSection = () => {
               className="flex flex-col sm:flex-row gap-3 mb-8"
             >
               <button
-                onClick={() => {
-                  trackCTAClick("hero_start");
-                  scrollToSection("early-access");
+                onClick={async () => {
+                  if (loadingCheckout) return;
+                  trackCTAClick("hero_start_stripe");
+                  setLoadingCheckout(true);
+                  try {
+                    await startStripeCheckout({ packageId: "trial_1usd" });
+                  } catch (err) {
+                    console.error("Stripe checkout failed:", err);
+                    setLoadingCheckout(false);
+                  }
                 }}
-                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02]"
+                disabled={loadingCheckout}
+                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-wait"
                 data-testid="hero-cta-primary"
               >
-                {language === "es" ? "Empieza por $1 USD" : "Start for $1 USD"}
+                {loadingCheckout
+                  ? t("payment.processing")
+                  : language === "es"
+                  ? "Empieza por $1 USD"
+                  : "Start for $1 USD"}
               </button>
               <button
                 onClick={() => scrollToSection("morning-snapshot")}
