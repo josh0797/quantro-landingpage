@@ -27,6 +27,9 @@ import {
   Zap
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { LanguageProvider, useLanguage } from "@/hooks/useLanguage";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import QuantroMorningDemo from "@/components/QuantroMorningDemo";
 
 // GA4 CTA Click Tracking
 const trackCTAClick = (ctaLocation) => {
@@ -269,6 +272,7 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          <LanguageSwitcher />
           <button
             onClick={() => {
               trackCTAClick("navbar");
@@ -1601,118 +1605,24 @@ const QuantroIntelligenceSection = () => {
 };
 
 // Morning Snapshot Section
+// Morning Snapshot Section - Interactive Demo
 const MorningSnapshotSection = () => {
-  const suggestions = [
-    "Procesar nuevos leads",
-    "Enviar seguimiento automático",
-    "Reasignar oportunidades",
-    "Agendar reunión clave"
-  ];
+  const { t } = useLanguage();
 
   return (
     <AnimatedSection id="morning-snapshot" className="py-24 px-6">
       <div className="max-w-6xl mx-auto">
         <motion.div variants={fadeInUp} className="text-center mb-16">
           <h2 className="font-satoshi font-bold text-3xl sm:text-4xl lg:text-5xl text-white mb-6">
-            Así amanece tu empresa con Quantro.
+            {t('morning.title')}
           </h2>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Despiertas con claridad: Quantro analiza tu negocio, detecta oportunidades y deja listo un plan inteligente.
+            {t('morning.subtitle')}
           </p>
         </motion.div>
 
-        <motion.div variants={fadeInUp} className="snapshot-window">
-          {/* Browser Bar */}
-          <div className="snapshot-browser-bar">
-            <div className="browser-dots">
-              <div className="browser-dot bg-red-500" />
-              <div className="browser-dot bg-yellow-500" />
-              <div className="browser-dot bg-green-500" />
-            </div>
-            <div className="browser-url">
-              app.quantroos.com/dashboard
-            </div>
-          </div>
-
-          {/* Dashboard Content */}
-          <div className="p-6 md:p-8">
-            {/* Alert Banner */}
-            <div className="alert-badge mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="text-red-400" size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-red-400 font-semibold">Riesgo financiero detectado</span>
-                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">IA detectó esto</span>
-                  </div>
-                  <p className="text-slate-300 text-sm">Tu negocio está perdiendo dinero y esto es lo que debes hacer hoy.</p>
-                  <p className="text-slate-500 text-xs mt-1">Ingreso neto: <span className="text-red-400 font-mono">-$384</span></p>
-                </div>
-              </div>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <button className="flex-1 sm:flex-none px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 text-sm rounded-lg hover:bg-red-500/30 transition-colors">
-                  Reducir gastos
-                </button>
-                <button className="flex-1 sm:flex-none px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-sm rounded-lg hover:bg-emerald-500/30 transition-colors">
-                  Aumentar ingresos
-                </button>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-6">
-              {/* Priority Cards */}
-              <div className="lg:col-span-2">
-                <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Target className="text-[#00F5FF]" size={18} />
-                  Prioridades de hoy
-                </h3>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <div className="priority-card">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-red-400" />
-                      <span className="text-xs text-red-400 font-medium">URGENTE</span>
-                    </div>
-                    <p className="text-white text-sm font-medium mb-1">Estás perdiendo dinero</p>
-                    <p className="text-slate-500 text-xs">Ingreso neto: <span className="text-red-400 font-mono">-$384</span></p>
-                  </div>
-                  <div className="priority-card">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-xs text-amber-400 font-medium">ATENCIÓN</span>
-                    </div>
-                    <p className="text-white text-sm font-medium mb-1">3 problemas sin resolver</p>
-                    <p className="text-slate-500 text-xs">Requiere atención inmediata</p>
-                  </div>
-                  <div className="priority-card">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 rounded-full bg-[#00F5FF]" />
-                      <span className="text-xs text-[#00F5FF] font-medium">META</span>
-                    </div>
-                    <p className="text-white text-sm font-medium mb-1">Leads fuera de meta</p>
-                    <p className="text-slate-500 text-xs">Actual: <span className="text-white">50</span> · Meta: <span className="text-[#00F5FF]">100</span></p>
-                  </div>
-                </div>
-              </div>
-
-              {/* AI Suggestions */}
-              <div>
-                <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                  <Sparkles className="text-[#A020FF]" size={18} />
-                  Sugerencias
-                </h3>
-                <div className="space-y-2">
-                  {suggestions.map((suggestion, i) => (
-                    <div key={i} className="suggestion-item flex items-center gap-3">
-                      <ChevronRight className="text-[#00F5FF]" size={16} />
-                      <span className="text-sm text-slate-300">{suggestion}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+        <motion.div variants={fadeInUp}>
+          <QuantroMorningDemo mode="demo" />
         </motion.div>
       </div>
     </AnimatedSection>
@@ -1777,7 +1687,8 @@ const SuccessStoriesSection = () => {
 };
 
 // Main App Component
-function App() {
+// App Content Component
+function AppContent() {
   return (
     <div className="min-h-screen bg-[#030712]">
       {/* Noise overlay */}
@@ -1797,6 +1708,15 @@ function App() {
       <FinalCTASection />
       <Footer />
     </div>
+  );
+}
+
+// Main App Component with Language Provider
+function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 
