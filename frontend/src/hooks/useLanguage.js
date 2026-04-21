@@ -19,16 +19,21 @@ const detectBrowserLanguage = () => {
   return DEFAULT_LANGUAGE;
 };
 
-// Get initial language from localStorage or browser
+// Get initial language from localStorage or default (ES by request of product)
 const getInitialLanguage = () => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
-  
+
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored && (stored === 'es' || stored === 'en')) {
     return stored;
   }
-  
-  return detectBrowserLanguage();
+
+  // Product spec: ES is the primary language. Respect browser only if it's ES.
+  // EN users can toggle manually with the language switcher.
+  const browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+  if (browserLang.startsWith('es')) return 'es';
+
+  return DEFAULT_LANGUAGE;
 };
 
 // Language Provider Component
