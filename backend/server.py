@@ -15,6 +15,7 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionResponse,
     CheckoutStatusResponse,
 )
+from emails import send_welcome_email
 
 
 ROOT_DIR = Path(__file__).parent
@@ -206,7 +207,7 @@ async def stripe_checkout_status(session_id: str, request: Request):
     stripe_checkout = _get_stripe_checkout(request)
     status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
 
-    # Idempotent update: only mark paid once
+    # Idempotent update: only mark paid once + send welcome email only once
     existing = await db.payment_transactions.find_one(
         {"session_id": session_id}, {"_id": 0}
     )
@@ -219,6 +220,26 @@ async def stripe_checkout_status(session_id: str, request: Request):
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }}
         )
+
+        # Fire welcome email on first paid transition
+        if (
+            status.payment_status == "paid"
+            and existing.get("email")
+            and not existing.get("welcome_email_sent")
+        ):
+            email_id = await send_welcome_email(
+                to_email=existing["email"],
+                amount_usd=existing.get("amount", 1.0),
+            )
+            if email_id:
+                await db.payment_transactions.update_one(
+                    {"session_id": session_id},
+                    {"$set": {
+                        "welcome_email_sent": True,
+                        "welcome_email_id": email_id,
+                        "welcome_email_sent_at": datetime.now(timezone.utc).isoformat(),
+                    }}
+                )
 
     return CheckoutStatusResponseBody(
         status=status.status,
@@ -251,6 +272,26 @@ async def stripe_webhook(request: Request):
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }}
         )
+
+        # Fire welcome email on first paid transition
+        if (
+            webhook_response.payment_status == "paid"
+            and existing.get("email")
+            and not existing.get("welcome_email_sent")
+        ):
+            email_id = await send_welcome_email(
+                to_email=existing["email"],
+                amount_usd=existing.get("amount", 1.0),
+            )
+            if email_id:
+                await db.payment_transactions.update_one(
+                    {"session_id": webhook_response.session_id},
+                    {"$set": {
+                        "welcome_email_sent": True,
+                        "welcome_email_id": email_id,
+                        "welcome_email_sent_at": datetime.now(timezone.utc).isoformat(),
+                    }}
+                )
 
     return {"received": True}
 

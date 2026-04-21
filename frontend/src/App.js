@@ -14,7 +14,6 @@ import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
 import PricingSection from "@/components/sections/PricingSection";
-import FinalCTASection from "@/components/sections/FinalCTASection";
 import Footer from "@/components/sections/Footer";
 
 function AppContent() {
@@ -35,7 +34,6 @@ function AppContent() {
       <StarFeaturesSection />
       <DifferentiationSection />
       <PricingSection />
-      <FinalCTASection />
       <Footer />
 
       {/* Stripe return modal — reads ?payment=success|cancel from URL */}

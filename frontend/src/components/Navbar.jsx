@@ -2,14 +2,16 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
-import { trackCTAClick } from "../lib/analytics";
+import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
+import { startStripeCheckout } from "../lib/stripe";
 import LanguageSwitcher from "./LanguageSwitcher";
 import QuantroLogoMark from "./QuantroLogoMark";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { language } = useLanguage();
+  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const { language, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -20,6 +22,19 @@ export const Navbar = () => {
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMobileMenuOpen(false);
+  };
+
+  const goToStripe = async (source) => {
+    if (loadingCheckout) return;
+    trackCTAClick(source);
+    trackCheckoutStarted({ packageId: "trial_1usd", source });
+    setLoadingCheckout(true);
+    try {
+      await startStripeCheckout({ packageId: "trial_1usd" });
+    } catch (err) {
+      console.error("Stripe checkout failed:", err);
+      setLoadingCheckout(false);
+    }
   };
 
   return (
@@ -69,14 +84,12 @@ export const Navbar = () => {
         <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
           <button
-            onClick={() => {
-              trackCTAClick("navbar");
-              scrollToSection("early-access");
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"
+            onClick={() => goToStripe("navbar")}
+            disabled={loadingCheckout}
+            className="px-4 py-2 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all disabled:opacity-70 disabled:cursor-wait"
             data-testid="nav-cta"
           >
-            {language === "es" ? "Comenzar" : "Get Started"}
+            {loadingCheckout ? t("payment.processing") : language === "es" ? "Comenzar" : "Get Started"}
           </button>
         </div>
 
@@ -126,13 +139,11 @@ export const Navbar = () => {
                 <LanguageSwitcher />
               </div>
               <button
-                onClick={() => {
-                  trackCTAClick("mobile_menu");
-                  scrollToSection("early-access");
-                }}
-                className="px-4 py-3 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg w-full mt-2"
+                onClick={() => goToStripe("mobile_menu")}
+                disabled={loadingCheckout}
+                className="px-4 py-3 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg w-full mt-2 disabled:opacity-70 disabled:cursor-wait"
               >
-                {language === "es" ? "Comenzar" : "Get Started"}
+                {loadingCheckout ? t("payment.processing") : language === "es" ? "Comenzar" : "Get Started"}
               </button>
             </div>
           </motion.div>

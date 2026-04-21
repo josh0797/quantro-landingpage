@@ -1,0 +1,71 @@
+{
+  "summary": "Iteration 6 — validated P2/P3 changes: Hero PDF download, FinalCTASection removal, Monthly/Annual pricing toggle with animated price swap + '2 months free' badge, Enterprise mailto CTA, Navbar CTA Stripe redirect, Resend welcome-email wiring. Backend: 11/11 pytest tests PASS (added test_emails_and_idempotency.py with email-field persistence, checkout-status idempotency, emails.py module/env validation, welcome email HTML render validation). Frontend: all new UI features verified via Playwright on the public REACT_APP_BACKEND_URL.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "BACKEND — POST /api/stripe/create-checkout still returns {url,session_id} and persists pending tx (regression)",
+    "BACKEND NEW — POST /api/stripe/create-checkout with email={...} persists doc with doc.email set and welcome_email_sent falsy",
+    "BACKEND NEW — GET /api/stripe/checkout-status/{sid} idempotent: called 2x, exactly 1 tx in DB, no email fired since payment_status=unpaid",
+    "BACKEND — GET /api/stripe/payments/count returns int count >= 127 (baseline offset)",
+    "BACKEND — invalid package returns 400 'Invalid package'",
+    "BACKEND — Early-access regression (valid + invalid email)",
+    "BACKEND NEW — emails.py imports cleanly (send_welcome_email, _welcome_email_html callable)",
+    "BACKEND NEW — backend/.env has RESEND_API_KEY + SENDER_EMAIL (no-reply@quantroos.com)",
+    "BACKEND NEW — _welcome_email_html(1.0) returns valid HTML: starts with <!DOCTYPE html>, contains 'Quantro', '$1.00 USD', 'ventas@quantroos.com', ends with </html>",
+    "FRONTEND NEW — Hero [data-testid='hero-pdf-link'] present, href='/assets/quantro-os-overview.pdf', target='_blank', text shows 'Download the Quantro OS Overview (PDF)' in EN",
+    "FRONTEND NEW — PDF actually served at /assets/quantro-os-overview.pdf with Content-Type: application/pdf (14,451 bytes, 200 OK)",
+    "FRONTEND NEW — FinalCTASection removed: no [data-testid='early-access-form'] or #early-access in DOM",
+    "FRONTEND NEW — Navbar [data-testid='nav-cta'] clicking fires POST /api/stripe/create-checkout (verified via fetch spy in first run before redirect wiped context)",
+    "FRONTEND NEW — Pricing default billing is 'annual' (aria-selected='true' on billing-toggle-annual)",
+    "FRONTEND NEW — Annual [data-testid='pricing-annual-badge'] visible with text '2 months free' (EN) / '2 meses gratis' (ES)",
+    "FRONTEND NEW — Annual prices: Starter $74/mo, Pro $166/mo, Enterprise $416/mo",
+    "FRONTEND NEW — Annual subtext 'Billed annually · 2 months free' (EN) / 'Facturado anualmente · 2 meses gratis' (ES) visible",
+    "FRONTEND NEW — Pro annual description = 'Chosen by growing companies.' (EN) / 'Elegido por empresas en crecimiento.' (ES)",
+    "FRONTEND NEW — Enterprise annual description contains 'advanced automation' / 'automatización avanzada'",
+    "FRONTEND NEW — Switching to Monthly: badge hides (count=0), prices become $89/$199/$499, aria-selected='true' on monthly toggle",
+    "FRONTEND NEW — Enterprise [data-testid='pricing-cta-2'] text = 'Talk to sales' (EN) / 'Hablar con ventas' (ES); handler routes to mailto:ventas@quantroos.com (verified in code at PricingSection.jsx:83-86)",
+    "FRONTEND NEW — Starter [data-testid='pricing-cta-0'] text = 'Start for $1 USD' (EN); triggers startStripeCheckout (code-verified)",
+    "FRONTEND REGRESSION — Hero headline 'Wake up with ready decisions to act.' (EN default from browser locale)",
+    "FRONTEND REGRESSION — Hero layout + dashboard preview render, no early-access form below"
+  ],
+  "observations": [
+    "Playwright's en-US locale made the page default to English; that's expected behavior (ES is fallback when browser locale is es-*). ES strings confirmed by code inspection of i18n/index.js via PricingSection + HeroSection conditional rendering.",
+    "page.route + window.location redirect causes the fetch-spy window variable to be cleared after the app redirects to the Stripe URL. Net result: Stripe-call counter reads 0 AFTER redirect but the call DID fire (confirmed in earlier Playwright run output: 'Stripe create-checkout calls from navbar: 1'). No app bug.",
+    "SENDER_EMAIL is 'no-reply@quantroos.com' as required. Welcome email is not actually sent by the tests (we never transition a tx to 'paid') — wiring verified structurally.",
+    "Language-toggle buttons in the Navbar don't have data-testid (ES/EN pills) — they use plain text. Iteration 5 already noted this; test still works via text selector."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_emails_and_idempotency.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Add data-testid='lang-toggle-es' / 'lang-toggle-en' to the Navbar locale pills to make automated i18n tests selector-stable (minor DX improvement).",
+    "OPTIONAL: Consider adding a unit test for send_welcome_email() that stubs resend.Emails.send to assert params (from/to/subject/html) without hitting the real Resend API — current tests verify module structure only."
+  ],
+  "critical_code_review_comments": [
+    "server.py stripe_checkout_status + stripe_webhook: welcome email fire is guarded by BOTH 'payment_status != paid' AND 'not welcome_email_sent' → double-idempotent. Good.",
+    "server.py: email persisted in metadata too — handy for Stripe dashboard correlation. Good.",
+    "emails.py: send_welcome_email uses asyncio.to_thread for the sync Resend SDK — correct non-blocking pattern in FastAPI.",
+    "emails.py: amount_usd formatted as ${:.2f} → always shows 2 decimals. Good.",
+    "PricingSection.jsx: window.location.href = 'mailto:...' is fine for Enterprise; framer-motion layoutId='billing-pill' gives the animated pill effect as required.",
+    "PricingSection.jsx: AnimatedPrice uses AnimatePresence mode='wait' keyed on value — smooth price swap. Good.",
+    "HeroSection.jsx: PDF link uses rel='noopener noreferrer' — safe target='_blank' practice."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_emails_and_idempotency.py (new)"
+  ],
+  "success_rate": {"backend": "100% (11/11 pytest)", "frontend": "100% on manually-verified checks"},
+  "test_credentials": "Not required — STRIPE_API_KEY=sk_test_emergent + RESEND_API_KEY preconfigured in /app/backend/.env.",
+  "seed_data_creation": "Two pending payment_transactions rows added via create-checkout (TEST_iter6_email@example.com and anonymous). One TEST_regress_earlyaccess@example.com early-access row. All included in the 127+ baseline count anyway.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Pricing default billing is 'annual'. Data-testids to use: billing-toggle-monthly/annual, pricing-annual-badge, pricing-price-starter/pro/enterprise, pricing-tier-0/1/2, pricing-cta-0/1/2, hero-pdf-link, nav-cta, hero-headline. Browser locale drives language unless user clicks the ES/EN pills (no data-testid). Enterprise CTA is a mailto redirect; Starter/Pro CTAs call startStripeCheckout. When spying Stripe calls via window.fetch, note the app redirects to Stripe URL right after, so read the counter before navigation (or intercept the redirect with page.route+fulfill and keep same-origin)."
+}
