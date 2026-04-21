@@ -191,28 +191,116 @@ const QuantroLogoMark = ({
   );
 };
 
-const HeroQuantroLogo = () => (
-  <div className="relative flex items-center justify-center">
-    <div className="absolute w-[280px] h-[280px] rounded-full bg-cyan-400/10 blur-3xl" />
-    <div className="absolute w-[360px] h-[360px] rounded-full bg-blue-500/8 blur-[120px]" />
-    <div className="absolute w-[220px] h-[220px] rounded-full border border-cyan-300/10" />
-    <div className="absolute w-[280px] h-[280px] rounded-full border border-cyan-300/5" />
-
+// Compact Dashboard Preview for Hero
+const HeroDashboardPreview = () => {
+  const { language } = useLanguage();
+  
+  return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.88, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.9, ease: "easeOut" }}
-      className="relative z-10"
+      initial={{ opacity: 0, x: 40, y: 20 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+      className="relative"
     >
-      <QuantroLogoMark size={176} glow transparent />
+      {/* Glow effect behind dashboard */}
+      <div className="absolute -inset-4 bg-gradient-to-br from-[#00F5FF]/10 via-transparent to-[#A020FF]/10 rounded-3xl blur-2xl" />
+      
+      <div className="relative bg-[#0F172A]/90 border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-sm">
+        {/* Browser bar */}
+        <div className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 border-b border-slate-700/50">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+          </div>
+          <div className="flex-1 text-center">
+            <span className="text-[10px] text-slate-500 font-mono">app.quantroos.com/dashboard</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <motion.div 
+              className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+              animate={{ opacity: [1, 0.5, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <span className="text-[10px] text-slate-500">Live</span>
+          </div>
+        </div>
+        
+        {/* Dashboard content */}
+        <div className="p-4 space-y-3">
+          {/* Alert */}
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                <TrendingUp className="text-emerald-400" size={12} />
+              </div>
+              <span className="text-emerald-400 text-xs font-medium">
+                {language === 'es' ? 'Plan de crecimiento activo' : 'Growth plan active'}
+              </span>
+            </div>
+            <p className="text-slate-400 text-[11px]">
+              {language === 'es' ? '3 acciones ejecutándose' : '3 actions executing'}
+            </p>
+          </div>
+          
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+              <p className="text-[10px] text-slate-500 mb-1">{language === 'es' ? 'Ingresos' : 'Revenue'}</p>
+              <p className="text-lg font-mono text-white font-medium">$847K</p>
+              <p className="text-[10px] text-emerald-400">+12.4%</p>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30">
+              <p className="text-[10px] text-slate-500 mb-1">{language === 'es' ? 'Margen' : 'Margin'}</p>
+              <p className="text-lg font-mono text-white font-medium">67.3%</p>
+              <p className="text-[10px] text-emerald-400">+2.1%</p>
+            </div>
+          </div>
+          
+          {/* Action items */}
+          <div className="space-y-1.5">
+            <p className="text-[10px] text-slate-500 uppercase tracking-wide">
+              {language === 'es' ? 'Próximas acciones' : 'Next actions'}
+            </p>
+            {[
+              { done: true, text: language === 'es' ? 'Enviar propuestas' : 'Send proposals' },
+              { done: true, text: language === 'es' ? 'Optimizar gastos' : 'Optimize costs' },
+              { done: false, text: language === 'es' ? 'Revisar leads' : 'Review leads' }
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px]">
+                <div className={`w-3.5 h-3.5 rounded flex items-center justify-center ${
+                  item.done ? 'bg-[#00F5FF]/20' : 'bg-slate-700/50'
+                }`}>
+                  {item.done && <Check className="text-[#00F5FF]" size={10} />}
+                </div>
+                <span className={item.done ? 'text-slate-400 line-through' : 'text-slate-300'}>{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* Floating badge */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
+        className="absolute -bottom-3 -left-3 bg-[#A020FF]/20 border border-[#A020FF]/30 rounded-lg px-3 py-1.5 backdrop-blur-sm"
+      >
+        <div className="flex items-center gap-1.5">
+          <Zap className="text-[#A020FF]" size={12} />
+          <span className="text-[#A020FF] text-[11px] font-medium">Quantro Flow</span>
+        </div>
+      </motion.div>
     </motion.div>
-  </div>
-);
+  );
+};
 
 // Navbar Component
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { language } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -246,28 +334,28 @@ const Navbar = () => {
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-solution"
           >
-            Solution
+            {language === 'es' ? 'Solución' : 'Solution'}
           </button>
           <button
             onClick={() => scrollToSection("features")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-features"
           >
-            Features
+            {language === 'es' ? 'Características' : 'Features'}
           </button>
           <button
-            onClick={() => scrollToSection("product")}
+            onClick={() => scrollToSection("morning-snapshot")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-product"
           >
-            Product
+            {language === 'es' ? 'Producto' : 'Product'}
           </button>
           <button
             onClick={() => scrollToSection("pricing")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-pricing"
           >
-            Pricing
+            {language === 'es' ? 'Precios' : 'Pricing'}
           </button>
         </div>
 
@@ -278,10 +366,10 @@ const Navbar = () => {
               trackCTAClick("navbar");
               scrollToSection("early-access");
             }}
-            className="btn-primary text-sm"
+            className="px-4 py-2 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"
             data-testid="nav-cta"
           >
-            Start Free Trial
+            {language === 'es' ? 'Comenzar' : 'Get Started'}
           </button>
         </div>
 
@@ -307,34 +395,37 @@ const Navbar = () => {
                 onClick={() => scrollToSection("solution")}
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
-                Solution
+                {language === 'es' ? 'Solución' : 'Solution'}
               </button>
               <button
                 onClick={() => scrollToSection("features")}
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
-                Features
+                {language === 'es' ? 'Características' : 'Features'}
               </button>
               <button
-                onClick={() => scrollToSection("product")}
+                onClick={() => scrollToSection("morning-snapshot")}
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
-                Product
+                {language === 'es' ? 'Producto' : 'Product'}
               </button>
               <button
                 onClick={() => scrollToSection("pricing")}
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
-                Pricing
+                {language === 'es' ? 'Precios' : 'Pricing'}
               </button>
+              <div className="pt-2">
+                <LanguageSwitcher />
+              </div>
               <button
                 onClick={() => {
                   trackCTAClick("mobile_menu");
                   scrollToSection("early-access");
                 }}
-                className="btn-primary text-sm w-full mt-2"
+                className="px-4 py-3 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-medium text-sm rounded-lg w-full mt-2"
               >
-                Start Free Trial
+                {language === 'es' ? 'Comenzar' : 'Get Started'}
               </button>
             </div>
           </motion.div>
@@ -344,105 +435,142 @@ const Navbar = () => {
   );
 };
 
-// Particle Background Component
-const ParticleBackground = () => {
-  const particles = Array.from({ length: 20 }, (_, i) => i);
-
-  return (
-    <div className="particle-container">
-      {particles.map((i) => (
-        <div key={i} className="particle" />
-      ))}
-    </div>
-  );
-};
-
-// Hero Section
+// Hero Section - Premium Apple/Stripe Style
 const HeroSection = () => {
+  const { t, language } = useLanguage();
+  
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const companies = language === 'es' 
+    ? ['Grupo Nexo', 'AuroMex Alimentos', 'TechBuild MX']
+    : ['Grupo Nexo', 'AuroMex Foods', 'TechBuild MX'];
+
   return (
     <section
-      className="relative min-h-screen flex flex-col items-center justify-center hero-void-bg overflow-hidden"
+      className="relative min-h-screen flex items-center pt-24 pb-16 overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #0A0F1C 0%, #030712 100%)' }}
       data-testid="hero-section"
     >
-      <ParticleBackground />
+      {/* Subtle gradient orbs */}
+      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#00F5FF]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-[#A020FF]/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0F1C]/80 pointer-events-none" />
+      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          
+          {/* Left Column - Text Content */}
+          <div className="order-1">
+            {/* Eyebrow */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-4"
+            >
+              <span className="inline-flex items-center gap-2 text-xs font-medium tracking-[0.15em] uppercase text-slate-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00F5FF]" />
+                Quantro OS · Powered by AOS
+              </span>
+            </motion.div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 py-20 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="flex justify-center mb-16 md:mb-20"
-        >
-          <HeroQuantroLogo />
-        </motion.div>
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="font-satoshi font-bold text-[32px] sm:text-[44px] lg:text-[56px] xl:text-[64px] leading-[1.1] tracking-tight text-white mb-4"
+              data-testid="hero-headline"
+            >
+              {language === 'es' ? (
+                <>
+                  Despierta con{' '}
+                  <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                    decisiones listas
+                  </span>{' '}
+                  para actuar.
+                </>
+              ) : (
+                <>
+                  Wake up with{' '}
+                  <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                    ready decisions
+                  </span>{' '}
+                  to act.
+                </>
+              )}
+            </motion.h1>
 
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          className="font-satoshi font-bold text-white text-5xl sm:text-7xl lg:text-[100px] leading-[1.05] tracking-tight mb-8 md:mb-10 text-glow-cyan headline-outline"
-          data-testid="hero-headline"
-        >
-          Quantro runs your business.
-        </motion.h1>
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="text-base sm:text-lg lg:text-xl text-slate-400 leading-relaxed mb-6 max-w-xl"
+              data-testid="hero-subheadline"
+            >
+              {language === 'es' 
+                ? 'Quantro OS conecta tus datos, detecta oportunidades y te propone acciones claras — y con Quantro Flow, las ejecuta por ti.'
+                : 'Quantro OS connects your data, detects opportunities and proposes clear actions — and with Quantro Flow, executes them for you.'
+              }
+            </motion.p>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="font-inter text-[#00F5FF] text-xl sm:text-2xl lg:text-[32px] font-medium leading-relaxed mb-8 md:mb-10 max-w-3xl mx-auto"
-          data-testid="hero-subheadline"
-        >
-          From data to decisions to execution — automatically.
-        </motion.p>
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="flex flex-col sm:flex-row gap-3 mb-8"
+            >
+              <button
+                onClick={() => {
+                  trackCTAClick('hero_start');
+                  scrollToSection("early-access");
+                }}
+                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02]"
+                data-testid="hero-cta-primary"
+              >
+                {language === 'es' ? 'Empieza por $1 USD' : 'Start for $1 USD'}
+              </button>
+              <button
+                onClick={() => scrollToSection("morning-snapshot")}
+                className="px-6 py-3.5 border border-slate-600 text-white font-medium text-base rounded-xl hover:border-slate-500 hover:bg-slate-800/30 transition-all duration-200"
+                data-testid="hero-cta-secondary"
+              >
+                {language === 'es' ? 'Ver cómo funciona' : 'See how it works'}
+              </button>
+            </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65, duration: 0.6 }}
-          className="text-white/60 text-base sm:text-lg lg:text-xl leading-relaxed mb-12 md:mb-16 max-w-2xl mx-auto"
-        >
-          Data overload ends here. Just clear actions to grow your business.
-        </motion.p>
+            {/* Social proof */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="flex items-center gap-2 text-sm"
+            >
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <svg key={i} className="w-4 h-4 text-[#FACC15]" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <span className="text-slate-500">
+                {language === 'es' 
+                  ? `Empresas como ${companies.join(', ')} ya operan con Quantro.`
+                  : `Companies like ${companies.join(', ')} already run on Quantro.`
+                }
+              </span>
+            </motion.div>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-        >
-          <button
-            onClick={() => {
-              trackCTAClick("hero_waitlist");
-              scrollToSection("early-access");
-            }}
-            className="btn-cyan min-w-[320px] md:min-w-[400px]"
-            data-testid="hero-cta-waitlist"
-          >
-            Join the waitlist
-          </button>
-        </motion.div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.4 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <div className="w-6 h-10 border-2 border-[#00F5FF]/30 rounded-full flex justify-center pt-2">
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            className="w-1 h-3 bg-[#00F5FF]/50 rounded-full"
-          />
+          {/* Right Column - Dashboard Preview */}
+          <div className="order-2 lg:order-2">
+            <HeroDashboardPreview />
+          </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 };
