@@ -1,0 +1,29 @@
+{
+  "summary": "Iteration 9 full-stack testing (admin chat insights endpoint + Features/Differentiation/ValueStack redesigns). Backend: 9/9 pytest cases PASS on /api/admin/chat/insights — auth gating (no creds => 401 with WWW-Authenticate: Basic; wrong creds => 401; correct admin:quantro-admin-2026 => 200), response shape {window_days,total_user_messages,distinct_sessions,top_questions}, normalization/grouping of '¿Qué es Quantro?' + '¿qué es quantro' into one grouped entry with count>=2 and languages=[es,en], query param days=7&limit=5 honored, days=0 clamped to 1, days=9999 clamped to 365; regressions: POST /api/chat/message still returns reply+session_id and a Stripe checkout endpoint is reachable. Frontend (Playwright on REACT_APP_BACKEND_URL): in ES — Features eyebrow 'QUÉ HACE QUANTRO' and headline 'Decisiones claras. Acciones automáticas.' match, all 4 feature-card-{0..3} have expected ES titles. Differentiation ES title 'No es un dashboard.' + 'Es un sistema que decide.' present, diff-step-{0..3} show labels Ver/Entender/Actuar/Ejecutar with 01/02/03/04. Old data-testid='comparison-table' is gone (count=0). Value Stack: #value-stack + data-testid='value-stack-section' present and ordered between Differentiation and Pricing (diff=8943 < vs=9618 < pricing=10538). Title 'Un sistema.' + 'No 7 herramientas.' present. All 7 pills (value-stack-pill-0..6) exist with labels CRM/BI Tool/Forecasts/Spreadsheets/Chat Ops/Email Mgmt/Task Tracker and their costs. Savings card shows $339 and ES copy 'Ahorro mensual estimado' + 'vs. el costo promedio de mantener 7 herramientas por separado.' Pill opacity drops to 0 after ~2.5s (collapse animation fires). In EN — Features headline 'Clear decisions. Automatic actions.', all 4 EN feature titles, Differentiation 'Not a dashboard.' + 'A system that decides.' with labels See/Understand/Act/Execute, Value Stack 'One system.' + 'Not 7 tools.' Chat widget trigger + pricing toggle present.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_admin_insights.py",
+    "/app/test_reports/pytest/iter9_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "DUPLICATE data-testid: DifferentiationSection renders BOTH desktop (lg:grid) and mobile (stacked) layouts in the DOM and each layout uses the same data-testid='diff-step-0..3'. Tests saw dup_count=2 for every step. Only one layout is visible per viewport (Tailwind hides the other), so end-users are unaffected, but automation must use .first and regression scripts can be fragile. Recommend suffixing (e.g. diff-step-0-desktop / diff-step-0-mobile) or rendering only one tree per breakpoint.",
+    "ValueStackSection: the fade-in Savings card animation has transition delay=2.2s — it's above-the-fold fine, but the 2.2s delay means users scrolling fast see the card appear late. Consider reducing the delay or anchoring animation to in-view rather than mount time.",
+    "chat.py admin_chat_insights: MongoDB $trim only strips from the ENDS of the normalized string — punctuation in the middle (e.g. 'hola, qué es quantro') is preserved, so two slightly-different phrasings will still not fold together. Grouping works for the sample spec because leading '¿' and trailing '?' are the only non-alphanumerics. If you want deeper grouping, either pre-normalize at write time or use $regexReplace in the pipeline.",
+    "chat.py: created_at is stored as ISO string. The range query for the insights window works only because the ISO format is lexicographically sortable in UTC zulu form. Prefer BSON datetime + an index on created_at for scale.",
+    "ValueStackSection SavingsCard uses useInViewTween but the hook is NOT gated by inView — the tween starts on mount, not when the card scrolls into view. The visual delay=2.2s masks this, but the counter animation can finish before the user ever sees it. Gate with an IntersectionObserver or useInView."
+  ],
+  "updated_files": ["/app/backend/tests/test_admin_insights.py"],
+  "success_rate": {"backend": "100% (9/9)", "frontend": "100% on all 19 checks across ES+EN"},
+  "test_credentials": "admin / quantro-admin-2026 (HTTP Basic on /api/admin/chat/insights)",
+  "seed_data_creation": "Module-scoped pytest fixture inserted 2 chat_messages with session_id prefix 'TEST_sess_*' and contents '¿Qué es Quantro?' and '¿qué es quantro'. Fixture teardown deletes both by _id — no residual test data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Admin endpoint is /api/admin/chat/insights (HTTP Basic, admin:quantro-admin-2026). Regression test file at /app/backend/tests/test_admin_insights.py — rerun with `pytest backend/tests/test_admin_insights.py -v`. Chat+Stripe regressions covered in /app/backend/tests/test_chat_and_regression.py. Frontend language toggle uses localStorage key 'quantro-language' ('es'|'en'); reload after setItem to apply. Duplicate data-testid for diff-step-{0..3} is known (desktop+mobile DOM) — always use .first() or nth(0). Value Stack pills collapse to center after ~600ms + 1.1s animation; check pills exist immediately, opacity 0 after ~2s.",
+  "rca of the issue": "No product bugs found. One test-logic gotcha was resolved: MongoDB $trim only strips chars from string ends (like Python str.strip), so placing a unique marker suffix containing '?' inside the seeded content broke grouping — fixed by using spec-exact samples and identifying by session_id + normalized equality."
+}

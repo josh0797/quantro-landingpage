@@ -13,6 +13,7 @@ import MorningSnapshotSection from "@/components/sections/MorningSnapshotSection
 import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
+import ValueStackSection from "@/components/sections/ValueStackSection";
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
@@ -35,6 +36,7 @@ export default function App() {
       <SuccessStoriesSection />
       <StarFeaturesSection />
       <DifferentiationSection />
+      <ValueStackSection />
       <PricingSection />
       <FAQSection />
       <Footer />

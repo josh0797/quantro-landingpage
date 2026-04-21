@@ -8,11 +8,13 @@ Rate limits:
 """
 import os
 import uuid
+import secrets
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
@@ -86,6 +88,20 @@ def _client_ip(request: Request) -> str:
 
 def register_chat_routes(api_router: APIRouter, db):
     """Register chat routes on the given FastAPI router. Takes the Motor db instance."""
+    security = HTTPBasic()
+
+    def require_admin(credentials: HTTPBasicCredentials = Depends(security)):
+        expected_user = os.environ.get("ADMIN_USER", "")
+        expected_pass = os.environ.get("ADMIN_PASSWORD", "")
+        user_ok = secrets.compare_digest(credentials.username, expected_user)
+        pass_ok = secrets.compare_digest(credentials.password, expected_pass)
+        if not (user_ok and pass_ok) or not expected_user or not expected_pass:
+            raise HTTPException(
+                status_code=401,
+                detail="Unauthorized",
+                headers={"WWW-Authenticate": "Basic"},
+            )
+        return credentials.username
 
     @api_router.post("/chat/message", response_model=ChatMessageResponse)
     async def send_chat_message(body: ChatMessageRequest, request: Request):
@@ -180,3 +196,73 @@ def register_chat_routes(api_router: APIRouter, db):
             limit_reached=False,
             messages_remaining=max(messages_remaining, 0),
         )
+
+    # -------- Admin insights --------
+
+    @api_router.get("/admin/chat/insights")
+    async def admin_chat_insights(
+        days: int = 30,
+        limit: int = 10,
+        _user: str = Depends(require_admin),
+    ):
+        """Top-N most frequent user questions in the last `days` days.
+
+        Normalizes by lowercasing and stripping punctuation to group similar questions.
+        Returns also session/message volume metrics for a quick dashboard view.
+        """
+        days = max(1, min(days, 365))
+        limit = max(1, min(limit, 50))
+
+        since = datetime.now(timezone.utc) - timedelta(days=days)
+        since_iso = since.isoformat()
+
+        pipeline = [
+            {"$match": {"role": "user", "created_at": {"$gte": since_iso}}},
+            {
+                "$addFields": {
+                    "normalized": {
+                        "$trim": {
+                            "input": {"$toLower": "$content"},
+                            "chars": " \t\n.,!?¿¡;:\"'()[]{}",
+                        }
+                    }
+                }
+            },
+            {"$match": {"normalized": {"$ne": ""}}},
+            {
+                "$group": {
+                    "_id": "$normalized",
+                    "count": {"$sum": 1},
+                    "sample": {"$first": "$content"},
+                    "last_seen": {"$max": "$created_at"},
+                    "languages": {"$addToSet": "$language"},
+                }
+            },
+            {"$sort": {"count": -1}},
+            {"$limit": limit},
+            {
+                "$project": {
+                    "_id": 0,
+                    "question": "$sample",
+                    "count": 1,
+                    "last_seen": 1,
+                    "languages": 1,
+                }
+            },
+        ]
+
+        top_questions = await db.chat_messages.aggregate(pipeline).to_list(limit)
+
+        total_user_messages = await db.chat_messages.count_documents(
+            {"role": "user", "created_at": {"$gte": since_iso}}
+        )
+        distinct_sessions = len(
+            await db.chat_messages.distinct("session_id", {"created_at": {"$gte": since_iso}})
+        )
+
+        return {
+            "window_days": days,
+            "total_user_messages": total_user_messages,
+            "distinct_sessions": distinct_sessions,
+            "top_questions": top_questions,
+        }
