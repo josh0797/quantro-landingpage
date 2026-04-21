@@ -5,7 +5,7 @@ import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
 import { startStripeCheckout } from "../../lib/stripe";
-import { trackCTAClick } from "../../lib/analytics";
+import { trackCTAClick, trackCheckoutStarted } from "../../lib/analytics";
 
 // Pricing Section
 export const PricingSection = () => {
@@ -63,6 +63,7 @@ export const PricingSection = () => {
       return;
     }
     // Starter/Pro both route to the $1 trial for now
+    trackCheckoutStarted({ packageId: "trial_1usd", source: `pricing_${tier.key}` });
     try {
       await startStripeCheckout({ packageId: "trial_1usd" });
     } catch (err) {

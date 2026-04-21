@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Loader2, AlertCircle } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 import { pollCheckoutStatus } from "../lib/stripe";
+import { trackCheckoutPaid, trackCheckoutCancelled } from "../lib/analytics";
 
 // Reads ?payment=success|cancel&session_id=... from URL and shows feedback modal.
 // On success, polls backend to verify payment_status = "paid" before confirming.
@@ -17,15 +18,25 @@ export const PaymentReturnModal = () => {
 
     if (paymentFlag === "cancel") {
       setState("cancel");
+      trackCheckoutCancelled({ sessionId });
       return;
     }
 
     if (paymentFlag === "success" && sessionId) {
       setState("polling");
       pollCheckoutStatus(sessionId, (update) => {
-        if (update.state === "paid") setState("success");
-        else if (update.state === "error" || update.state === "expired") setState("error");
-        else if (update.state === "timeout") setState("error");
+        if (update.state === "paid") {
+          setState("success");
+          const amount = update.data?.amount_total
+            ? update.data.amount_total / 100
+            : 1.0;
+          const currency = update.data?.currency || "usd";
+          trackCheckoutPaid({ sessionId, amount, currency });
+        } else if (update.state === "error" || update.state === "expired") {
+          setState("error");
+        } else if (update.state === "timeout") {
+          setState("error");
+        }
       });
     }
   }, []);

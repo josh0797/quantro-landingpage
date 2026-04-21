@@ -89,13 +89,16 @@ Premium SaaS landing page for "Quantro" — an "Autonomous Business Operating Sy
 - [x] Live social proof
 
 ### P2 - Remaining
-- [ ] Replace GA4 placeholder `G-XXXXXXXXXX` with real Measurement ID
 - [ ] Connect QuantroMorningDemo to live backend data (currently MOCKED)
 - [ ] Wire Footer Privacy/Terms/Contact links to real pages
 - [ ] Add investor deck PDF download
 - [ ] Email confirmation (SendGrid/Resend) after payment
 
 ### P3 - Ideas
+- [x] Track Stripe checkout funnel events in GA4 (Feb 21, 2026) — `checkout_started`/`begin_checkout`, `checkout_paid`/`purchase`, `checkout_cancelled`
 - [ ] A/B test Hero primary CTA copy
 - [ ] Add testimonial carousel / logo row on scroll
-- [ ] Track Stripe checkout funnel events in GA4
+
+## GA4 Configuration
+- Measurement ID: `G-NLF6B56ZG6` (production)
+- Standard events emitted: `page_view`, `cta_click`, `checkout_started`, `begin_checkout`, `checkout_paid`, `purchase`, `checkout_cancelled`

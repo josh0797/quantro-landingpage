@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../hooks/useLanguage";
-import { trackCTAClick } from "../../lib/analytics";
+import { trackCTAClick, trackCheckoutStarted } from "../../lib/analytics";
 import { startStripeCheckout } from "../../lib/stripe";
 import HeroDashboardPreview from "../HeroDashboardPreview";
 
@@ -97,6 +97,7 @@ export const HeroSection = () => {
                 onClick={async () => {
                   if (loadingCheckout) return;
                   trackCTAClick("hero_start_stripe");
+                  trackCheckoutStarted({ packageId: "trial_1usd", source: "hero_cta" });
                   setLoadingCheckout(true);
                   try {
                     await startStripeCheckout({ packageId: "trial_1usd" });
