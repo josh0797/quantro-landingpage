@@ -61,6 +61,28 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
+### Feb 21, 2026 — Admin Insights + Section Redesigns (P2/P3)
+- **NEW endpoint `GET /api/admin/chat/insights`** (HTTP Basic auth via `ADMIN_USER`/`ADMIN_PASSWORD` env):
+  - Returns `{window_days, total_user_messages, distinct_sessions, top_questions}`
+  - Top questions grouped by normalized form (lowercased, stripped of punctuation/accents) — so "¿Qué es Quantro?" and "¿qué es quantro" merge into one entry
+  - Query params: `days=1..365` (default 30), `limit=1..50` (default 10)
+  - Credentials in `/app/memory/test_credentials.md`
+- **Features section redesigned** (`StarFeaturesSection`):
+  - Title: "Decisiones claras. Acciones automáticas."
+  - 4 benefit-focused cards with short titles (≤6 words) and 1-line body
+  - 3 accent colors (cyan/violet/emerald) with hover glow shadow
+- **Differentiation section redesigned** (`DifferentiationSection`):
+  - Replaced comparison table with emotional 4-step flow
+  - Ver → Entender → Actuar → Ejecutar (ES) / See → Understand → Act → Execute (EN)
+  - Gradient headline "No es un dashboard. Es un sistema que decide."
+  - Desktop: horizontal flow with SVG gradient arrows. Mobile: vertical stack
+- **Value Stack section (NEW)**:
+  - Title: "Un sistema. No 7 herramientas."
+  - Animated canvas: 7 floating tool pills (CRM, BI Tool, Forecasts, Spreadsheets, Chat Ops, Email Mgmt, Task Tracker) scatter around a central Quantro OS core
+  - After 600ms in view, pills collapse into the center with fading connectors
+  - Savings card with easeOutCubic tween counter: $339/mo (sum of 7 tool costs)
+- Testing iteration_9: 9/9 backend + 19/19 frontend (ES + EN). 0 issues.
+
 ### Feb 21, 2026 — Chat de Soporte IA + Testimonial Carousel
 - **Chat flotante con GPT-4o-mini** (Intercom-style, minimalist dark):
   - Backend: `/app/backend/chat.py` con endpoint `POST /api/chat/message`, usa `emergentintegrations.llm.chat.LlmChat` con `gpt-4o-mini` (bajo costo)
