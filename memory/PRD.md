@@ -61,6 +61,23 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
+### Feb 21, 2026 — Chat de Soporte IA + Testimonial Carousel
+- **Chat flotante con GPT-4o-mini** (Intercom-style, minimalist dark):
+  - Backend: `/app/backend/chat.py` con endpoint `POST /api/chat/message`, usa `emergentintegrations.llm.chat.LlmChat` con `gpt-4o-mini` (bajo costo)
+  - System prompts bilingües (ES/EN) con conocimiento de producto, precios, onboarding
+  - Rate limiting: 20 msgs/sesión, 50 msgs/IP/día (control de costos)
+  - Persistencia en MongoDB: `chat_sessions` + `chat_messages`
+  - Multi-turn context preservation vía `session_id`
+  - Frontend: `/app/frontend/src/components/SupportChatWidget.jsx` — botón flotante bottom-right con dot verde pulsante, panel 380×560px, header con gradient + avatar Sparkles, 3 chips de sugerencias iniciales, bubbles user (gradient cyan) / assistant (slate), typing dots animation, localStorage session
+- **Testimonial Carousel** (reemplaza las 3 cards estáticas):
+  - Auto-advance cada 7s con progress bar animada en los dots
+  - Pause on hover
+  - Arrow controls + dots clickables (active = 40px, inactive = 10px)
+  - Slide transition con AnimatePresence (x=40→0 / 0→-40)
+  - BigMetric con easeOutCubic tween del número (+40% cuenta de 0 a 40)
+  - 3 testimonios bilingües, cada uno con autor
+- Testing iteration_8: 8/8 backend + 20/20 frontend. 0 issues.
+
 ### Feb 21, 2026 — Legal pages + FAQ + cleanup
 - **Router**: `react-router-dom` with `BrowserRouter` at `index.js` root; `LanguageProvider` moved to root so routed pages also have i18n
 - **Legal pages**: `/privacidad`, `/terminos`, `/contacto` (+ English aliases `/privacy`, `/terms`, `/contact`) with shared `LegalPageLayout` component (minimal top bar, back-home link, content, footer)
