@@ -1,24 +1,18 @@
-# Test Credentials
+# Quantro test credentials
 
-## Admin Panel
-- **Endpoint**: `GET /api/admin/chat/insights?days=30&limit=10`
-- **Auth**: HTTP Basic
-- **Username**: `admin`
-- **Password**: `quantro-admin-2026`
+## Admin endpoint `/api/admin/chat/insights`
+- user: `admin`
+- pass: `quantro-admin-2026`
 
-Example:
-```bash
-curl -u "admin:quantro-admin-2026" \
-  "https://decision-engine-61.preview.emergentagent.com/api/admin/chat/insights?days=30&limit=10"
-```
+## Supabase (shared with Quantro OS)
+- URL: `https://ukootpnechabpmwsmxsi.supabase.co`
+- Anon key: in `/app/frontend/.env` (`REACT_APP_SUPABASE_ANON_KEY`)
+- Profiles table columns used by the landing:
+  `id, email, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at`
+- Valid plans: `essential | pro | enterprise`
+- The testing agent may create a throwaway account via `supabase.auth.signUp`
+  using the same anon key; cleanup is optional.
 
-## Stripe
-- Test key pre-configured in `/app/backend/.env` (`STRIPE_API_KEY=sk_test_emergent`)
-- Any Stripe test card will work (e.g. `4242 4242 4242 4242`)
-
-## Emergent LLM Key
-- Configured in `/app/backend/.env` (`EMERGENT_LLM_KEY=sk-emergent-...`)
-- Uses `gpt-4o-mini` for the support chat
-
-## Resend
-- Live API key in `/app/backend/.env`, sender: `no-reply@quantroos.com`
+## Platform redirect URLs (see /app/frontend/src/lib/platformRoutes.js)
+- Quantro OS: `https://quantro-os.emergent.host/dashboard`
+- Quantro Flow: **not yet wired** — renders as "Próximamente" disabled card

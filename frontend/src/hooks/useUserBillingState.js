@@ -1,84 +1,146 @@
-import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { deriveBillingState, hasActivePlan, needsOnboarding } from "../lib/billingGuards";
+import { VALID_PLANS } from "../lib/platformRoutes";
 
 /**
- * Valid billing/auth states.
- * This is currently MOCKED via URL param (?userState=...) or localStorage
- * until Supabase auth is wired. Centralising the contract here means the
- * switchover later is a single-file change inside this hook.
+ * Real Supabase-backed billing/auth state hook.
+ *
+ * Reads from auth.session + profiles table and derives everything the rest
+ * of the app needs. No URL params. No mocks.
+ *
+ * Shape returned:
+ *   session, user, profile, plan, billingCycle,
+ *   isAuthenticated, hasPaidPlan, needsOnboarding,
+ *   isLoading, error, billingState, refresh()
+ *
+ * Secondary contract: this hook ALSO exports legacy CTA helpers so existing
+ * consumers (Navbar, Pricing) keep working without touching their imports.
  */
-export const VALID_STATES = [
-  "not_logged",        // default: anonymous visitor
-  "trial_active",      // paid $1 trial, trial window open
-  "active_subscription", // active recurring plan
-  "expired",           // payment failed / card expired / subscription lapsed
-];
 
-const STORAGE_KEY = "quantro_user_state";
+const PROFILE_COLUMNS =
+  "id, email, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at";
 
-/**
- * Returns the current billing state.
- * Precedence: URL param > localStorage > default ("not_logged")
- */
+const fetchProfile = async (userId) => {
+  if (!userId) return null;
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(PROFILE_COLUMNS)
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.warn("[useUserBillingState] fetchProfile error:", error.message);
+    return null;
+  }
+  // Normalise plan to lowercase and validate
+  if (data && data.plan && !VALID_PLANS.includes(data.plan)) {
+    return { ...data, plan: null };
+  }
+  return data;
+};
+
 export const useUserBillingState = () => {
-  const location = useLocation();
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const mounted = useRef(true);
 
-  return useMemo(() => {
-    try {
-      const params = new URLSearchParams(location.search);
-      const fromUrl = params.get("userState");
-      if (fromUrl && VALID_STATES.includes(fromUrl)) {
-        try {
-          localStorage.setItem(STORAGE_KEY, fromUrl);
-        } catch {
-          /* storage may be unavailable */
-        }
-        return fromUrl;
-      }
-      const fromStorage = localStorage.getItem(STORAGE_KEY);
-      if (fromStorage && VALID_STATES.includes(fromStorage)) return fromStorage;
-    } catch {
-      /* SSR / locked storage — fall through */
+  const applySession = useCallback(async (nextSession) => {
+    if (!mounted.current) return;
+    setSession(nextSession || null);
+    if (!nextSession?.user?.id) {
+      setProfile(null);
+      setIsLoading(false);
+      return;
     }
-    return "not_logged";
-  }, [location.search]);
+    try {
+      const p = await fetchProfile(nextSession.user.id);
+      if (!mounted.current) return;
+      setProfile(p);
+    } catch (err) {
+      if (!mounted.current) return;
+      setError(err);
+    } finally {
+      if (mounted.current) setIsLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    await applySession(data?.session || null);
+  }, [applySession]);
+
+  useEffect(() => {
+    mounted.current = true;
+
+    // Bootstrap session on mount
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        await applySession(data?.session || null);
+      } catch (err) {
+        if (mounted.current) {
+          setError(err);
+          setIsLoading(false);
+        }
+      }
+    })();
+
+    // Subscribe to auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession || null);
+    });
+
+    return () => {
+      mounted.current = false;
+      subscription?.unsubscribe?.();
+    };
+  }, [applySession]);
+
+  const user = session?.user ?? null;
+  const isAuthenticated = !!session && !!user;
+  const paid = hasActivePlan(profile);
+  const billingState = deriveBillingState({ session, profile });
+
+  return {
+    session,
+    user,
+    profile,
+    plan: profile?.plan ?? null,
+    billingCycle: profile?.billing_cycle ?? null,
+    isAuthenticated,
+    hasPaidPlan: paid,
+    needsOnboarding: isAuthenticated && needsOnboarding(profile),
+    isLoading,
+    error,
+    billingState, // 'not_logged' | 'active_subscription' | 'expired'
+    refresh,
+  };
 };
 
 /**
- * Resolves the CTA definition for a given state + language.
- * type is a hint for the caller:
- *   - "stripe": trigger the Stripe checkout flow
- *   - "app"   : open the app (external URL)
- *   - "billing": (future) open customer portal — currently routes to Stripe too
+ * Backwards-compatible CTA label resolver.
+ * Kept here so legacy imports (`getCTAForState`) keep working unchanged.
  */
 export const getCTAForState = (state, lang = "es", { source = "cta" } = {}) => {
   const isEs = lang === "es";
-  const APP_URL = "https://app.quantroos.com";
-
   switch (state) {
     case "active_subscription":
-      return {
-        label: isEs ? "Ir al sistema" : "Open app",
-        short: isEs ? "Ir al sistema" : "Open app",
-        type: "app",
-        href: APP_URL,
-        source: `${source}_app`,
-        variant: "primary",
-      };
     case "trial_active":
       return {
         label: isEs ? "Ir al sistema" : "Open app",
-        short: isEs ? "Ir al sistema" : "Open app",
-        type: "app",
-        href: APP_URL,
-        source: `${source}_trial`,
+        type: "platform_access",
+        source: `${source}_logged_in`,
         variant: "primary",
       };
     case "expired":
       return {
         label: isEs ? "Actualizar pago" : "Update payment",
-        short: isEs ? "Actualizar pago" : "Update payment",
-        type: "billing",
+        type: "platform_access",
         source: `${source}_expired`,
         variant: "warning",
       };
@@ -86,8 +148,7 @@ export const getCTAForState = (state, lang = "es", { source = "cta" } = {}) => {
     default:
       return {
         label: isEs ? "Comenzar" : "Get Started",
-        short: isEs ? "Comenzar" : "Get Started",
-        type: "stripe",
+        type: "platform_access",
         source,
         variant: "primary",
       };

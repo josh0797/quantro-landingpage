@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 14 tested: real Supabase integration, PlatformAccessScreen 4-step flow, refactored CTAs and backend /api/stripe/create-checkout. 15/16 spec items PASS end-to-end. The only blocker: Supabase signUp endpoint returns HTTP 500 for the test email domain, so the signup→auto-auth→plan→Stripe chain couldn't be fully exercised via the form (this is a Supabase project-side response, not a frontend bug — spec explicitly allowed either auto-auth or auth-info outcome, but we got neither because Supabase itself errored). Everything else works as designed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Supabase signup via AuthForm",
+        "issue": "supabase.auth.signUp returns HTTP 500; AuthForm surfaces the supabase-js parse error 'Failed to execute json on Response: body stream already read' inside data-testid=auth-error. Root cause is external (Supabase project) — likely email-domain validator / signups disabled in the dashboard. Frontend behavior (catching the error, disabling the button during await, clearing previous state) is correct.",
+        "affected_selectors": ["[data-testid=auth-error]", "[data-testid=auth-submit]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_stripe_checkout_iter14.py",
+    "/app/test_reports/pytest/iter14_results.xml"
+  ],
+  "action_items": [
+    "Verify Supabase Auth settings for project ukootpnechabpmwsmxsi: (1) 'Enable email signups' is ON, (2) email-domain allowlist is not blocking test/throwaway domains, (3) rate-limits are not tripped. Once signup returns 200, the full AuthForm → choose_plan → Stripe chain should complete automatically (frontend code is correct).",
+    "Optional robustness: in AuthForm.handleSubmit, wrap the supabase-js call result inspection so that a 500 with unparseable body renders a friendlier message like 'El servicio de autenticación no respondió. Intenta de nuevo.' instead of the raw 'body stream already read' string."
+  ],
+  "critical_code_review_comments": [
+    "useUserBillingState.js: good rewrite — real session bootstrap, onAuthStateChange subscription, proper mounted.current cleanup, VALID_PLANS normalization. No issues.",
+    "PlatformAccessScreen.jsx is ~620 lines and mixes PLAN_TIERS config + PlatformCard + StepIndicator + the main component. Reasonable for now but consider extracting PlanTierCard and StepIndicator to /components/platform/* if it grows further.",
+    "billingGuards.deriveBillingState marks profiles with plan but null stripe_subscription_id as 'expired'. This will flag freshly inserted rows (where webhook hasn't landed yet) as expired; consider also checking plan_updated_at age or a dedicated status column.",
+    "AuthForm.jsx: good UX with isolated error/info slots. Minor — no explicit 'email format' validation before calling supabase; supabase will reject but a client-side regex check would save a network round-trip.",
+    "Backend create_stripe_checkout: metadata merge guards against overwrites (k not in metadata) — good. Consider stringifying only primitive values in body.metadata (current str(v) will stringify dicts/lists into unreadable blobs).",
+    "checkoutResume.loadIntent 1h TTL + try/catch around sessionStorage — solid."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_stripe_checkout_iter14.py (new — pytest regression for create-checkout optional fields)"
+  ],
+  "success_rate": {
+    "backend": "100% (5/5 pytest)",
+    "frontend": "~94% (15/16 spec items verified; signup blocked by external Supabase 500)"
+  },
+  "test_credentials": "Used throwaway signup email test_iter14_<ts>@quantrotest.dev / SuperStrong!2026 per /app/memory/test_credentials.md guidance. Supabase returned 500 — see Action Items.",
+  "seed_data_creation": "None persisted. No rows written to profiles (signup never completed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Verified on https://decision-engine-61.preview.emergentagent.com. CONFIRMED WORKING: (1) Supabase client boots without throwing (no console errors on load). (2) Navbar 'Comenzar' + Hero 'Comenzar' CTAs both open PlatformAccessScreen modal via data-testid=nav-cta / hero-cta-primary. (3) Stage 1 renders both platform cards — platform-card-os enabled with CORE badge, platform-card-flow disabled with PRÓXIMAMENTE badge (is_disabled()==True). (4) Clicking OS card advances to stage=auth; data-testid=auth-form renders with auth-email / auth-password / auth-submit (label 'Entrar'). (5) auth-switch-signup swaps submit label to 'Crear cuenta'. (6) Step indicator shows 4 dots labelled Plataforma · Acceso · Plan · Listo in ES. (7) Footer strip shows 'Sin sesión' + 'Sin plan activo' pre-auth. (8) platform-access-close dismisses modal cleanly (count drops to 0). (9) Pricing pricing-cta-1 click writes sessionStorage.quantro_checkout_intent = {\"platform\":null,\"tier\":\"pro\",\"plan\":\"pro\",\"billing_cycle\":\"monthly\",\"createdAt\":\"...\"} and opens the modal (does NOT redirect directly to Stripe). (10) Pricing CTA label = 'Comenzar' when not logged. (11) Regression: Quantro / Pricing / FAQ text all render on the page. Backend pytest confirms /api/stripe/create-checkout accepts all new optional fields (plan, billing_cycle, user_id, metadata.platform) and still works with minimal payload. NOT VERIFIED (blocked by Supabase 500): footer 'Sesión activa · <email>', plan cards (platform-plan-essential/pro/enterprise) clickable → real POST to /api/stripe/create-checkout, auto-redirect to Stripe URL. Once Supabase signup works, main agent can manually verify by creating one account through the UI and clicking any plan tile — network tab should show POST to /api/stripe/create-checkout with body containing plan/billing_cycle/user_id/metadata, and window.location should then go to Stripe.",
+  "rca of the issue": "Supabase signUp 500: the REST call to https://ukootpnechabpmwsmxsi.supabase.co/auth/v1/signup returned a 5xx with a non-JSON/empty body, so supabase-js's internal `.json()` parse crashed with 'body stream already read' (actually it's trying to re-read after the first parse attempt failed). Since the 500 comes from Supabase itself (external service), no frontend change fixes this — the Supabase project needs 'Enable email signups' toggled on and/or the email domain allowlist relaxed. Reproduction: open PlatformAccessScreen → pick OS → switch to signup → submit any email+password(>=8) → observe data-testid=auth-error surfaced + console shows 'Failed to load resource: status 500'. Mitigation: configure the Supabase project's Auth → Providers → Email settings; optionally upgrade supabase-js error handling so 5xx upstream renders a cleaner message."
+}

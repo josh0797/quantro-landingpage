@@ -137,6 +137,10 @@ class CheckoutSessionRequestBody(BaseModel):
     package_id: str = "trial_1usd"
     origin_url: str
     email: Optional[str] = None
+    plan: Optional[str] = None
+    billing_cycle: Optional[str] = None
+    user_id: Optional[str] = None
+    metadata: Optional[dict] = None
 
 
 class CheckoutSessionResponseBody(BaseModel):
@@ -173,6 +177,17 @@ async def create_stripe_checkout(body: CheckoutSessionRequestBody, request: Requ
     }
     if body.email:
         metadata["email"] = body.email
+    if body.plan:
+        metadata["plan"] = body.plan
+    if body.billing_cycle:
+        metadata["billing_cycle"] = body.billing_cycle
+    if body.user_id:
+        metadata["user_id"] = body.user_id
+    if body.metadata:
+        # Allow callers to append custom metadata (e.g., platform intent)
+        for k, v in body.metadata.items():
+            if v is not None and k not in metadata:
+                metadata[k] = str(v)
 
     stripe_checkout = _get_stripe_checkout(request)
     checkout_request = CheckoutSessionRequest(

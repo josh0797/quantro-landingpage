@@ -1,7 +1,17 @@
-// Stripe checkout helper — calls backend to create session and redirects
+// Stripe checkout helper — calls backend to create session and redirects.
+// Passes plan / billing_cycle / user info in the body so the backend can
+// persist them in Stripe session metadata and, later, update profiles.plan.
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-export async function startStripeCheckout({ packageId = "trial_1usd", email = null } = {}) {
+export async function startStripeCheckout({
+  packageId = "trial_1usd",
+  email = null,
+  plan = null,           // 'essential' | 'pro' | 'enterprise' | null
+  billingCycle = null,   // 'monthly' | 'annual' | null
+  userId = null,         // Supabase auth.users.id when available
+  metadata = {},
+} = {}) {
   const response = await fetch(`${BACKEND_URL}/api/stripe/create-checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -9,6 +19,10 @@ export async function startStripeCheckout({ packageId = "trial_1usd", email = nu
       package_id: packageId,
       origin_url: window.location.origin,
       email,
+      plan,
+      billing_cycle: billingCycle,
+      user_id: userId,
+      metadata,
     }),
   });
 
@@ -19,7 +33,6 @@ export async function startStripeCheckout({ packageId = "trial_1usd", email = nu
   const data = await response.json();
   if (!data.url) throw new Error("No checkout URL received");
 
-  // Redirect user to Stripe Checkout
   window.location.href = data.url;
 }
 

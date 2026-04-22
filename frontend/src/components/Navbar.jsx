@@ -2,19 +2,20 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
-import { useUserBillingState, getCTAForState } from "../hooks/useUserBillingState";
-import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
-import { startStripeCheckout } from "../lib/stripe";
+import { useUserBillingState } from "../hooks/useUserBillingState";
+import { getCTACopy } from "../lib/billingGuards";
+import { usePlatformAccess } from "../hooks/usePlatformAccess";
+import { trackCTAClick } from "../lib/analytics";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { QuantroLogoMark } from "./QuantroLogoMark";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
-  const { language, t } = useLanguage();
-  const billingState = useUserBillingState();
-  const cta = getCTAForState(billingState, language, { source: "navbar" });
+  const { language } = useLanguage();
+  const { billingState } = useUserBillingState();
+  const { open: openPlatformAccess } = usePlatformAccess();
+  const ctaLabel = getCTACopy(billingState, language);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -27,31 +28,14 @@ export const Navbar = () => {
     setMobileMenuOpen(false);
   };
 
-  const handleCTA = async (sourceSuffix = "") => {
-    if (loadingCheckout) return;
-    const source = sourceSuffix ? `${cta.source}_${sourceSuffix}` : cta.source;
-    trackCTAClick(source);
-
-    if (cta.type === "app") {
-      window.open(cta.href, "_blank", "noopener,noreferrer");
-      setMobileMenuOpen(false);
-      return;
-    }
-
-    // stripe OR billing (both go to the $1 checkout until customer portal exists)
-    trackCheckoutStarted({ packageId: "trial_1usd", source });
-    setLoadingCheckout(true);
-    try {
-      await startStripeCheckout({ packageId: "trial_1usd" });
-    } catch (err) {
-      console.error("Stripe checkout failed:", err);
-      setLoadingCheckout(false);
-    }
+  const handleCTA = (source = "navbar") => {
+    trackCTAClick(`${source}_open_platform_access`);
+    setMobileMenuOpen(false);
+    openPlatformAccess();
   };
 
-  // Visual variant of the CTA button
   const ctaClasses =
-    cta.variant === "warning"
+    billingState === "expired"
       ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A0F1C] hover:shadow-lg hover:shadow-amber-400/25"
       : "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20";
 
@@ -104,13 +88,12 @@ export const Navbar = () => {
         <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
           <button
-            onClick={() => handleCTA()}
-            disabled={loadingCheckout}
+            onClick={() => handleCTA("navbar")}
             data-testid="nav-cta"
             data-cta-state={billingState}
-            className={`px-4 py-2 font-medium text-sm rounded-lg transition-all disabled:opacity-70 disabled:cursor-wait ${ctaClasses}`}
+            className={`px-4 py-2 font-medium text-sm rounded-lg transition-all ${ctaClasses}`}
           >
-            {loadingCheckout ? t("payment.processing") : cta.label}
+            {ctaLabel}
           </button>
         </div>
 
@@ -160,13 +143,12 @@ export const Navbar = () => {
                 <LanguageSwitcher />
               </div>
               <button
-                onClick={() => handleCTA("mobile")}
-                disabled={loadingCheckout}
+                onClick={() => handleCTA("mobile_menu")}
                 data-testid="mobile-cta"
                 data-cta-state={billingState}
-                className={`px-4 py-3 font-medium text-sm rounded-lg w-full mt-2 disabled:opacity-70 disabled:cursor-wait ${ctaClasses}`}
+                className={`px-4 py-3 font-medium text-sm rounded-lg w-full mt-2 ${ctaClasses}`}
               >
-                {loadingCheckout ? t("payment.processing") : cta.label}
+                {ctaLabel}
               </button>
             </div>
           </motion.div>

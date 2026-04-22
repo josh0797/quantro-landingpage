@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../hooks/useLanguage";
-import { trackCTAClick, trackCheckoutStarted } from "../../lib/analytics";
-import { startStripeCheckout } from "../../lib/stripe";
+import { trackCTAClick } from "../../lib/analytics";
+import { usePlatformAccess } from "../../hooks/usePlatformAccess";
 import HeroDashboardPreview from "../HeroDashboardPreview";
 
 // Hero Section - Premium Apple/Stripe Style
 export const HeroSection = () => {
-  const { language, t } = useLanguage();
-  const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const { language } = useLanguage();
+  const { open: openPlatformAccess } = usePlatformAccess();
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -94,27 +94,14 @@ export const HeroSection = () => {
               className="flex flex-col sm:flex-row gap-3 mb-8"
             >
               <button
-                onClick={async () => {
-                  if (loadingCheckout) return;
-                  trackCTAClick("hero_start_stripe");
-                  trackCheckoutStarted({ packageId: "trial_1usd", source: "hero_cta" });
-                  setLoadingCheckout(true);
-                  try {
-                    await startStripeCheckout({ packageId: "trial_1usd" });
-                  } catch (err) {
-                    console.error("Stripe checkout failed:", err);
-                    setLoadingCheckout(false);
-                  }
+                onClick={() => {
+                  trackCTAClick("hero_open_platform_access");
+                  openPlatformAccess();
                 }}
-                disabled={loadingCheckout}
-                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-wait"
+                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02]"
                 data-testid="hero-cta-primary"
               >
-                {loadingCheckout
-                  ? t("payment.processing")
-                  : language === "es"
-                  ? "Empieza por $1 USD"
-                  : "Start for $1 USD"}
+                {language === "es" ? "Comenzar" : "Get Started"}
               </button>
               <button
                 onClick={() => scrollToSection("interactive-demo")}
