@@ -61,7 +61,23 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Real Supabase infrastructure + PlatformAccessScreen
+### Feb 22, 2026 — Server-side Stripe→Supabase sync + usePlan/UpgradeScreen + Welcome + Announcement banner
+- **Stripe webhook → Supabase (server-side, service-role authority)**:
+  - New `/app/backend/supabase_admin.py` — singleton admin client using `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (added to `/app/backend/.env`). Exposes `update_profile_plan(user_id, plan, billing_cycle, stripe_subscription_id, stripe_customer_id)` + `clear_profile_plan(user_id)`.
+  - `supabase==2.28.3` added to `requirements.txt`.
+  - Both `/api/webhook/stripe` AND `/api/stripe/checkout-status/{session_id}` trigger `update_profile_plan` when `payment_status=paid` (metadata sourced from `payment_transactions` stored at checkout creation). Idempotent via `profile_sync_status=synced` flag.
+  - Frontend `PaymentReturnModal` removed its client-side supabase UPDATE — now only calls `refresh()` because backend is authoritative.
+- **`usePlan()` hook + `PLAN_LIMITS`** (`/app/frontend/src/hooks/usePlan.js`): wraps `useUserBillingState` and exposes `limits` (seats / ai_agents / ai_runs_monthly / automations / has_revenue / has_intelligence) + `can` (useIntelligence / useRevenue / inviteSeats / runAgents) + `isAtLeast(plan)`.
+- **`UpgradeScreen.jsx`**: premium gated-feature modal with DiffPill (current→required plan) + 5-row comparison table (Asientos, Agentes IA, Automatizaciones, Intelligence, Revenue) + "Más tarde" / upgrade CTA. Upgrade CTA closes the modal and opens PlatformAccessScreen.
+- **Welcome post-purchase**: PlatformAccessScreen `redirect` stage detects `profile.plan_updated_at < 6min` and shows "Pago confirmado · ¡Bienvenido, {firstName}! · Tu plan {label} está activo. Vamos a {platform}." instead of the bare "Entrando…". Redirect delay extended from 700ms → 2800ms on fresh purchase so the user has time to read.
+- **`AnnouncementBanner.jsx`** (new) mounted above `<Navbar />` in `App.js`:
+  - ES: "🎉 Prueba Quantro por $1 USD — despierta con decisiones listas y ejecutables."
+  - EN: "🎉 Try Quantro for $1 — wake up to ready-to-execute decisions."
+  - Dismissible × (persists in localStorage `quantro_announce_dismissed=1`), clickable body opens PlatformAccessScreen, subtle horizontal shimmer animation.
+  - Navbar changed from `fixed` → `sticky` so banner + navbar stack correctly.
+- Testing iteration_15: 100% backend (7/7), 100% frontend (9/9). No issues.
+
+
 - **Supabase auth as source of truth**: `@supabase/supabase-js` v2 installed; `REACT_APP_SUPABASE_URL` + `REACT_APP_SUPABASE_ANON_KEY` added to `/app/frontend/.env`. Shared Supabase project with Quantro OS.
 - **`useUserBillingState.js` rewritten (REAL)**: reads `auth.getSession()` + subscribes to `onAuthStateChange`, fetches `profiles` row by user id (columns: `id, email, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at`). Derives: `session, user, profile, plan, billingCycle, isAuthenticated, hasPaidPlan, needsOnboarding, isLoading, billingState, refresh()`. No URL params anywhere.
 - **New lib modules**:
