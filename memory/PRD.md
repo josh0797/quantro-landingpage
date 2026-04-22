@@ -61,7 +61,25 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Supabase-first billing refactor (Edge Functions authority)
+### Feb 22, 2026 — Mobile flow S-curve + Essential/Pro/Enterprise rename + watermark removed
+- **Mobile flow visualization fix** (`IntelligenceSection.jsx`):
+  - Desktop (≥640px): unchanged horizontal flowing curve through 4 nodes.
+  - Mobile (<640px): new S-shaped 2-row curve — DATOS + ANÁLISIS on top row, DECISIÓN + ACCIÓN on bottom row. Curve SVG uses `vectorEffect="non-scaling-stroke"` + stroke 1.4px so the line stays crisp regardless of the non-uniform viewBox scaling. Labels no longer clip off-screen.
+  - Both variants share Dot + PathSvg components; only the path `d` and node coordinates differ.
+- **Pricing rename + $1 USD promo**:
+  - `tier.key` now matches `profiles.plan` directly (`essential | pro | enterprise`). Removed the now-redundant `mapTierToPlan()` usage; `PlatformAccessScreen.PLAN_TIERS` aligned.
+  - New copy:
+    - Essential ($59) — "Deja el caos atrás y gana claridad"
+    - Pro ($209) — "Escala con inteligencia, no con esfuerzo"
+    - Enterprise ($499) — "Automatización y control en su máxima expresión"
+  - All 3 CTAs read "Comenzar" when not logged in (state-aware label kept for authenticated states).
+  - Microcopy under each CTA (only when `billingState === 'not_logged'`): "● Empieza hoy por $1 USD" / "● Start today for $1 USD" (cyan dot). data-testid pricing-promo-0/1/2.
+- **"Made with Emergent" badge removed**:
+  - `/app/frontend/public/index.html` — the `#emergent-badge` anchor now has `style="display:none !important"`.
+  - `/app/frontend/src/index.css` — defensive rule hides `#emergent-badge` + any `a[href*="emergent.sh"][href*="utm_source=emergent-badge"]` in case the Emergent script re-injects.
+- Testing iteration_17: 100% frontend (13/13) across desktop + mobile, ES + EN. Zero issues.
+
+
 User directive: STOP local FastAPI billing; route everything through the existing Supabase Edge Functions `create-checkout-session` + `stripe-webhook`. `profiles.plan` is the sole source of truth.
 
 - **`lib/stripe.js` rewritten**: `startStripeCheckout({ plan, billingCycle, email, language })` now POSTs to `${SUPABASE_URL}/functions/v1/create-checkout-session` with body `{ priceId, successUrl, cancelUrl, locale, customerEmail }` and `Authorization: Bearer <session_access_token || anon_key>`. Removed `getCheckoutStatus` / `pollCheckoutStatus` (obsolete).
