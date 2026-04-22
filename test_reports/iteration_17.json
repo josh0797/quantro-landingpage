@@ -1,0 +1,31 @@
+{
+  "summary": "Frontend-only regression verification for Iteration 17: (1) Mobile S-curve IntelligenceSection flow viz, (2) Pricing rename Starter→Essential, Scale→Enterprise with new taglines + $1 USD promo microcopy, (3) Emergent badge removed. All 13 verification items PASS on both desktop (1920x900) and mobile (390x844) viewports, in both ES and EN.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_17.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "PlatformAccessScreen.jsx line ~221: display-name map still reads { essential: 'Starter', pro: 'Pro', enterprise: 'Scale' } to show the user their plan label. This was intentional in prior iterations to keep marketing labels stable for existing users, but with Iteration 17's rename this is now inconsistent with the rest of the app. Recommend updating to { essential: 'Essential', pro: 'Pro', enterprise: 'Enterprise' } so logged-in users see the new plan names in their profile summary. Non-blocking for this iteration.",
+    "IntelligenceSection.jsx Dot component: the `labelBelow` prop toggles a ternary but both branches use 'top-5', so the prop has no visual effect. Harmless, but dead logic — consider removing or wiring a labelAbove style."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (skipped per request)",
+    "frontend": "100%"
+  },
+  "test_credentials": "Not required — landing-page only, not_logged state.",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All Iteration 17 items verified green. Playwright confirmed: (a) Desktop 1920x900 shows flow-visualization-desktop, hides flow-visualization-mobile; (b) Mobile 390x844 shows flow-visualization-mobile (SVG path length 235px, 4 dots at y=28%/72%, labels 'Datos','Análisis','Decisión','Acción' all within viewport horizontally — no overflow), hides desktop variant; (c) Pricing cards 0/1/2 render 'Essential'/'Pro'/'Enterprise' (no 'Starter' or 'Scale' present) with correct ES+EN taglines; (d) pricing-cta-0/1/2 = 'Comenzar'/'Get Started' and pricing-promo-0/1/2 render '● Empieza hoy por $1 USD' / '● Start today for $1 USD'; (e) Clicking a pricing CTA opens data-testid=platform-access-screen; (f) Emergent badge: #emergent-badge has computed display:none on both viewports (verified via getComputedStyle); no floating pill at bottom-right. EN toggle via data-testid='lang-toggle-en' switches all strings correctly. PlatformAccessScreen opens at the auth/email gate stage (not the plan-selection stage) when launched from an unauthenticated pricing CTA, which is why data-testid=platform-plan-essential/pro/enterprise count was 0 — expected behavior (plan cards render only after auth). No issues to fix; only optional code-review polish noted for the 'displayPlan' map in PlatformAccessScreen.jsx (still maps to old marketing names).",
+  "rca of the issue": "N/A — no bugs found."
+}

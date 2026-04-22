@@ -33,12 +33,12 @@ const OVERLAY_BG =
 
 const PLAN_TIERS = (isEs) => [
   {
-    key: "starter",
+    key: "essential",
     plan: "essential",
-    name: "Starter",
+    name: "Essential",
     price: "$59",
     period: isEs ? "/mes" : "/mo",
-    tagline: isEs ? "Ordena tu operación" : "Organize your operation",
+    tagline: isEs ? "Deja el caos atrás y gana claridad" : "Leave the chaos behind",
     features: isEs
       ? ["Automatizaciones básicas", "Dashboard esencial", "Agentes IA básicos"]
       : ["Basic automations", "Essential dashboard", "Basic AI agents"],
@@ -51,7 +51,7 @@ const PLAN_TIERS = (isEs) => [
     name: "Pro",
     price: "$209",
     period: isEs ? "/mes" : "/mo",
-    tagline: isEs ? "Tu negocio avanza solo" : "Your business moves on its own",
+    tagline: isEs ? "Escala con inteligencia, no con esfuerzo" : "Scale with intelligence",
     features: isEs
       ? ["Quantro OS + Flow completos", "Quantro Intelligence activo", "Multiusuario · 3 asientos"]
       : ["Full Quantro OS + Flow", "Quantro Intelligence active", "Multi-user · 3 seats"],
@@ -59,12 +59,14 @@ const PLAN_TIERS = (isEs) => [
     accent: "#00F5FF",
   },
   {
-    key: "scale",
+    key: "enterprise",
     plan: "enterprise",
-    name: "Scale",
+    name: "Enterprise",
     price: "$499",
     period: isEs ? "/mes" : "/mo",
-    tagline: isEs ? "Optimización continua" : "Continuous optimization",
+    tagline: isEs
+      ? "Automatización y control en su máxima expresión"
+      : "Automation and control at their peak",
     features: isEs
       ? ["Todo en Pro", "Quantro Revenue", "Multiusuario · 10 asientos"]
       : ["Everything in Pro", "Quantro Revenue", "Multi-user · 10 seats"],

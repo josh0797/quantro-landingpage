@@ -7,7 +7,6 @@ import { useLanguage } from "../../hooks/useLanguage";
 import { useUserBillingState } from "../../hooks/useUserBillingState";
 import { getCTACopy } from "../../lib/billingGuards";
 import { usePlatformAccess } from "../../hooks/usePlatformAccess";
-import { mapTierToPlan } from "../../lib/platformRoutes";
 import { saveIntent } from "../../lib/checkoutResume";
 import { trackCTAClick } from "../../lib/analytics";
 
@@ -36,9 +35,9 @@ export const PricingSection = () => {
 
   const tiers = [
     {
-      key: "starter",
-      name: "Starter",
-      tagline: isEs ? "Ordena tu operación" : "Organize your operation",
+      key: "essential",
+      name: "Essential",
+      tagline: isEs ? "Deja el caos atrás y gana claridad" : "Leave the chaos behind, gain clarity",
       prices: { monthly: "$59", annual: "$590" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
@@ -56,14 +55,14 @@ export const PricingSection = () => {
     {
       key: "pro",
       name: "Pro",
-      tagline: isEs ? "Tu negocio empieza a avanzar solo" : "Your business starts moving on its own",
+      tagline: isEs ? "Escala con inteligencia, no con esfuerzo" : "Scale with intelligence, not effort",
       prices: { monthly: "$209", annual: "$2,090" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
         ? "Para negocios o empresas que quieren crecer con decisiones claras y ejecución constante."
         : "For businesses that want to grow with clear decisions and constant execution.",
       features: [
-        isEs ? "Todo en Starter" : "Everything in Starter",
+        isEs ? "Todo en Essential" : "Everything in Essential",
         isEs ? "Flow · CRM + Inbox + seguimiento" : "Flow · CRM + Inbox + follow-up",
         isEs ? "Quantro OS completo · Scorecard, Rocks, decisiones" : "Full Quantro OS · Scorecard, Rocks, decisions",
         isEs ? "Quantro Intelligence activo" : "Quantro Intelligence active",
@@ -75,9 +74,11 @@ export const PricingSection = () => {
       accent: "#00F5FF",
     },
     {
-      key: "scale",
-      name: "Scale",
-      tagline: isEs ? "Un sistema que optimiza todo" : "A system that optimizes everything",
+      key: "enterprise",
+      name: "Enterprise",
+      tagline: isEs
+        ? "Automatización y control en su máxima expresión"
+        : "Automation and control at their peak",
       prices: { monthly: "$499", annual: "$4,990" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
@@ -100,10 +101,10 @@ export const PricingSection = () => {
   ];
 
   const handleCtaClick = (tier) => {
-    const plan = mapTierToPlan(tier.key); // essential | pro | enterprise
+    // tier.key is now the internal plan identifier directly ('essential' | 'pro' | 'enterprise')
+    const plan = tier.key;
     const source = `pricing_${tier.key}_${billing}`;
     trackCTAClick(`${source}_open_platform_access`);
-    // Persist intent so PlatformAccessScreen / post-checkout resume picks it up
     saveIntent({
       platform: null, // user still needs to pick OS or Flow
       tier: tier.key,
@@ -113,7 +114,11 @@ export const PricingSection = () => {
     openPlatformAccess();
   };
 
-  const ctaLabel = getCTACopy(billingState, language);
+  // All CTAs on this section read "Comenzar" per spec (state-aware copy for
+  // logged-in users keeps the smart CTA semantics from getCTACopy).
+  const ctaLabel = billingState === "not_logged"
+    ? (isEs ? "Comenzar" : "Get Started")
+    : getCTACopy(billingState, language);
 
   return (
     <AnimatedSection
@@ -292,6 +297,26 @@ export const PricingSection = () => {
               >
                 {ctaLabel}
               </button>
+
+              {/* $1 promo microcopy — only when not logged in */}
+              {billingState === "not_logged" && (
+                <p
+                  className="text-center text-[11px] text-slate-500 mt-2.5"
+                  data-testid={`pricing-promo-${i}`}
+                >
+                  {isEs ? (
+                    <>
+                      <span className="text-[#00F5FF]">●</span> Empieza hoy por{" "}
+                      <span className="text-white font-semibold">$1 USD</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[#00F5FF]">●</span> Start today for{" "}
+                      <span className="text-white font-semibold">$1 USD</span>
+                    </>
+                  )}
+                </p>
+              )}
             </motion.div>
           ))}
         </div>
