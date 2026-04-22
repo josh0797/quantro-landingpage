@@ -61,7 +61,29 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Premium Interactive Demo rebuild + Brand unification
+### Feb 22, 2026 — Smart CTA + Demo Easter egg + ValueStack redesign
+- **Smart CTA logic (Msg 479)** via new hook `/app/frontend/src/hooks/useUserBillingState.js`:
+  - States: `not_logged` (default) / `trial_active` / `active_subscription` / `expired`
+  - Precedence: URL param `?userState=<state>` > localStorage (`quantro_user_state`) > default
+  - Invalid values fall through to `not_logged`. URL param writes to localStorage so state persists across navigation within the session.
+  - Helper `getCTAForState(state, lang)` returns `{ label, type: 'stripe'|'app'|'billing', href?, variant }`:
+    - `not_logged` → "Comenzar" / "Get Started" (cyan gradient, Stripe)
+    - `trial_active` / `active_subscription` → "Ir al sistema" / "Open app" (cyan gradient, opens https://app.quantroos.com in new tab)
+    - `expired` → "Actualizar pago" / "Update payment" (amber gradient)
+  - Applied to Navbar (desktop + mobile CTAs, `data-cta-state` attribute) and to all 3 PricingSection tier CTAs.
+- **Easter egg onboarding hint in Interactive Demo**:
+  - After 7s on the default Dashboard view, a cyan gradient tooltip appears below the "Agentes IA" tab pill with a pointing caret and pulsing ring around the pill
+  - Copy: "Haz clic aquí para ver cómo Quantro piensa por ti ↑" / "Click here to see how Quantro thinks for you ↑"
+  - Dismissed by: clicking any tab, clicking any sidebar item, or the × button. Dismissal persists for the session via `sessionStorage.quantro_demo_hint=dismissed`.
+- **ValueStackSection redesign**:
+  - Eyebrow + H2 + subheadline unchanged, but the canvas is now a two-layer "Before vs Now" composition.
+  - Back layer: 8 external tools (CRM · WhatsApp · Email Marketing · Calendar · Analytics · Docs · Tasks · Automation) rendered as muted (50% opacity) floating pills with slow vertical drift — represents fragmentation.
+  - Core layer: two protagonist cards centered on the canvas — Quantro OS (cyan, Brain icon, "Inteligencia del negocio") and Quantro Flow (violet, Workflow icon, "Ejecución automática") — with a gradient SVG arc connecting them to communicate they work together.
+  - Top badges anchor the narrative: "Antes · disperso" (left, muted) / "Ahora · unificado" (right, cyan with glow).
+  - ComparisonCard (right column) rewritten to user spec: "Antes / Múltiples herramientas separadas / Desde $399/mes" (strikethrough) → "Ahora con Quantro / Un solo sistema conectado / Desde $59/mes" (cyan gradient) → "Menos herramientas que pagar. Más resultados en marcha."
+- Testing iteration_13: 42/42 frontend checks, 0 bugs.
+
+
 - **InteractiveDemoSection** fully rebuilt as an Apple/Stripe/Linear-style Quantro OS product mock:
   - macOS-style window chrome with sidebar (Operaciones + Inteligencia groups, profile pill with `ENTERPRISE` badge, search hint ⌘K)
   - Topbar with `Quantro OS / <view>` breadcrumb, Q2 · LEVEL 10 gradient badge, CO avatar
