@@ -117,7 +117,7 @@ def _welcome_email_html(amount_usd: float = 1.0) -> str:
                 ¿Preguntas? Responde este correo o escríbenos a <a href="mailto:ventas@quantroos.com" style="color:#00F5FF;text-decoration:none;">ventas@quantroos.com</a>.
               </p>
               <p style="margin:0;color:#475569;font-size:12px;">
-                © 2026 Quantro · Autonomous Business Operating System
+                © 2026 Quantro · Autonomous Operating System
               </p>
             </td>
           </tr>

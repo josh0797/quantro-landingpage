@@ -10,7 +10,7 @@ import { usePlatformAccess } from "../../hooks/usePlatformAccess";
 import { saveIntent } from "../../lib/checkoutResume";
 import { trackCTAClick } from "../../lib/analytics";
 
-const AnimatedPrice = ({ value }) => (
+const AnimatedPrice = ({ value, size = "md" }) => (
   <AnimatePresence mode="wait">
     <motion.span
       key={value}
@@ -18,7 +18,9 @@ const AnimatedPrice = ({ value }) => (
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="font-satoshi font-bold text-5xl text-white tabular-nums"
+      className={`font-satoshi font-bold text-white tabular-nums ${
+        size === "lg" ? "text-6xl" : "text-5xl"
+      }`}
     >
       {value}
     </motion.span>
@@ -37,20 +39,26 @@ export const PricingSection = () => {
     {
       key: "essential",
       name: "Essential",
-      tagline: isEs ? "Deja el caos atrás y gana claridad" : "Leave the chaos behind, gain clarity",
+      tagline: isEs ? "Empieza con claridad y control" : "Start with clarity and control",
       prices: { monthly: "$59", annual: "$590" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
-        ? "Para emprendedores que quieren dejar el caos y empezar a operar con claridad."
-        : "For entrepreneurs who want to leave chaos behind and operate with clarity.",
+        ? "Para emprendedores que quieren dejar el caos y empezar a operar como sistema."
+        : "For founders who want to leave chaos behind and start operating as a system.",
       features: [
-        isEs ? "Automatizaciones básicas" : "Basic automations",
-        isEs ? "Dashboard esencial" : "Essential dashboard",
-        isEs ? "Agentes IA (consultas al mes)" : "AI Agents (monthly queries)",
-        isEs ? "Contabilidad · facturas timbradas" : "Accounting · stamped invoices",
+        isEs ? "Quantro OS + Flow + Intelligence incluidos" : "Quantro OS + Flow + Intelligence included",
+        isEs ? "Dashboard y scorecard en tiempo real" : "Real-time dashboard and scorecard",
+        isEs ? "Inbox + CRM con seguimiento básico" : "Inbox + CRM with basic follow-up",
+        isEs ? "Agentes IA (consultas mensuales limitadas)" : "AI Agents (limited monthly queries)",
+        isEs ? "Automatizaciones esenciales" : "Essential automations",
+        isEs ? "Contabilidad y facturación integrada" : "Integrated accounting and invoicing",
       ],
       highlighted: false,
       accent: "#94A3B8",
+      microcopy: {
+        type: "coupon",
+        label: { es: "Utiliza el cupón QUANTRO1", en: "Use coupon QUANTRO1" },
+      },
     },
     {
       key: "pro",
@@ -59,19 +67,26 @@ export const PricingSection = () => {
       prices: { monthly: "$209", annual: "$2,090" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
-        ? "Para negocios o empresas que quieren crecer con decisiones claras y ejecución constante."
+        ? "Para negocios que buscan crecer con decisiones claras y ejecución constante."
         : "For businesses that want to grow with clear decisions and constant execution.",
       features: [
         isEs ? "Todo en Essential" : "Everything in Essential",
-        isEs ? "Flow · CRM + Inbox + seguimiento" : "Flow · CRM + Inbox + follow-up",
-        isEs ? "Quantro OS completo · Scorecard, Rocks, decisiones" : "Full Quantro OS · Scorecard, Rocks, decisions",
-        isEs ? "Quantro Intelligence activo" : "Quantro Intelligence active",
+        isEs ? "Automatización avanzada de procesos" : "Advanced process automation",
+        isEs ? "Flow + CRM + Inbox con ejecución automatizada" : "Flow + CRM + Inbox with automated execution",
+        isEs ? "Quantro Intelligence activo (análisis continuo)" : "Quantro Intelligence active (continuous analysis)",
         isEs ? "Agentes IA ejecutando tareas" : "AI Agents executing tasks",
-        isEs ? "Automatización avanzada" : "Advanced automation",
-        isEs ? "Multiusuario · 3 asientos" : "Multi-user · 3 seats",
+        isEs ? "Decisiones inteligentes + plan de acción" : "Smart decisions + action plan",
+        isEs ? "Multiusuario (3 asientos)" : "Multi-user (3 seats)",
       ],
       highlighted: true,
       accent: "#00F5FF",
+      microcopy: {
+        type: "text",
+        label: {
+          es: "El punto donde tu negocio empieza a escalar",
+          en: "Where your business starts to scale",
+        },
+      },
     },
     {
       key: "enterprise",
@@ -86,17 +101,24 @@ export const PricingSection = () => {
         : "For businesses seeking continuous optimization and competitive edge.",
       features: [
         isEs ? "Todo en Pro" : "Everything in Pro",
-        isEs ? "Inteligencia más frecuente y profunda" : "Deeper, more frequent intelligence",
-        isEs ? "Quantro Revenue" : "Quantro Revenue",
+        isEs ? "Inteligencia más profunda y frecuente" : "Deeper, more frequent intelligence",
+        isEs ? "Quantro Revenue (optimización de ingresos)" : "Quantro Revenue (revenue optimization)",
         isEs ? "Automatizaciones personalizadas" : "Custom automations",
         isEs ? "Lean Management module" : "Lean Management module",
-        isEs ? "Multiusuario · 10 asientos" : "Multi-user · 10 seats",
-        isEs ? "Mayor capacidad de agentes" : "Higher agent capacity",
+        isEs ? "Multiusuario (10 asientos)" : "Multi-user (10 seats)",
+        isEs ? "Mayor capacidad de agentes IA" : "Higher AI agent capacity",
         isEs ? "Soporte prioritario" : "Priority support",
-        isEs ? "Acceso prioritario a nuevas funciones" : "Early access to new features",
+        isEs ? "Acceso anticipado a nuevas funciones" : "Early access to new features",
       ],
       highlighted: false,
       accent: "#C084FC",
+      microcopy: {
+        type: "text",
+        label: {
+          es: "Diseñado para operación avanzada",
+          en: "Built for advanced operations",
+        },
+      },
     },
   ];
 
@@ -146,13 +168,14 @@ export const PricingSection = () => {
         {/* Inclusion context strip */}
         <motion.div
           variants={fadeInUp}
-          className="flex items-center justify-center gap-2 mb-10 text-sm text-slate-400"
+          className="flex items-start sm:items-center justify-center gap-2 mb-10 text-sm text-slate-400 max-w-2xl mx-auto text-center px-4"
+          data-testid="pricing-inclusion-strip"
         >
-          <Sparkles size={14} className="text-[#00F5FF]" />
+          <Sparkles size={14} className="text-[#00F5FF] flex-shrink-0 mt-1 sm:mt-0" />
           <span>
             {isEs
-              ? "Quantro Flow + Intelligence disponible a partir del plan Pro."
-              : "Quantro Flow + Intelligence available from the Pro plan."}
+              ? "Todo el sistema Quantro desde el primer plan. Escala en automatización, profundidad y capacidad."
+              : "The full Quantro system from day one. Scale on automation, depth and capacity."}
           </span>
         </motion.div>
 
@@ -208,23 +231,34 @@ export const PricingSection = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Cards */}
+        {/* Cards — on mobile Pro is shown first per UX spec */}
         <div className="grid lg:grid-cols-3 gap-6 items-stretch">
-          {tiers.map((tier, i) => (
+          {tiers.map((tier, i) => {
+            // Mobile order: Pro (1) → Essential (2) → Enterprise (3). Desktop keeps natural order.
+            const mobileOrderClass = tier.highlighted
+              ? "order-1 lg:order-none"
+              : tier.key === "essential"
+              ? "order-2 lg:order-none"
+              : "order-3 lg:order-none";
+
+            const cardClass = tier.highlighted
+              ? "bg-gradient-to-br from-[#00F5FF]/[0.06] via-slate-900/60 to-[#A020FF]/[0.05] border-2 border-[#00F5FF]/45 lg:scale-[1.05] lg:-translate-y-3 shadow-2xl shadow-[#00F5FF]/15"
+              : tier.key === "enterprise"
+              ? "bg-white/[0.02] border border-[#A020FF]/18 hover:border-[#A020FF]/32 lg:scale-[0.985]"
+              : "bg-white/[0.015] border border-white/[0.06] hover:border-white/[0.12] lg:scale-[0.97]";
+
+            return (
             <motion.div
               key={tier.key}
               variants={fadeInUp}
-              className={`relative rounded-2xl p-8 flex flex-col transition-all duration-300 ${
-                tier.highlighted
-                  ? "bg-gradient-to-br from-[#00F5FF]/[0.04] via-slate-900/60 to-[#A020FF]/[0.04] border-2 border-[#00F5FF]/40 lg:scale-[1.04] lg:-translate-y-2 shadow-2xl shadow-[#00F5FF]/10"
-                  : "bg-white/[0.02] border border-white/[0.08] hover:border-white/[0.15]"
-              }`}
+              className={`relative rounded-2xl p-7 flex flex-col transition-all duration-300 ${mobileOrderClass} ${cardClass}`}
               style={
                 tier.highlighted
-                  ? { backdropFilter: "blur(12px)" }
+                  ? { backdropFilter: "blur(14px)" }
                   : { backdropFilter: "blur(6px)" }
               }
               data-testid={`pricing-tier-${i}`}
+              data-tier={tier.key}
             >
               {/* Popular badge */}
               {tier.highlighted && (
@@ -243,7 +277,11 @@ export const PricingSection = () => {
 
               {/* Name + tagline */}
               <div className="mb-4">
-                <h3 className="font-satoshi font-bold text-xl text-white tracking-tight">
+                <h3
+                  className={`font-satoshi font-bold tracking-tight text-white ${
+                    tier.highlighted ? "text-2xl" : "text-xl"
+                  }`}
+                >
                   {tier.name}
                 </h3>
                 <p
@@ -259,7 +297,7 @@ export const PricingSection = () => {
                 className="flex items-baseline gap-2 mb-5"
                 data-testid={`pricing-price-${tier.key}`}
               >
-                <AnimatedPrice value={tier.prices[billing]} />
+                <AnimatedPrice value={tier.prices[billing]} size={tier.highlighted ? "lg" : "md"} />
                 <span className="text-slate-500 text-sm">{tier.periodSuffix[billing]}</span>
               </div>
 
@@ -290,6 +328,8 @@ export const PricingSection = () => {
                     ? billingState === "expired"
                       ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A0F1C] hover:shadow-lg hover:shadow-amber-400/30"
                       : "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/30"
+                    : tier.key === "enterprise"
+                    ? "bg-white/[0.04] border border-[#A020FF]/30 text-white hover:bg-[#A020FF]/10 hover:border-[#A020FF]/50"
                     : "bg-slate-800 text-white hover:bg-slate-700"
                 }`}
                 data-testid={`pricing-cta-${i}`}
@@ -298,27 +338,33 @@ export const PricingSection = () => {
                 {ctaLabel}
               </button>
 
-              {/* $1 promo microcopy — only when not logged in */}
-              {billingState === "not_logged" && (
+              {/* Per-tier microcopy under the CTA */}
+              {tier.microcopy?.type === "coupon" ? (
+                <div className="flex justify-center mt-3">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border"
+                    style={{
+                      background: "rgba(0, 245, 255, 0.06)",
+                      borderColor: "rgba(0, 245, 255, 0.22)",
+                      color: "#67E8F9",
+                    }}
+                    data-testid={`pricing-promo-${i}`}
+                  >
+                    <span aria-hidden className="text-[10px]">🎟</span>
+                    {tier.microcopy.label[isEs ? "es" : "en"]}
+                  </span>
+                </div>
+              ) : (
                 <p
-                  className="text-center text-[11px] text-slate-500 mt-2.5"
+                  className="text-center text-[11px] text-slate-500 mt-2.5 leading-snug"
                   data-testid={`pricing-promo-${i}`}
                 >
-                  {isEs ? (
-                    <>
-                      <span className="text-[#00F5FF]">●</span> Empieza hoy por{" "}
-                      <span className="text-white font-semibold">$1 USD</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-[#00F5FF]">●</span> Start today for{" "}
-                      <span className="text-white font-semibold">$1 USD</span>
-                    </>
-                  )}
+                  {tier.microcopy.label[isEs ? "es" : "en"]}
                 </p>
               )}
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Key phrase */}

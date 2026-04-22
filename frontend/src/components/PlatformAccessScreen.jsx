@@ -5,6 +5,7 @@ import {
   Brain,
   Workflow,
   ArrowRight,
+  ArrowLeft,
   Loader2,
   Lock,
   Check,
@@ -354,6 +355,27 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                 <X size={18} />
               </button>
 
+              {/* Back (only on auth stage) */}
+              <AnimatePresence>
+                {stage === "auth" && (
+                  <motion.button
+                    key="modal-back"
+                    type="button"
+                    onClick={backToPlatform}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -8 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-colors z-10"
+                    aria-label={isEs ? "Volver" : "Back"}
+                    data-testid="platform-access-back"
+                  >
+                    <ArrowLeft size={13} />
+                    {isEs ? "Volver" : "Back"}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+
               {/* Ambient glow */}
               <div
                 aria-hidden
@@ -438,7 +460,8 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                   {!isLoading && stage === "auth" && (
                     <AuthForm
                       onBack={backToPlatform}
-                      onAuthenticated={handleAuthenticated}
+        onAuthenticated={handleAuthenticated}
+                      hideBackButton
                     />
                   )}
 

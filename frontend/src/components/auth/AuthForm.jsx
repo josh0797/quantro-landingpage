@@ -13,7 +13,7 @@ import { useLanguage } from "../../hooks/useLanguage";
 const INPUT_CLS =
   "w-full bg-slate-900/60 border border-slate-800 rounded-lg px-10 py-2.5 text-[13px] text-white placeholder-slate-600 focus:outline-none focus:border-[#00F5FF]/50 focus:ring-2 focus:ring-[#00F5FF]/15 transition-all";
 
-export const AuthForm = ({ onBack, onAuthenticated }) => {
+export const AuthForm = ({ onBack, onAuthenticated, hideBackButton = false }) => {
   const { language } = useLanguage();
   const isEs = language === "es";
   const [mode, setMode] = useState("login"); // 'login' | 'signup'
@@ -87,14 +87,16 @@ export const AuthForm = ({ onBack, onAuthenticated }) => {
       className="w-full max-w-md mx-auto"
       data-testid="auth-form"
     >
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-white mb-5 transition-colors"
-        data-testid="auth-back"
-      >
-        <ArrowLeft size={12} /> {isEs ? "Volver" : "Back"}
-      </button>
+      {!hideBackButton && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-white mb-5 transition-colors"
+          data-testid="auth-back"
+        >
+          <ArrowLeft size={12} /> {isEs ? "Volver" : "Back"}
+        </button>
+      )}
 
       <h2 className="font-satoshi font-bold text-2xl text-white tracking-tight mb-1">
         {mode === "login"

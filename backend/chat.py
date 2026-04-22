@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 MAX_MESSAGES_PER_SESSION = 20
 MAX_MESSAGES_PER_IP_PER_DAY = 50
 
-SYSTEM_PROMPT_ES = """Eres el asistente de soporte de Quantro, una plataforma SaaS premium que se describe como "Autonomous Business Operating System" — combina Quantro OS (inteligencia y claridad) con Quantro Flow (ejecución automática).
+SYSTEM_PROMPT_ES = """Eres el asistente de soporte de Quantro, una plataforma SaaS premium que se describe como "Autonomous Operating System" (AOS) — combina Quantro OS (inteligencia y claridad) con Quantro Flow (ejecución automática).
 
 Tu rol:
 - Responder preguntas sobre qué es Quantro, cómo funciona, precios, prueba, cancelación
@@ -44,7 +44,7 @@ Información clave del producto:
 
 Si no sabes algo específico o técnico profundo (integraciones exactas, compliance legal, onboarding personalizado), sé honesto y dirige a ventas@quantroos.com."""
 
-SYSTEM_PROMPT_EN = """You are Quantro's support assistant. Quantro is a premium SaaS described as an "Autonomous Business Operating System" — combining Quantro OS (intelligence and clarity) with Quantro Flow (automatic execution).
+SYSTEM_PROMPT_EN = """You are Quantro's support assistant. Quantro is a premium SaaS described as an "Autonomous Operating System" (AOS) — combining Quantro OS (intelligence and clarity) with Quantro Flow (automatic execution).
 
 Your role:
 - Answer questions about what Quantro is, how it works, pricing, trial, cancellation
