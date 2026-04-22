@@ -65,7 +65,15 @@ export const AuthForm = ({ onBack, onAuthenticated }) => {
         }
       }
     } catch (err) {
-      setError(err?.message || (isEs ? "Error al autenticar" : "Authentication error"));
+      const raw = err?.message || "";
+      // Supabase-js surfaces unparseable 500s as "Failed to execute 'json' on 'Response': body stream already read"
+      const friendly =
+        /body stream already read|Failed to execute|fetch failed|Network/i.test(raw)
+          ? isEs
+            ? "El servicio de autenticación no respondió. Intenta de nuevo en unos segundos."
+            : "The authentication service didn't respond. Please try again in a moment."
+          : raw || (isEs ? "Error al autenticar" : "Authentication error");
+      setError(friendly);
     } finally {
       setLoading(false);
     }

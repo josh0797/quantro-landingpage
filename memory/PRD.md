@@ -61,7 +61,27 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Smart CTA + Demo Easter egg + ValueStack redesign
+### Feb 22, 2026 — Real Supabase infrastructure + PlatformAccessScreen
+- **Supabase auth as source of truth**: `@supabase/supabase-js` v2 installed; `REACT_APP_SUPABASE_URL` + `REACT_APP_SUPABASE_ANON_KEY` added to `/app/frontend/.env`. Shared Supabase project with Quantro OS.
+- **`useUserBillingState.js` rewritten (REAL)**: reads `auth.getSession()` + subscribes to `onAuthStateChange`, fetches `profiles` row by user id (columns: `id, email, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at`). Derives: `session, user, profile, plan, billingCycle, isAuthenticated, hasPaidPlan, needsOnboarding, isLoading, billingState, refresh()`. No URL params anywhere.
+- **New lib modules**:
+  - `lib/supabase.js` — singleton client with `storageKey: "quantro.auth"`
+  - `lib/platformRoutes.js` — `PLATFORMS` config + `PRICING_TIER_TO_PLAN` mapping (Starter→essential, Pro→pro, Scale→enterprise)
+  - `lib/billingGuards.js` — pure rules: `resolveNextStep`, `deriveBillingState`, `hasActivePlan`, `needsOnboarding`, `getCTACopy`
+  - `lib/checkoutResume.js` — sessionStorage `quantro_checkout_intent` with 1h TTL to survive Stripe redirect
+- **`PlatformAccessScreen.jsx` (NEW — star screen)**: full-screen modal orchestrating 4 stages — `choose_platform` → `auth` → `choose_plan` → `redirect`. Platform cards for Quantro OS (active) and Quantro Flow (disabled/"Próximamente" until URL is set). Plan cards map to `essential/pro/enterprise`. Step indicator (Plataforma · Acceso · Plan · Listo). Footer status strip showing session/plan.
+- **`AuthForm.jsx` (NEW)**: premium dark inline login + signup using Supabase directly. Graceful error message on Supabase 500s.
+- **`usePlatformAccess.jsx` (NEW)**: global provider + `openPlatformAccess()` hook so any CTA opens the same modal.
+- **`App.js` refactored**: `App` → `AppContent` → `LandingShell` with `<PlatformAccessProvider>` wrapping everything. Landing order 100% preserved.
+- **CTAs migrated**:
+  - Navbar CTA no longer hits Stripe directly — opens PlatformAccessScreen. Label from `getCTACopy(billingState)`.
+  - Hero primary CTA also opens the modal.
+  - PricingSection tier CTAs persist intent (`saveIntent` with tier+plan+billing_cycle) then open the modal — unified entry point.
+- **Backend `POST /api/stripe/create-checkout`** now accepts optional `plan`, `billing_cycle`, `user_id`, `metadata`; forwards them all into Stripe session metadata.
+- **`PaymentReturnModal` upgraded**: on `paid`, runs `UPDATE profiles SET plan, billing_cycle, plan_updated_at WHERE id=user.id` (RLS-scoped), calls `refresh()` from useUserBillingState, computes resume URL from persisted intent, shows "Continuar a Quantro OS →" button, cleans URL + intent on close.
+- Testing iteration_14: 100% backend (5/5 pytest), 94% frontend (15/16 — only gap is Supabase project config on user side: signup returning HTTP 500).
+
+
 - **Smart CTA logic (Msg 479)** via new hook `/app/frontend/src/hooks/useUserBillingState.js`:
   - States: `not_logged` (default) / `trial_active` / `active_subscription` / `expired`
   - Precedence: URL param `?userState=<state>` > localStorage (`quantro_user_state`) > default
