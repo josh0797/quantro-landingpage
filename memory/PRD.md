@@ -61,7 +61,23 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Server-side Stripe→Supabase sync + usePlan/UpgradeScreen + Welcome + Announcement banner
+### Feb 22, 2026 — Supabase-first billing refactor (Edge Functions authority)
+User directive: STOP local FastAPI billing; route everything through the existing Supabase Edge Functions `create-checkout-session` + `stripe-webhook`. `profiles.plan` is the sole source of truth.
+
+- **`lib/stripe.js` rewritten**: `startStripeCheckout({ plan, billingCycle, email, language })` now POSTs to `${SUPABASE_URL}/functions/v1/create-checkout-session` with body `{ priceId, successUrl, cancelUrl, locale, customerEmail }` and `Authorization: Bearer <session_access_token || anon_key>`. Removed `getCheckoutStatus` / `pollCheckoutStatus` (obsolete).
+- **`lib/platformRoutes.js`**:
+  - Added `STRIPE_PRICE_IDS` map with all 6 user-provided price IDs (essential/pro/enterprise × monthly/annual) + `resolvePriceId(plan, cycle)` helper.
+  - Updated URLs: Quantro OS → `https://konta-seven.vercel.app`, Quantro Flow → `https://quantro-os.emergent.host/dashboard`, both `available: true`.
+- **`PaymentReturnModal` rewritten**: detects `?checkout=success|cancel`; in success mode polls `supabase.from('profiles').select('plan').eq('id', user.id)` every 1.5s up to 12 attempts (~18s) until `plan` flips — no backend calls. Ensures Stripe webhook latency is absorbed gracefully.
+- **`usePlan.js` extended**: reads `public.ai_usage` filtering by `user_id + month='YYYY-MM'`, groups/SUMs by `type` (agent_runs / ai_requests / automations). Exposes `usage`, `remaining`, `can.runMoreAgents/runMoreAiRequests/runMoreAutomations`, and `refreshUsage()`.
+- **Backend FastAPI — Stripe code removed entirely**:
+  - Deleted: `/api/stripe/create-checkout`, `/api/stripe/checkout-status/{id}`, `/api/webhook/stripe` (all now 404).
+  - Kept: `/api/stripe/payments/count` (simple counter used by SocialProof; returns baseline + Mongo legacy count).
+  - Removed imports of `emergentintegrations.payments.stripe.checkout`, `supabase_admin`, `send_welcome_email` from `server.py`.
+  - `/app/backend/supabase_admin.py` DELETED — no more service-role code in our backend. Supabase Edge Functions own the service-role key.
+- Testing iteration_16: 100% backend (7/7), 100% frontend (9/9). Zero bugs.
+
+
 - **Stripe webhook → Supabase (server-side, service-role authority)**:
   - New `/app/backend/supabase_admin.py` — singleton admin client using `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (added to `/app/backend/.env`). Exposes `update_profile_plan(user_id, plan, billing_cycle, stripe_subscription_id, stripe_customer_id)` + `clear_profile_plan(user_id)`.
   - `supabase==2.28.3` added to `requirements.txt`.
