@@ -4,6 +4,7 @@ import { Check, Sparkles } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useUserBillingState, getCTAForState } from "../../hooks/useUserBillingState";
 import { startStripeCheckout } from "../../lib/stripe";
 import { trackCTAClick, trackCheckoutStarted } from "../../lib/analytics";
 
@@ -27,6 +28,7 @@ export const PricingSection = () => {
   const isEs = language === "es";
   const [billing, setBilling] = useState("monthly"); // 'monthly' | 'annual'
   const isAnnual = billing === "annual";
+  const billingState = useUserBillingState();
 
   const tiers = [
     {
@@ -94,17 +96,24 @@ export const PricingSection = () => {
   ];
 
   const handleCtaClick = async (tier) => {
-    trackCTAClick(`pricing_${tier.key}_${billing}`);
-    trackCheckoutStarted({
-      packageId: "trial_1usd",
-      source: `pricing_${tier.key}_${billing}`,
-    });
+    const source = `pricing_${tier.key}_${billing}`;
+    const cta = getCTAForState(billingState, language, { source });
+    trackCTAClick(cta.source);
+
+    if (cta.type === "app") {
+      window.open(cta.href, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    trackCheckoutStarted({ packageId: "trial_1usd", source: cta.source });
     try {
       await startStripeCheckout({ packageId: "trial_1usd" });
     } catch (err) {
       console.error(err);
     }
   };
+
+  const ctaForPricing = getCTAForState(billingState, language, { source: "pricing" });
 
   return (
     <AnimatedSection
@@ -273,12 +282,15 @@ export const PricingSection = () => {
                 onClick={() => handleCtaClick(tier)}
                 className={`w-full py-3.5 rounded-xl font-semibold transition-all ${
                   tier.highlighted
-                    ? "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/30"
+                    ? ctaForPricing.variant === "warning"
+                      ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A0F1C] hover:shadow-lg hover:shadow-amber-400/30"
+                      : "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/30"
                     : "bg-slate-800 text-white hover:bg-slate-700"
                 }`}
                 data-testid={`pricing-cta-${i}`}
+                data-cta-state={billingState}
               >
-                {isEs ? "Empezar" : "Get started"}
+                {ctaForPricing.label}
               </button>
             </motion.div>
           ))}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -1427,6 +1427,39 @@ export const InteractiveDemoSection = () => {
   const [view, setView] = useState("dashboard");
   const tabs = useMemo(() => TABS(isEs), [isEs]);
 
+  // Onboarding hint — appears ~7s after landing on the Dashboard view
+  // (once per session) if the user hasn't explored other modules yet.
+  const [showHint, setShowHint] = useState(false);
+  const [hintDismissed, setHintDismissed] = useState(() => {
+    try {
+      return sessionStorage.getItem("quantro_demo_hint") === "dismissed";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (hintDismissed) return;
+    if (view !== "dashboard") return;
+    const id = setTimeout(() => setShowHint(true), 7000);
+    return () => clearTimeout(id);
+  }, [view, hintDismissed]);
+
+  const dismissHint = () => {
+    setShowHint(false);
+    setHintDismissed(true);
+    try {
+      sessionStorage.setItem("quantro_demo_hint", "dismissed");
+    } catch {
+      /* storage may be unavailable */
+    }
+  };
+
+  const handleTabClick = (key) => {
+    if (showHint || !hintDismissed) dismissHint();
+    setView(key);
+  };
+
   const CurrentView = VIEWS[view] || DashboardView;
 
   return (
@@ -1481,12 +1514,13 @@ export const InteractiveDemoSection = () => {
         >
           {tabs.map((tab) => {
             const active = view === tab.key;
-            return (
+            const isAgents = tab.key === "agents";
+            const button = (
               <button
                 key={tab.key}
                 role="tab"
                 aria-selected={active}
-                onClick={() => setView(tab.key)}
+                onClick={() => handleTabClick(tab.key)}
                 data-testid={`demo-tab-${tab.key}`}
                 className={`relative px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all ${
                   active
@@ -1506,7 +1540,94 @@ export const InteractiveDemoSection = () => {
                   />
                 )}
                 <span className="relative">{tab.label}</span>
+                {/* Pulse ring drawing attention to Agentes IA while hint is showing */}
+                {isAgents && showHint && !active && (
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full pointer-events-none"
+                    style={{ border: "1px solid rgba(0, 245, 255, 0.55)" }}
+                    animate={{ scale: [1, 1.14, 1], opacity: [0.9, 0.2, 0.9] }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
               </button>
+            );
+
+            if (!isAgents) return button;
+
+            return (
+              <div key={tab.key} className="relative">
+                {button}
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.95 }}
+                      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute left-1/2 -translate-x-1/2 z-40"
+                      style={{ top: "calc(100% + 14px)" }}
+                      data-testid="demo-hint-tooltip"
+                    >
+                      {/* Caret */}
+                      <div
+                        className="absolute left-1/2 -translate-x-1/2 -top-1.5 w-3 h-3 rotate-45"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, rgba(0, 245, 255, 0.95), rgba(34, 211, 238, 0.9))",
+                          boxShadow: "0 0 12px -2px rgba(0, 245, 255, 0.6)",
+                        }}
+                      />
+                      {/* Bubble */}
+                      <div
+                        className="relative rounded-xl px-4 py-2.5"
+                        style={{
+                          width: 300,
+                          background:
+                            "linear-gradient(135deg, rgba(0, 245, 255, 0.97), rgba(34, 211, 238, 0.92))",
+                          boxShadow:
+                            "0 12px 40px -10px rgba(0, 245, 255, 0.55), 0 0 0 1px rgba(0, 245, 255, 0.35)",
+                        }}
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dismissHint();
+                          }}
+                          className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full flex items-center justify-center text-[#0A0F1C] hover:bg-[#0A0F1C]/15 transition-colors"
+                          aria-label={isEs ? "Cerrar" : "Dismiss"}
+                          data-testid="demo-hint-dismiss"
+                        >
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                            <path
+                              d="M1 1 L7 7 M7 1 L1 7"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                        <div className="flex items-start gap-2 pr-4">
+                          <Sparkles size={13} className="text-[#0A0F1C] flex-shrink-0 mt-[2px]" />
+                          <p className="text-[12px] font-semibold text-[#0A0F1C] leading-snug m-0">
+                            {isEs
+                              ? "Haz clic aquí para ver cómo Quantro piensa por ti"
+                              : "Click here to see how Quantro thinks for you"}{" "}
+                            <motion.span
+                              className="inline-block text-[#0A0F1C] font-bold"
+                              animate={{ y: [0, -3, 0] }}
+                              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                              aria-hidden
+                            >
+                              ↑
+                            </motion.span>
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             );
           })}
         </motion.div>
@@ -1550,7 +1671,7 @@ export const InteractiveDemoSection = () => {
           </div>
 
           <div className="flex" style={{ minHeight: 620 }}>
-            <Sidebar current={view} onNavigate={setView} isEs={isEs} />
+            <Sidebar current={view} onNavigate={handleTabClick} isEs={isEs} />
 
             <div className="flex-1 flex flex-col min-w-0" style={{ background: PANEL }}>
               <Topbar current={view} isEs={isEs} />

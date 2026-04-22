@@ -1,251 +1,382 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import {
-  BarChart3,
   Users,
-  TrendingUp,
-  FileSpreadsheet,
-  MessageSquare,
+  MessageCircle,
   Mail,
+  Calendar,
+  BarChart3,
+  FileText,
   ClipboardList,
+  Zap,
+  Brain,
+  Workflow,
+  ArrowRight,
 } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
 
-// Tool positions around the center (percentages) — scattered premium layout
-// Costs sum to $399/mo, the user-specified pre-Quantro baseline
-const TOOLS = [
-  { label: "CRM", icon: Users, x: 8, y: 15, cost: 99 },
-  { label: "BI Tool", icon: BarChart3, x: 80, y: 10, cost: 119 },
-  { label: "Forecasts", icon: TrendingUp, x: 72, y: 78, cost: 59 },
-  { label: "Spreadsheets", icon: FileSpreadsheet, x: 3, y: 72, cost: 25 },
-  { label: "Chat Ops", icon: MessageSquare, x: 88, y: 45, cost: 39 },
-  { label: "Email Mgmt", icon: Mail, x: 15, y: 48, cost: 29 },
-  { label: "Task Tracker", icon: ClipboardList, x: 55, y: 88, cost: 29 },
+/* Scattered external tools — the "before" layer. Positions are in % inside
+   a relatively-positioned canvas. Kept deliberately muted and blurred. */
+const EXTERNAL_TOOLS = (isEs) => [
+  { label: "CRM", icon: Users, x: 6, y: 12 },
+  { label: "WhatsApp", icon: MessageCircle, x: 78, y: 8 },
+  { label: isEs ? "Email Marketing" : "Email Marketing", icon: Mail, x: 4, y: 82 },
+  { label: "Calendar", icon: Calendar, x: 84, y: 78 },
+  { label: "Analytics", icon: BarChart3, x: 12, y: 52 },
+  { label: "Docs", icon: FileText, x: 82, y: 46 },
+  { label: "Tasks", icon: ClipboardList, x: 36, y: 6 },
+  { label: "Automation", icon: Zap, x: 60, y: 90 },
 ];
 
-const TOTAL_COST = TOOLS.reduce((sum, t) => sum + t.cost, 0);
+/* =========================================================================
+   CoreCard — the two protagonist cards (Quantro OS + Quantro Flow)
+   ========================================================================= */
+const CoreCard = ({
+  title,
+  subtitle,
+  icon: Icon,
+  accent,
+  tagLabel,
+  delay = 0,
+}) => (
+  <motion.div
+    initial={{ opacity: 0, y: 18, scale: 0.96 }}
+    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+    viewport={{ once: true, margin: "-80px" }}
+    transition={{ delay, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+    className="relative"
+    data-testid={`core-card-${tagLabel.toLowerCase()}`}
+  >
+    {/* Glow aura */}
+    <motion.div
+      aria-hidden
+      className="absolute -inset-6 rounded-3xl blur-2xl pointer-events-none"
+      style={{
+        background: `radial-gradient(circle at center, ${accent}33, transparent 70%)`,
+      }}
+      animate={{ opacity: [0.55, 0.85, 0.55] }}
+      transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+    />
 
-// Animated counter — tweens from `from` to `to` once in view
-const useInViewTween = (target, duration = 1400) => {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    const start = performance.now();
-    let frame;
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(eased * target));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, duration]);
-  return value;
-};
+    <div
+      className="relative rounded-2xl p-5 flex items-center gap-4 backdrop-blur-xl"
+      style={{
+        background:
+          "linear-gradient(160deg, rgba(15, 23, 42, 0.92) 0%, rgba(3, 7, 18, 0.85) 100%)",
+        border: `1px solid ${accent}4D`,
+        boxShadow: `0 24px 60px -24px ${accent}55, inset 0 1px 0 rgba(255,255,255,0.05)`,
+      }}
+    >
+      {/* Icon */}
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background: `linear-gradient(135deg, ${accent}33, ${accent}0D)`,
+          border: `1px solid ${accent}66`,
+          boxShadow: `0 0 18px -4px ${accent}88`,
+        }}
+      >
+        <Icon size={20} style={{ color: accent }} />
+      </div>
 
-const ValueStackCanvas = () => {
+      {/* Text */}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span
+            className="text-[9px] font-bold tracking-[0.22em] uppercase"
+            style={{ color: accent }}
+          >
+            {tagLabel}
+          </span>
+          <span
+            className="w-1 h-1 rounded-full"
+            style={{ backgroundColor: accent, boxShadow: `0 0 6px ${accent}` }}
+          />
+        </div>
+        <div className="font-satoshi font-bold text-[20px] text-white leading-none tracking-tight">
+          {title}
+        </div>
+        <div className="text-[12px] text-slate-400 mt-1.5 leading-snug">{subtitle}</div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* =========================================================================
+   UnifiedCanvas — external tools (back) + Quantro OS/Flow (front)
+   ========================================================================= */
+const UnifiedCanvas = ({ isEs }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-120px" });
-  const [collapsed, setCollapsed] = useState(false);
-
-  // Kick off the collapse animation ~600ms after enter-in
-  useEffect(() => {
-    if (!inView) return;
-    const id = setTimeout(() => setCollapsed(true), 600);
-    return () => clearTimeout(id);
-  }, [inView]);
+  const tools = EXTERNAL_TOOLS(isEs);
 
   return (
     <div
       ref={ref}
-      className="relative w-full h-[440px] sm:h-[480px] rounded-2xl overflow-hidden"
-      data-testid="value-stack-canvas"
+      className="relative w-full rounded-2xl overflow-hidden"
       style={{
+        minHeight: 520,
         background:
-          "radial-gradient(ellipse at center, rgba(0,245,255,0.06), transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(160,32,255,0.05), transparent 55%)",
+          "radial-gradient(ellipse at 30% 20%, rgba(0,245,255,0.08), transparent 55%), radial-gradient(ellipse at 70% 80%, rgba(160,32,255,0.07), transparent 55%), #030712",
+        border: "1px solid rgba(148, 163, 184, 0.08)",
       }}
+      data-testid="unified-canvas"
     >
       {/* Grid background */}
       <div
-        className="absolute inset-0 opacity-40 pointer-events-none"
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-30"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(71,85,105,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(71,85,105,0.08) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
+            "linear-gradient(rgba(71,85,105,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(71,85,105,0.1) 1px, transparent 1px)",
+          backgroundSize: "36px 36px",
+          maskImage:
+            "radial-gradient(ellipse at center, black 40%, transparent 85%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse at center, black 40%, transparent 85%)",
         }}
       />
 
-      {/* Center Quantro core */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={inView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-      >
-        {/* Outer glow */}
-        <motion.div
-          animate={collapsed ? { scale: [1, 1.15, 1] } : {}}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#00F5FF]/20 to-[#A020FF]/20 blur-2xl scale-150"
-        />
-        <div className="relative flex items-center gap-3 px-5 py-4 rounded-2xl bg-gradient-to-br from-[#0F172A] to-[#030712] border border-[#00F5FF]/40 shadow-2xl shadow-[#00F5FF]/20">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] flex items-center justify-center text-[#0A0F1C] font-satoshi font-bold text-lg">
-            Q
-          </div>
-          <div className="text-left">
-            <div className="font-satoshi font-bold text-white text-lg leading-none">Quantro OS</div>
-            <div className="text-xs text-slate-400 mt-1">Un sistema</div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Connector lines from each tool to center (fade as tools collapse) */}
-      <svg
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        aria-hidden
-      >
-        {TOOLS.map((tool, i) => (
-          <motion.line
-            key={i}
-            x1={`${tool.x}%`}
-            y1={`${tool.y}%`}
-            x2="50%"
-            y2="50%"
-            stroke="url(#connectorGrad)"
-            strokeWidth="1"
-            strokeDasharray="3 4"
-            initial={{ opacity: 0 }}
-            animate={
-              inView && !collapsed
-                ? { opacity: [0, 0.5, 0.3] }
-                : collapsed
-                ? { opacity: 0 }
-                : {}
-            }
-            transition={{ delay: 0.3 + i * 0.06, duration: 1, ease: "easeInOut" }}
+      {/* BEFORE / AHORA labels */}
+      <div className="absolute top-4 left-4 z-10">
+        <span
+          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-[0.18em] uppercase"
+          style={{
+            background: "rgba(148, 163, 184, 0.06)",
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            color: "#64748B",
+          }}
+        >
+          <span className="w-1 h-1 rounded-full bg-slate-500" />
+          {isEs ? "Antes · disperso" : "Before · fragmented"}
+        </span>
+      </div>
+      <div className="absolute top-4 right-4 z-10">
+        <motion.span
+          initial={{ opacity: 0, x: 6 }}
+          animate={inView ? { opacity: 1, x: 0 } : {}}
+          transition={{ delay: 0.8, duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-[0.18em] uppercase"
+          style={{
+            background: "rgba(0, 245, 255, 0.08)",
+            border: "1px solid rgba(0, 245, 255, 0.3)",
+            color: "#00F5FF",
+          }}
+        >
+          <span
+            className="w-1 h-1 rounded-full bg-[#00F5FF]"
+            style={{ boxShadow: "0 0 6px #00F5FF" }}
           />
-        ))}
-        <defs>
-          <linearGradient id="connectorGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#00F5FF" />
-            <stop offset="100%" stopColor="#A020FF" />
-          </linearGradient>
-        </defs>
-      </svg>
+          {isEs ? "Ahora · unificado" : "Now · unified"}
+        </motion.span>
+      </div>
 
-      {/* Tool pills — start scattered, then collapse to center */}
-      {TOOLS.map((tool, i) => {
+      {/* External tool pills — floating back-layer */}
+      {tools.map((tool, i) => {
         const Icon = tool.icon;
         return (
           <motion.div
             key={tool.label}
-            initial={{ opacity: 0, scale: 0.7, x: "-50%", y: "-50%" }}
-            animate={
-              inView
-                ? collapsed
-                  ? {
-                      opacity: 0,
-                      scale: 0.3,
-                      x: "-50%",
-                      y: "-50%",
-                      left: "50%",
-                      top: "50%",
-                    }
-                  : {
-                      opacity: 1,
-                      scale: 1,
-                      x: "-50%",
-                      y: "-50%",
-                      left: `${tool.x}%`,
-                      top: `${tool.y}%`,
-                    }
-                : {}
-            }
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={inView ? { opacity: 0.5, scale: 1 } : {}}
             transition={{
-              delay: 0.15 + i * 0.07,
-              duration: 1.1,
-              ease: [0.25, 0.1, 0.25, 1],
+              delay: 0.15 + i * 0.08,
+              duration: 0.9,
+              ease: [0.22, 1, 0.36, 1],
             }}
-            className="absolute flex items-center gap-2 px-3 py-2 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-sm"
-            style={{ left: `${tool.x}%`, top: `${tool.y}%` }}
-            data-testid={`value-stack-pill-${i}`}
+            className="absolute -translate-x-1/2 -translate-y-1/2"
+            style={{
+              left: `${tool.x}%`,
+              top: `${tool.y}%`,
+              filter: "blur(0.3px)",
+            }}
+            data-testid={`external-tool-${i}`}
           >
-            <Icon size={14} className="text-slate-400" />
-            <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
-              {tool.label}
-            </span>
-            <span className="text-[10px] text-slate-500 font-mono">${tool.cost}</span>
+            <motion.div
+              animate={{ y: [0, -4, 0, 3, 0] }}
+              transition={{
+                duration: 6 + (i % 3),
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.25,
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full"
+              style={{
+                background: "rgba(15, 23, 42, 0.55)",
+                border: "1px solid rgba(148, 163, 184, 0.15)",
+                backdropFilter: "blur(6px)",
+                boxShadow: "0 6px 16px -8px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <Icon size={11} className="text-slate-500" />
+              <span className="text-[10px] font-medium text-slate-500 whitespace-nowrap">
+                {tool.label}
+              </span>
+            </motion.div>
           </motion.div>
         );
       })}
+
+      {/* Connector arc between OS and Flow */}
+      <svg
+        aria-hidden
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20"
+        width="100%"
+        height="120"
+        viewBox="0 0 600 120"
+        style={{ maxWidth: 600 }}
+      >
+        <defs>
+          <linearGradient id="core-link" x1="0" y1="0.5" x2="1" y2="0.5">
+            <stop offset="0%" stopColor="#00F5FF" stopOpacity="0.0" />
+            <stop offset="35%" stopColor="#00F5FF" stopOpacity="0.55" />
+            <stop offset="65%" stopColor="#A020FF" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#A020FF" stopOpacity="0.0" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          d="M 50 60 C 180 20, 420 20, 550 60"
+          fill="none"
+          stroke="url(#core-link)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          initial={{ pathLength: 0, opacity: 0 }}
+          animate={inView ? { pathLength: 1, opacity: 1 } : {}}
+          transition={{ delay: 1.1, duration: 1, ease: "easeInOut" }}
+        />
+      </svg>
+
+      {/* Core cards container */}
+      <div className="absolute inset-0 flex items-center justify-center px-6 py-12 z-30">
+        <div className="grid sm:grid-cols-2 gap-5 sm:gap-7 w-full max-w-[640px]">
+          <CoreCard
+            title="Quantro OS"
+            subtitle={isEs ? "Inteligencia del negocio" : "Business intelligence"}
+            icon={Brain}
+            accent="#00F5FF"
+            tagLabel="CORE"
+            delay={0.45}
+          />
+          <CoreCard
+            title="Quantro Flow"
+            subtitle={isEs ? "Ejecución automática" : "Automated execution"}
+            icon={Workflow}
+            accent="#A020FF"
+            tagLabel="CORE"
+            delay={0.6}
+          />
+        </div>
+      </div>
     </div>
   );
 };
 
-const SavingsCard = ({ isEs }) => {
-  const savings = useInViewTween(TOTAL_COST);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ delay: 2.2, duration: 0.5 }}
-      className="relative rounded-2xl p-7 bg-gradient-to-br from-[#00F5FF]/[0.04] via-slate-900/60 to-[#A020FF]/[0.04] border border-slate-800/70 overflow-hidden"
-      data-testid="value-stack-savings"
-    >
-      <div className="absolute top-0 right-0 w-48 h-48 bg-[#00F5FF]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="relative space-y-6">
-        {/* Before */}
-        <div>
-          <p className="text-xs text-slate-500 mb-1.5 leading-snug">
-            {isEs
-              ? "Lo que antes necesitaba múltiples herramientas"
-              : "What used to need multiple tools"}
-          </p>
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-satoshi font-bold text-2xl text-slate-400 line-through tabular-nums">
-              ${savings}
-            </span>
-            <span className="text-xs text-slate-500">/mes</span>
-          </div>
-        </div>
+/* =========================================================================
+   Comparison card — Before (disperse / high cost) vs Now (Quantro / low cost)
+   ========================================================================= */
+const ComparisonCard = ({ isEs }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-80px" }}
+    transition={{ delay: 0.3, duration: 0.6 }}
+    className="relative rounded-2xl p-6 overflow-hidden h-full flex flex-col"
+    style={{
+      background:
+        "linear-gradient(160deg, rgba(15, 23, 42, 0.75) 0%, rgba(3, 7, 18, 0.85) 100%)",
+      border: "1px solid rgba(148, 163, 184, 0.12)",
+      backdropFilter: "blur(12px)",
+    }}
+    data-testid="comparison-card"
+  >
+    {/* Ambient glow */}
+    <div
+      aria-hidden
+      className="absolute -top-12 -right-12 w-56 h-56 rounded-full pointer-events-none"
+      style={{
+        background:
+          "radial-gradient(circle, rgba(0, 245, 255, 0.18), transparent 70%)",
+        filter: "blur(24px)",
+      }}
+    />
 
-        {/* Arrow separator */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider">
-            {isEs ? "con Quantro" : "with Quantro"}
+    <div className="relative flex-1 flex flex-col">
+      {/* BEFORE */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="w-1 h-1 rounded-full bg-slate-500" />
+          <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-slate-500">
+            {isEs ? "Antes" : "Before"}
           </span>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
         </div>
-
-        {/* After */}
-        <div>
-          <p className="text-xs text-emerald-400 font-medium mb-1.5 leading-snug">
-            {isEs
-              ? "Ahora funciona todo en un solo sistema"
-              : "Now everything works in one system"}
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className="font-satoshi font-bold text-5xl text-white tabular-nums">
-              $59
-            </span>
-            <span className="text-slate-500 text-base">/mes</span>
-          </div>
-          <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-            {isEs
-              ? "Menos herramientas que pagar. Más resultados en marcha."
-              : "Fewer tools to pay for. More results in motion."}
-          </p>
+        <div className="text-[13px] text-slate-400 leading-snug mb-2">
+          {isEs
+            ? "Múltiples herramientas separadas"
+            : "Multiple separate tools"}
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[10px] text-slate-500">
+            {isEs ? "Desde" : "From"}
+          </span>
+          <span className="font-satoshi font-bold text-2xl text-slate-400 line-through tabular-nums decoration-slate-600 decoration-1">
+            $399
+          </span>
+          <span className="text-[11px] text-slate-500">/mes</span>
         </div>
       </div>
-    </motion.div>
-  );
-};
 
-// Value Stack Section — "De múltiples herramientas a un solo sistema."
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+        <ArrowRight size={12} className="text-slate-600" />
+        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-slate-700 to-transparent" />
+      </div>
+
+      {/* AHORA */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span
+            className="w-1 h-1 rounded-full bg-[#00F5FF]"
+            style={{ boxShadow: "0 0 6px #00F5FF" }}
+          />
+          <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#00F5FF]">
+            {isEs ? "Ahora con Quantro" : "Now with Quantro"}
+          </span>
+        </div>
+        <div className="text-[13px] text-white font-medium leading-snug mb-2">
+          {isEs ? "Un solo sistema conectado" : "One connected system"}
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[10px] text-slate-500">
+            {isEs ? "Desde" : "From"}
+          </span>
+          <span className="font-satoshi font-bold text-5xl bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums leading-none">
+            $59
+          </span>
+          <span className="text-slate-500 text-sm">/mes</span>
+        </div>
+      </div>
+
+      {/* Footer line */}
+      <div
+        className="mt-auto pt-5"
+        style={{ borderTop: "1px solid rgba(148, 163, 184, 0.08)" }}
+      >
+        <p className="text-[12px] text-slate-400 leading-relaxed">
+          {isEs
+            ? "Menos herramientas que pagar. Más resultados en marcha."
+            : "Fewer tools to pay for. More results in motion."}
+        </p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* =========================================================================
+   Main section
+   ========================================================================= */
 export const ValueStackSection = () => {
   const { language } = useLanguage();
   const isEs = language === "es";
@@ -287,11 +418,11 @@ export const ValueStackSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-[1fr_340px] gap-6">
+        <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-stretch">
           <motion.div variants={fadeInUp}>
-            <ValueStackCanvas />
+            <UnifiedCanvas isEs={isEs} />
           </motion.div>
-          <SavingsCard isEs={isEs} />
+          <ComparisonCard isEs={isEs} />
         </div>
       </div>
     </AnimatedSection>
