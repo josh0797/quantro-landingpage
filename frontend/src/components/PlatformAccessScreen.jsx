@@ -200,6 +200,28 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
   const [redirecting, setRedirecting] = useState(false);
   const [stage, setStage] = useState("choose_platform");
 
+  // Detect fresh purchase (plan_updated_at within last 6 minutes) so we can
+  // render a personalized welcome instead of a bare "opening…".
+  const isFreshPurchase = useMemo(() => {
+    if (!profile?.plan_updated_at) return false;
+    const age = Date.now() - new Date(profile.plan_updated_at).getTime();
+    return Number.isFinite(age) && age >= 0 && age < 6 * 60 * 1000;
+  }, [profile?.plan_updated_at]);
+
+  const firstName = useMemo(() => {
+    const raw = profile?.company_name || user?.email || "";
+    if (!raw) return "";
+    if (raw.includes("@")) return raw.split("@")[0].split(/[._-]/)[0];
+    return raw.split(" ")[0];
+  }, [profile?.company_name, user?.email]);
+
+  const planLabel = useMemo(() => {
+    const map = { essential: "Starter", pro: "Pro", enterprise: "Scale" };
+    return profile?.plan ? map[profile.plan] || profile.plan : "";
+  }, [profile?.plan]);
+
+  const platformName = intent?.platform ? PLATFORMS[intent.platform]?.name : "";
+
   // Recompute stage whenever the underlying auth/profile/intent changes
   useEffect(() => {
     if (!open) return;
@@ -208,7 +230,8 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
     setStage(next);
   }, [open, isLoading, session, profile, intent]);
 
-  // Auto-redirect when we reach 'redirect' stage
+  // Auto-redirect when we reach 'redirect' stage.
+  // Extra delay when it's a fresh purchase so the user can read the welcome.
   useEffect(() => {
     if (!open) return;
     if (stage !== "redirect") return;
@@ -218,12 +241,12 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
     setRedirecting(true);
     trackCTAClick(`platform_redirect_${intent.platform}`);
     clearIntent();
-    // Small delay so the user sees the success feedback
+    const delay = isFreshPurchase ? 2800 : 700;
     const id = setTimeout(() => {
       window.location.href = url;
-    }, 700);
+    }, delay);
     return () => clearTimeout(id);
-  }, [open, stage, intent]);
+  }, [open, stage, intent, isFreshPurchase]);
 
   // Persist intent changes
   useEffect(() => {
@@ -545,24 +568,52 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                       className="flex flex-col items-center justify-center py-10 text-center"
                       data-testid="platform-access-redirect"
                     >
-                      <div
-                        className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+                      <motion.div
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", duration: 0.5, bounce: 0.4 }}
+                        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
                         style={{
                           background:
-                            "linear-gradient(135deg, rgba(0,245,255,0.2), rgba(0,245,255,0.05))",
-                          border: "1px solid rgba(0,245,255,0.4)",
+                            "linear-gradient(135deg, rgba(0,245,255,0.22), rgba(0,245,255,0.05))",
+                          border: "1px solid rgba(0,245,255,0.45)",
+                          boxShadow: "0 0 32px -8px rgba(0,245,255,0.5)",
                         }}
                       >
-                        <ExternalLink size={22} className="text-[#00F5FF]" />
-                      </div>
-                      <div className="text-[14px] font-semibold text-white mb-1">
-                        {isEs ? "Todo listo." : "All set."}
-                      </div>
-                      <div className="text-[12px] text-slate-400 mb-3">
-                        {isEs
-                          ? `Entrando a ${PLATFORMS[intent?.platform]?.name}…`
-                          : `Opening ${PLATFORMS[intent?.platform]?.name}…`}
-                      </div>
+                        {isFreshPurchase ? (
+                          <Sparkles size={26} className="text-[#00F5FF]" />
+                        ) : (
+                          <ExternalLink size={22} className="text-[#00F5FF]" />
+                        )}
+                      </motion.div>
+                      {isFreshPurchase ? (
+                        <>
+                          <div className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#00F5FF] mb-1.5">
+                            {isEs ? "Pago confirmado" : "Payment confirmed"}
+                          </div>
+                          <div className="font-satoshi font-bold text-xl text-white mb-1 leading-tight">
+                            {isEs
+                              ? `¡Bienvenido${firstName ? `, ${firstName}` : ""}!`
+                              : `Welcome${firstName ? `, ${firstName}` : ""}!`}
+                          </div>
+                          <div className="text-[12px] text-slate-400 mb-3 max-w-sm">
+                            {isEs
+                              ? `Tu plan ${planLabel} está activo. Vamos a ${platformName}.`
+                              : `Your ${planLabel} plan is active. Let's head to ${platformName}.`}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-[14px] font-semibold text-white mb-1">
+                            {isEs ? "Todo listo." : "All set."}
+                          </div>
+                          <div className="text-[12px] text-slate-400 mb-3">
+                            {isEs
+                              ? `Entrando a ${platformName}…`
+                              : `Opening ${platformName}…`}
+                          </div>
+                        </>
+                      )}
                       {redirecting && (
                         <Loader2 size={16} className="animate-spin text-[#00F5FF]" />
                       )}

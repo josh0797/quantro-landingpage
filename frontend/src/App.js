@@ -18,6 +18,7 @@ import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
 import { PlatformAccessProvider } from "@/hooks/usePlatformAccess";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 
 /**
  * Landing page (routed at "/").
@@ -38,6 +39,7 @@ const LandingShell = () => (
   <div className="min-h-screen bg-[#030712]">
     <div className="noise-overlay" />
 
+    <AnnouncementBanner />
     <Navbar />
 
     {/* Hook */}

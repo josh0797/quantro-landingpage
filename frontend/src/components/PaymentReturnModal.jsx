@@ -8,7 +8,6 @@ import { pollCheckoutStatus } from "../lib/stripe";
 import { trackCheckoutPaid, trackCheckoutCancelled } from "../lib/analytics";
 import { loadIntent, clearIntent } from "../lib/checkoutResume";
 import { getPlatformRedirectUrl, PLATFORMS } from "../lib/platformRoutes";
-import { supabase } from "../lib/supabase";
 
 /**
  * Reads ?payment=success|cancel&session_id=... from URL and shows feedback modal.
@@ -21,7 +20,7 @@ import { supabase } from "../lib/supabase";
 export const PaymentReturnModal = () => {
   const { language, t } = useLanguage();
   const isEs = language === "es";
-  const { refresh, user } = useUserBillingState();
+  const { refresh } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
   const [state, setState] = useState("hidden"); // hidden | polling | success | cancel | error
   const [resumeUrl, setResumeUrl] = useState(null);
@@ -48,34 +47,15 @@ export const PaymentReturnModal = () => {
           const currency = update.data?.currency || "usd";
           trackCheckoutPaid({ sessionId, amount, currency });
 
-          // 1) Update Supabase profile with the purchased plan (RLS allows
-          //    users to update their own profile). Backend webhook can also
-          //    do this — both are idempotent.
-          try {
-            const intent = loadIntent();
-            if (user?.id && intent?.plan) {
-              await supabase
-                .from("profiles")
-                .update({
-                  plan: intent.plan,
-                  billing_cycle: intent.billing_cycle || "monthly",
-                  plan_updated_at: new Date().toISOString(),
-                })
-                .eq("id", user.id);
-            }
-          } catch (err) {
-            // eslint-disable-next-line no-console
-            console.warn("Profile update after checkout failed:", err);
-          }
-
-          // 2) Refresh useUserBillingState — single source of truth
+          // Backend has already synced profiles.plan via service-role key
+          // (see /api/stripe/checkout-status — server-side sync). We only need
+          // to pull the fresh profile into the client hook.
           try {
             await refresh();
           } catch {
             /* non-fatal */
           }
 
-          // 3) Compute resume target from persisted intent
           const intent = loadIntent();
           const url = getPlatformRedirectUrl(intent?.platform);
           setResumeUrl(url || null);

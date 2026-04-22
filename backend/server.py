@@ -17,6 +17,7 @@ from emergentintegrations.payments.stripe.checkout import (
 )
 from emails import send_welcome_email
 from chat import register_chat_routes
+from supabase_admin import update_profile_plan
 
 
 ROOT_DIR = Path(__file__).parent
@@ -257,6 +258,30 @@ async def stripe_checkout_status(session_id: str, request: Request):
                     }}
                 )
 
+        # Server-side Supabase profile sync — same idempotent logic as webhook.
+        # Runs from the polling path too so dev/preview environments without a
+        # public Stripe webhook still land the plan on the profile.
+        if status.payment_status == "paid":
+            stored_meta = existing.get("metadata") or {}
+            user_id = stored_meta.get("user_id")
+            plan = stored_meta.get("plan")
+            billing_cycle = stored_meta.get("billing_cycle")
+            if user_id and plan and existing.get("profile_sync_status") != "synced":
+                update_profile_plan(
+                    user_id,
+                    plan=plan,
+                    billing_cycle=billing_cycle,
+                    stripe_subscription_id=session_id,
+                )
+                await db.payment_transactions.update_one(
+                    {"session_id": session_id},
+                    {"$set": {
+                        "profile_sync_status": "synced",
+                        "profile_sync_at": datetime.now(timezone.utc).isoformat(),
+                        "synced_plan": plan,
+                    }}
+                )
+
     return CheckoutStatusResponseBody(
         status=status.status,
         payment_status=status.payment_status,
@@ -306,6 +331,34 @@ async def stripe_webhook(request: Request):
                         "welcome_email_sent": True,
                         "welcome_email_id": email_id,
                         "welcome_email_sent_at": datetime.now(timezone.utc).isoformat(),
+                    }}
+                )
+
+        # Sync plan to Supabase profiles (server-side, service-role authority).
+        # Source of truth for (user_id, plan, billing_cycle) is the metadata we
+        # persisted in payment_transactions when the checkout was created, with
+        # webhook_response.metadata as fallback.
+        if webhook_response.payment_status == "paid":
+            stored_meta = existing.get("metadata") or {}
+            event_meta = webhook_response.metadata or {}
+            user_id = stored_meta.get("user_id") or event_meta.get("user_id")
+            plan = stored_meta.get("plan") or event_meta.get("plan")
+            billing_cycle = (
+                stored_meta.get("billing_cycle") or event_meta.get("billing_cycle")
+            )
+            if user_id and plan:
+                update_profile_plan(
+                    user_id,
+                    plan=plan,
+                    billing_cycle=billing_cycle,
+                    stripe_subscription_id=webhook_response.session_id,
+                )
+                await db.payment_transactions.update_one(
+                    {"session_id": webhook_response.session_id},
+                    {"$set": {
+                        "profile_sync_status": "synced",
+                        "profile_sync_at": datetime.now(timezone.utc).isoformat(),
+                        "synced_plan": plan,
                     }}
                 )
 
