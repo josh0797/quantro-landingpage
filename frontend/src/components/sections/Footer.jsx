@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
+import { QuantroLogoMark } from "../QuantroLogoMark";
 
 // Footer with routed legal links
 export const Footer = () => {
@@ -9,11 +10,11 @@ export const Footer = () => {
   return (
     <footer className="py-12 px-6 border-t border-slate-800" data-testid="footer">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <Link to="/" className="flex items-center gap-2" data-testid="footer-logo-home">
-          <div className="w-8 h-8 rounded bg-[#0A0F1C] border border-[#00F5FF]/30 flex items-center justify-center">
-            <span className="font-satoshi font-bold text-sm text-[#00F5FF]">Q</span>
-          </div>
-          <span className="text-lg font-medium text-white">Quantro</span>
+        <Link to="/" className="flex items-center gap-2.5" data-testid="footer-logo-home">
+          <QuantroLogoMark size={30} />
+          <span className="font-satoshi font-semibold text-[17px] text-white tracking-tight leading-none">
+            Quantro
+          </span>
         </Link>
 
         <div className="flex items-center gap-8 text-sm text-slate-500">

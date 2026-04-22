@@ -5,7 +5,7 @@ import { useLanguage } from "../hooks/useLanguage";
 import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
 import { startStripeCheckout } from "../lib/stripe";
 import LanguageSwitcher from "./LanguageSwitcher";
-import QuantroLogoMark from "./QuantroLogoMark";
+import { QuantroLogoMark } from "./QuantroLogoMark";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -45,9 +45,11 @@ export const Navbar = () => {
       data-testid="navbar"
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3" data-testid="logo">
-          <QuantroLogoMark size={40} glow={false} transparent />
-          <span className="text-xl font-medium text-white tracking-tight">Quantro</span>
+        <div className="flex items-center gap-2.5" data-testid="logo">
+          <QuantroLogoMark size={32} />
+          <span className="font-satoshi font-semibold text-[17px] text-white tracking-tight leading-none">
+            Quantro
+          </span>
         </div>
 
         <div className="hidden md:flex items-center gap-8">
@@ -135,7 +137,7 @@ export const Navbar = () => {
               >
                 {language === "es" ? "Precios" : "Pricing"}
               </button>
-              <div className="pt-2">
+              <div className="pt-2 flex justify-center">
                 <LanguageSwitcher />
               </div>
               <button

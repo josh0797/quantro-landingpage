@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, CheckCircle2, Inbox, Sparkles, Sun } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Inbox, Sparkles, Sun } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
 
 // "Así amanece tu empresa con Quantro" — 5-frame narrative
@@ -67,10 +67,10 @@ export const AmanecerSection = () => {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 bg-[#00F5FF]/10 rounded-3xl blur-2xl" />
-            <div className="relative bg-[#0A0F1C] border border-slate-800/70 rounded-2xl p-6">
+            <div className="absolute -inset-4 bg-amber-400/10 rounded-3xl blur-2xl" />
+            <div className="relative bg-[#0A0F1C] border border-amber-400/25 rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-4">
-                <TrendingUp className="text-amber-400" size={18} />
+                <AlertTriangle className="text-amber-400" size={18} />
                 <span className="text-xs font-medium text-amber-400 tracking-wider uppercase">
                   {isEs ? "Riesgo financiero detectado" : "Financial risk detected"}
                 </span>
@@ -80,8 +80,8 @@ export const AmanecerSection = () => {
                   {isEs ? "Exposición estimada" : "Estimated exposure"}
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-satoshi font-bold text-4xl text-white tabular-nums">
-                    $1,399
+                  <span className="font-satoshi font-bold text-4xl text-amber-400 tabular-nums">
+                    -$1,399
                   </span>
                   <span className="text-xs text-slate-500">
                     {isEs ? "/ cuentas por cobrar vencidas" : "/ overdue receivables"}
