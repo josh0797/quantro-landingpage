@@ -61,7 +61,26 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — Mobile flow S-curve + Essential/Pro/Enterprise rename + watermark removed
+### Feb 22, 2026 — SEO + Modal "Volver" + Pricing refactor (full)
+- **SEO metadata update** (`/app/frontend/public/index.html`):
+  - `<title>` → "Quantro — Despierta con decisiones listas para ejecutar en tu negocio"
+  - `<meta name="description">` → "Quantro conecta tus datos, detecta oportunidades y propone acciones listas para ejecutar. Un solo sistema para operar, decidir y crecer — incluso mientras duermes."
+  - Propagated to Open Graph (og:title/og:description), Twitter card (twitter:title/twitter:description) and JSON-LD structured data.
+  - Added keyword `AOS` and `Autonomous Operating System` to meta keywords.
+- **ABOS → AOS rename**: removed any "Autonomous Business Operating System" reference in `backend/emails.py` (footer) and `backend/chat.py` (both ES and EN system prompts). Now says "Autonomous Operating System (AOS)".
+- **Modal "Volver" button relocated**: now lives in the top-left corner of the PlatformAccessScreen chrome (symmetric with the × button on top-right). Only visible on the `auth` stage. Smooth fade + slide transition via `AnimatePresence`. AuthForm accepts `hideBackButton` prop so the inline version isn't duplicated.
+- **PricingSection full refactor** per user spec:
+  - Global message: "Todo el sistema Quantro desde el primer plan. Escala en automatización, profundidad y capacidad."
+  - All 3 plans include Quantro OS + Flow + Intelligence (principle: differ only in depth/automation/capacity — no "disponible a partir de…" language).
+  - Essential ($59) "Empieza con claridad y control" — 6 new bullets. Microcopy: coupon pill 🎟 "Utiliza el cupón QUANTRO1" (cyan-tinted).
+  - Pro ($209) "Escala con inteligencia, no con esfuerzo" — 7 new bullets. Microcopy: "El punto donde tu negocio empieza a escalar". ⭐ Más popular badge. Visual emphasis: `text-2xl` H3, `text-6xl` price, border-2 cyan, `lg:scale-[1.05] -translate-y-3`, gradient shadow.
+  - Enterprise ($499) "Automatización y control en su máxima expresión" — 9 new bullets. Microcopy: "Diseñado para operación avanzada". Purple accent, neutral premium CTA (bg-white/[0.04] + purple border), `lg:scale-[0.985]`.
+  - Essential `lg:scale-[0.97]` — subtly smaller than Pro, larger than Enterprise is not (Enterprise is the same scale as Essential but with aspirational feel via purple).
+  - Mobile order: Pro (order-1) → Essential (order-2) → Enterprise (order-3). Desktop retains natural left-to-right.
+  - Old "$1 USD" microcopy removed everywhere.
+- Testing iteration_18: 100% frontend (all acceptance criteria pass). Zero issues.
+
+
 - **Mobile flow visualization fix** (`IntelligenceSection.jsx`):
   - Desktop (≥640px): unchanged horizontal flowing curve through 4 nodes.
   - Mobile (<640px): new S-shaped 2-row curve — DATOS + ANÁLISIS on top row, DECISIÓN + ACCIÓN on bottom row. Curve SVG uses `vectorEffect="non-scaling-stroke"` + stroke 1.4px so the line stays crisp regardless of the non-uniform viewBox scaling. Labels no longer clip off-screen.
