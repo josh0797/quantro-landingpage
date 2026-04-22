@@ -28,7 +28,6 @@ import {
   Filter,
   TrendingUp,
   TrendingDown,
-  Circle,
 } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";

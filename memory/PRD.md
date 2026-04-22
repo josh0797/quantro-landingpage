@@ -61,7 +61,29 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 21, 2026 — Apple Keynote Narrative Redesign
+### Feb 22, 2026 — Premium Interactive Demo rebuild + Brand unification
+- **InteractiveDemoSection** fully rebuilt as an Apple/Stripe/Linear-style Quantro OS product mock:
+  - macOS-style window chrome with sidebar (Operaciones + Inteligencia groups, profile pill with `ENTERPRISE` badge, search hint ⌘K)
+  - Topbar with `Quantro OS / <view>` breadcrumb, Q2 · LEVEL 10 gradient badge, CO avatar
+  - 7 switchable views via tab pills AND sidebar nav: Dashboard · Scorecard · Rocks · Issues · To-Dos · Agentes IA · Quantro Revenue
+  - Dashboard: greeting card + autonomy KPI + 4 KPI cards + Centro de Acción (4 prioritized tasks) + Revenue panel with Quantro Revenue decisions
+  - Scorecard: filter bar (All Departments / Weeks / 2 wks / CSV / Excel / Add Metric) + summary cards (Active/On Track/At Risk/Off Track) + 6-row measurables table with color-coded weekly cells and trend arrows
+  - Rocks: 4 rock cards with animated progress bars and owner avatars
+  - Issues: table with severity pills, owner avatars, status
+  - To-Dos: checkbox list with priority pills, due dates, owner avatars
+  - Agentes IA: 6 agent cards (Executive Monitor, Risk Monitor, CFO Quantro, Operations Architect, Coach de Ventas, Data Analyst) each with detected/suggestion/next-action
+  - Quantro Revenue: KPI strip + Revenue Decisions workflow + Quadrant analysis (Q1-Q4)
+  - All copy uses real product naming (Quantro, Quantro OS, Quantro Revenue, Agentes IA, Rocks, Scorecard, Issues, To-Dos, SOPs, Lean Analysis, Reunión AI)
+  - Narrative bridge title "Así se ve tu empresa funcionando en Quantro" connecting to AmanecerSection
+- **Brand unification**:
+  - Navbar now uses `QuantroLogoMark` (named import) at 32px + Satoshi wordmark
+  - Footer uses `QuantroLogoMark` at 30px + Satoshi wordmark (replaced the old boxed "Q")
+  - Favicon (SVG + Apple touch) redesigned to match the logo mark (rounded dark glass + cyan→green gradient Q circle + tail)
+- **LanguageSwitcher**: centered inside the mobile menu via `flex justify-center` wrapper
+- **AmanecerSection fix**: financial risk card now shows `-$1,399` in amber-400 with `AlertTriangle` icon and amber border/glow (was white `$1,399` with generic `TrendingUp`)
+- Testing iteration_12: 100% frontend pass, 0 critical bugs
+
+
 Full narrative restructure into a continuous story (Problem → System → Value → Product → Cinematic → Amanecer):
 - **ProblemSystemSection (NEW)**: "El problema no es falta de herramientas." 4 problem→solution blocks with red/green state pills, transition headline, OS + Flow mini-blocks, gradient closing "Primero entiendes. Luego ejecutas."
 - **ValueStackSection (UPDATED copy)**: Title "De múltiples herramientas a un solo sistema." Comparison card shows **$399/mes** (line-through) → **$59/mes** with copy "Menos herramientas que pagar. Más resultados en marcha." Pill costs adjusted to sum to 399.
