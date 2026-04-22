@@ -1,11 +1,20 @@
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { useUserBillingState } from "./useUserBillingState";
 
 /**
- * usePlan — thin wrapper over useUserBillingState that also exposes per-plan
- * feature limits. Used by UpgradeScreen and any gate-able component.
+ * usePlan — wraps useUserBillingState with per-plan feature limits AND
+ * real-time monthly usage from Supabase `public.ai_usage`.
  *
- * Limits are intentionally conservative MVP defaults. Tune as product matures.
+ *   ai_usage (
+ *     user_id uuid not null,
+ *     month   text not null,     -- 'YYYY-MM'
+ *     type    text not null,     -- e.g. 'agent_runs', 'ai_requests', 'automations'
+ *     count   integer not null default 0
+ *   )
+ *
+ * Usage rows are SUM'd by type — tolerant to multiple rows per tuple.
+ * Limits come from PLAN_LIMITS; -1 means unlimited.
  */
 
 export const PLAN_LIMITS = {
@@ -36,7 +45,7 @@ export const PLAN_LIMITS = {
     tagline_es: "Optimización continua",
     tagline_en: "Continuous optimization",
     seats: 10,
-    ai_agents: -1, // unlimited
+    ai_agents: -1,
     ai_runs_monthly: -1,
     automations: -1,
     has_revenue: true,
@@ -51,12 +60,79 @@ export const isPlanAtLeast = (plan, required) => {
   return (RANK[plan] ?? 0) >= (RANK[required] ?? 0);
 };
 
+const currentMonth = () => {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+
+const EMPTY_USAGE = { agent_runs: 0, ai_requests: 0, automations: 0 };
+
 export const usePlan = () => {
   const base = useUserBillingState();
+  const userId = base?.user?.id ?? null;
+  const [usage, setUsage] = useState(EMPTY_USAGE);
+  const [usageLoading, setUsageLoading] = useState(false);
+  const mounted = useRef(true);
+
+  const fetchUsage = useCallback(async () => {
+    if (!userId) {
+      setUsage(EMPTY_USAGE);
+      return;
+    }
+    setUsageLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("ai_usage")
+        .select("type, count")
+        .eq("user_id", userId)
+        .eq("month", currentMonth());
+
+      if (error) {
+        // eslint-disable-next-line no-console
+        console.warn("[usePlan] ai_usage fetch error:", error.message);
+        if (mounted.current) setUsage(EMPTY_USAGE);
+        return;
+      }
+
+      const totals = { ...EMPTY_USAGE };
+      for (const row of data || []) {
+        const key = row?.type;
+        const val = Number(row?.count) || 0;
+        if (!key) continue;
+        totals[key] = (totals[key] || 0) + val;
+      }
+      if (mounted.current) setUsage(totals);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("[usePlan] ai_usage exception:", err);
+      if (mounted.current) setUsage(EMPTY_USAGE);
+    } finally {
+      if (mounted.current) setUsageLoading(false);
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    mounted.current = true;
+    fetchUsage();
+    return () => {
+      mounted.current = false;
+    };
+  }, [fetchUsage]);
+
   const limits = useMemo(
     () => (base.plan ? PLAN_LIMITS[base.plan] : null),
     [base.plan]
   );
+
+  const remaining = useMemo(() => {
+    if (!limits) return { ai_runs_monthly: 0, automations: 0, ai_agents: 0 };
+    const rem = (limit, used) => (limit === -1 ? Infinity : Math.max(0, limit - used));
+    return {
+      ai_runs_monthly: rem(limits.ai_runs_monthly, usage.ai_requests),
+      automations: rem(limits.automations, usage.automations),
+      ai_agents: rem(limits.ai_agents, usage.agent_runs),
+    };
+  }, [limits, usage]);
 
   const can = useMemo(
     () => ({
@@ -68,14 +144,21 @@ export const usePlan = () => {
           ? Infinity
           : limits.ai_agents
         : 0,
+      runMoreAgents: remaining.ai_agents > 0,
+      runMoreAiRequests: remaining.ai_runs_monthly > 0,
+      runMoreAutomations: remaining.automations > 0,
     }),
-    [limits]
+    [limits, remaining]
   );
 
   return {
     ...base,
     limits,
+    usage,
+    remaining,
+    usageLoading,
     can,
+    refreshUsage: fetchUsage,
     isAtLeast: (required) => isPlanAtLeast(base.plan, required),
   };
 };

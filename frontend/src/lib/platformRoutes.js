@@ -1,6 +1,7 @@
 /**
- * Central configuration for platform redirect URLs and pricing tier mapping.
- * Keep this as the single source of truth — never hardcode these elsewhere.
+ * Central configuration for platform URLs, Stripe price IDs and pricing
+ * tier ↔ internal plan mapping.
+ * Single source of truth — never hardcode these values elsewhere.
  */
 
 export const PLATFORMS = {
@@ -15,7 +16,7 @@ export const PLATFORMS = {
       es: "Scorecard, Rocks, Agentes IA, decisiones claras y plan de acción diario.",
       en: "Scorecard, Rocks, AI Agents, clear decisions and daily action plan.",
     },
-    url: "https://quantro-os.emergent.host/dashboard",
+    url: "https://konta-seven.vercel.app",
     accent: "#00F5FF",
     available: true,
   },
@@ -30,11 +31,36 @@ export const PLATFORMS = {
       es: "Inbox unificado, CRM, seguimiento y automatización que ejecuta por ti.",
       en: "Unified inbox, CRM, follow-ups and automation that executes for you.",
     },
-    // TODO: replace with the real Flow dashboard URL once deployed
-    url: null,
+    url: "https://quantro-os.emergent.host/dashboard",
     accent: "#A020FF",
-    available: false,
+    available: true,
   },
+};
+
+/**
+ * Stripe price IDs — consumed by the Supabase Edge Function
+ * `create-checkout-session` which reads `priceId` from the request body.
+ * The Edge Function + `stripe-webhook` are the sole authorities here.
+ */
+export const STRIPE_PRICE_IDS = {
+  essential: {
+    monthly: "price_1TL8xMLJrc96wcWHzaaHtUOL",
+    annual: "price_1TL8xMLJrc96wcWHNYnS8VhY",
+  },
+  pro: {
+    monthly: "price_1TL9BeLJrc96wcWHTspVOqBT",
+    annual: "price_1TL9BeLJrc96wcWHi8ajKg7L",
+  },
+  enterprise: {
+    monthly: "price_1TL9HOLJrc96wcWHvp7LTLS2",
+    annual: "price_1TL9HOLJrc96wcWHxt5fDHWe",
+  },
+};
+
+export const resolvePriceId = (plan, billingCycle = "monthly") => {
+  const planPrices = STRIPE_PRICE_IDS[plan];
+  if (!planPrices) return null;
+  return planPrices[billingCycle] || planPrices.monthly || null;
 };
 
 /**

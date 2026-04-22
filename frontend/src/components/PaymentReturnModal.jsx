@@ -1,78 +1,127 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 import { useUserBillingState } from "../hooks/useUserBillingState";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
-import { pollCheckoutStatus } from "../lib/stripe";
 import { trackCheckoutPaid, trackCheckoutCancelled } from "../lib/analytics";
 import { loadIntent, clearIntent } from "../lib/checkoutResume";
 import { getPlatformRedirectUrl, PLATFORMS } from "../lib/platformRoutes";
+import { supabase } from "../lib/supabase";
 
 /**
- * Reads ?payment=success|cancel&session_id=... from URL and shows feedback modal.
- * On success:
- *   1. Polls Stripe session until `paid`
- *   2. Updates profiles.plan + billing_cycle directly (RLS scoped to user)
- *   3. Refreshes useUserBillingState so Navbar/Pricing re-render with new plan
- *   4. Resumes the platform-access flow if the user had intent before checkout
+ * Reads ?checkout=success|cancel from URL and shows feedback modal.
+ *
+ * Architecture:
+ *   Stripe success redirect → /?checkout=success
+ *   Supabase Edge Function `stripe-webhook` already updated profiles.plan.
+ *   We poll `profiles` from the client (with session auth) until the plan
+ *   flips to a paid value, then show the welcome state and resume the
+ *   platform-access flow.
+ *
+ * We never fetch checkout-status from our own backend — Supabase is the
+ * single source of truth.
  */
+
+const POLL_INTERVAL_MS = 1500;
+const POLL_MAX_ATTEMPTS = 12; // ≈18s total
+
 export const PaymentReturnModal = () => {
   const { language, t } = useLanguage();
   const isEs = language === "es";
-  const { refresh } = useUserBillingState();
+  const { refresh, session } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
   const [state, setState] = useState("hidden"); // hidden | polling | success | cancel | error
   const [resumeUrl, setResumeUrl] = useState(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
+    if (startedRef.current) return;
     const params = new URLSearchParams(window.location.search);
-    const paymentFlag = params.get("payment");
-    const sessionId = params.get("session_id");
+    const flag = params.get("checkout") || params.get("payment");
 
-    if (paymentFlag === "cancel") {
+    if (flag === "cancel") {
+      startedRef.current = true;
       setState("cancel");
-      trackCheckoutCancelled({ sessionId });
+      trackCheckoutCancelled({ sessionId: null });
       return;
     }
 
-    if (paymentFlag === "success" && sessionId) {
-      setState("polling");
+    if (flag !== "success") return;
 
-      pollCheckoutStatus(sessionId, async (update) => {
-        if (update.state === "paid") {
-          const amount = update.data?.amount_total
-            ? update.data.amount_total / 100
-            : 1.0;
-          const currency = update.data?.currency || "usd";
-          trackCheckoutPaid({ sessionId, amount, currency });
+    startedRef.current = true;
+    setState("polling");
 
-          // Backend has already synced profiles.plan via service-role key
-          // (see /api/stripe/checkout-status — server-side sync). We only need
-          // to pull the fresh profile into the client hook.
-          try {
-            await refresh();
-          } catch {
-            /* non-fatal */
+    let attempts = 0;
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      attempts += 1;
+
+      try {
+        // Always refresh from Supabase — profiles is the source of truth.
+        await refresh();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (!userId) {
+          // User session missing — likely signed out or session not restored yet.
+          if (attempts < POLL_MAX_ATTEMPTS) {
+            setTimeout(poll, POLL_INTERVAL_MS);
+          } else {
+            setState("error");
           }
+          return;
+        }
 
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("plan, billing_cycle, stripe_subscription_id")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profile?.plan) {
+          trackCheckoutPaid({
+            sessionId: null,
+            amount: 1.0,
+            currency: "usd",
+            plan: profile.plan,
+          });
           const intent = loadIntent();
-          const url = getPlatformRedirectUrl(intent?.platform);
-          setResumeUrl(url || null);
-
+          const url = getPlatformRedirectUrl(intent?.platform) || null;
+          setResumeUrl(url);
           setState("success");
-        } else if (update.state === "error" || update.state === "expired") {
-          setState("error");
-        } else if (update.state === "timeout") {
+          return;
+        }
+
+        if (attempts < POLL_MAX_ATTEMPTS) {
+          setTimeout(poll, POLL_INTERVAL_MS);
+        } else {
+          // Webhook didn't finish within the window — show a soft error.
           setState("error");
         }
-      });
-    }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[PaymentReturnModal] poll error:", err);
+        if (attempts < POLL_MAX_ATTEMPTS) {
+          setTimeout(poll, POLL_INTERVAL_MS);
+        } else {
+          setState("error");
+        }
+      }
+    };
+
+    poll();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const clearUrl = () => {
     const url = new URL(window.location.href);
+    url.searchParams.delete("checkout");
     url.searchParams.delete("payment");
     url.searchParams.delete("session_id");
     window.history.replaceState({}, "", url.toString());
@@ -102,11 +151,13 @@ export const PaymentReturnModal = () => {
   const intent = loadIntent();
   const platformName = intent?.platform ? PLATFORMS[intent.platform]?.name : null;
 
-  const content = {
+  const copy = {
     polling: {
       icon: <Loader2 className="text-[#00F5FF] animate-spin" size={32} />,
       title: t("payment.polling"),
-      body: "",
+      body: isEs
+        ? "Sincronizando tu plan con Supabase…"
+        : "Syncing your plan with Supabase…",
     },
     success: {
       icon: <Check className="text-emerald-400" size={32} />,
@@ -119,9 +170,11 @@ export const PaymentReturnModal = () => {
       body: t("payment.cancel.body"),
     },
     error: {
-      icon: <AlertCircle className="text-red-400" size={32} />,
-      title: t("payment.error.title"),
-      body: t("payment.error.body"),
+      icon: <AlertCircle className="text-amber-400" size={32} />,
+      title: isEs ? "Estamos verificando tu pago" : "We're verifying your payment",
+      body: isEs
+        ? "Stripe confirmó el cobro pero la sincronización tardó más de lo normal. Recarga en unos segundos o contáctanos."
+        : "Stripe confirmed the charge but the sync took longer than usual. Refresh in a few seconds or reach out.",
     },
   }[state];
 
@@ -143,16 +196,16 @@ export const PaymentReturnModal = () => {
         >
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-5">
-              {content.icon}
+              {copy.icon}
             </div>
             <h3
               className="font-satoshi font-bold text-2xl text-white mb-2"
               data-testid="payment-modal-title"
             >
-              {content.title}
+              {copy.title}
             </h3>
-            {content.body && (
-              <p className="text-slate-400 text-sm leading-relaxed mb-4">{content.body}</p>
+            {copy.body && (
+              <p className="text-slate-400 text-sm leading-relaxed mb-4">{copy.body}</p>
             )}
 
             {state === "success" && platformName && (

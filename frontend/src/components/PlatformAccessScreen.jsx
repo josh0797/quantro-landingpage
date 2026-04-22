@@ -272,20 +272,18 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
 
     const source = `platform_access_${intent.platform}_${tier.key}`;
     trackCTAClick(source);
-    trackCheckoutStarted({ packageId: "trial_1usd", source });
+    trackCheckoutStarted({ packageId: planCode, source });
 
     patchIntent({ tier: tier.key, plan: planCode, billing_cycle: "monthly" });
 
     try {
       await startStripeCheckout({
-        packageId: "trial_1usd",
-        email: user.email,
         plan: planCode,
         billingCycle: "monthly",
-        userId: user.id,
-        metadata: { platform: intent.platform },
+        email: user.email,
+        language,
       });
-      // startStripeCheckout redirects; we won't reach the next line normally
+      // startStripeCheckout redirects; control should not reach here.
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Checkout failed:", err);
