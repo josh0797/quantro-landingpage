@@ -1,0 +1,42 @@
+{
+  "summary": "Frontend-only testing of the Quantro auth-routes batch (deep-linking, full_name signup, URL/language sync, pricing section unauthenticated state, modal close redirect). 10/12 feature checks PASS. 1 CRITICAL user-facing bug discovered: language toggle is physically unreachable on auth routes because the PlatformAccessScreen overlay covers the navbar. Authenticated-only checks (avatar popover + current-plan badge) skipped per task note (no confirmed test account available).",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "PlatformAccessScreen + LanguageSwitcher (navbar)",
+        "issue": "When a user deep-links to /iniciar-sesion, /crear-cuenta, /sign-in or /sign-up the PlatformAccessScreen fixed overlay (z-index:70) is painted over the entire navbar. The LanguageSwitcher buttons (data-testid=lang-toggle-en / lang-toggle-es) still exist in the DOM and their onClick handler is wired correctly, but elementFromPoint at the button center returns the modal wrapper div — so a real user's mouse/tap click never reaches the button. The feature 'click lang-toggle-en on /iniciar-sesion → URL becomes /sign-in' is therefore unreachable via UI. Verified by: Playwright locator.click(force=True) does NOT change the URL (click dispatches at real coordinates and is intercepted by the overlay), but a direct JS btn.click() DOES change the URL to /sign-in and updates the title — confirming the logic works and the only failure is the overlay intercept.",
+        "selector": "[data-testid=lang-toggle-en], [data-testid=lang-toggle-es]",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Signup with a unique throwaway email against live Supabase",
+        "issue": "A POST to Supabase /auth/v1/signup returns HTTP 500 for @quantrotest.com emails, bubbling up as 'El servicio de autenticación no respondió.' in the UI. Likely an SMTP / domain-block issue on the Supabase project, not a frontend bug. The validation path (empty full_name → 'Ingresa tu nombre y apellido.', one-word full_name → same error) works correctly before the network call.",
+        "affected_selectors": ["[data-testid=auth-error]", "[data-testid=auth-submit]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "FIX the overlay/nav z-index so the LanguageSwitcher (and any other nav control the user needs while on an auth route) stays clickable. Recommended: either (a) render a compact LanguageSwitcher inside PlatformAccessScreen's header (next to the close/back buttons) so the feature works regardless of the nav layer, or (b) lift the navbar stacking context above z-70 when an auth route is active, or (c) make the overlay wrapper div pointer-events:none and only enable it on the inner modal card. Option (a) is the safest and matches the UX of a full-screen auth modal.",
+    "Investigate Supabase 500 on signUp for @quantrotest.com — likely SMTP / disposable-domain policy. Switch the test fixture to a Gmail-style address or enable those domains in the Supabase Auth settings so the signup happy-path can be exercised end-to-end by future QA runs.",
+    "Provide a confirmed test account (email + password) in /app/memory/test_credentials.md so the authenticated-only assertions (avatar popover with Ajustes/Pagar/Salir actions, pricing current-plan badge, post-auth redirect to '/') can actually be verified next iteration."
+  ],
+  "critical_code_review_comments": [
+    "PlatformAccessScreen.jsx (773 lines) is over the 700-line guideline — consider splitting the per-stage blocks (choose_platform, auth, choose_plan, onboarding, redirect) into small presentational subcomponents.",
+    "AuthRouteBoot.jsx useEffect intentionally drops open/close from deps with an eslint-disable. This is OK but brittle; if usePlatformAccess ever returns fresh closures, the stale 'isOpen' can cause the modal to stay open after navigating back to '/'. Consider using a ref for bootedRef+isOpen or gating on pathname transitions explicitly.",
+    "PlatformAccessScreen close handler only redirects to '/' when already on an auth route — good. But if the user arrives at /iniciar-sesion, clicks the background overlay (outside the inner card), nothing happens; click-outside-to-close would be a natural ergonomic addition.",
+    "AuthForm.upsertProfileFullName swallows errors silently with console.warn. For signup with email-confirmation ENABLED this path never runs because session is null — that's correct — but for the login branch the full_name is never backfilled for legacy users. Add a one-time backfill when the user later signs in and full_name is still missing."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "n/a (frontend-only per request)", "frontend": "~83% (10/12 testable features PASS, 1 critical overlay bug, 1 feature skipped due to Supabase 500)" },
+  "test_credentials": "Supabase anon key in /app/frontend/.env used for signUp. No confirmed account available for authenticated-state tests.",
+  "seed_data_creation": "None — signup attempts against live Supabase returned 500 for @quantrotest.com (see integration_issues).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Deep-link routing, document.title, heading, data-auth-mode and full_name presence/absence are all correct on /crear-cuenta, /iniciar-sesion, /sign-up, /sign-in. Mode-switch inside the modal ([data-testid=auth-switch-signup]) DOES update the URL correctly (/iniciar-sesion → /crear-cuenta). Close ([data-testid=platform-access-close]) from an auth route correctly routes to '/'. Pricing unauthenticated state: [data-testid=pricing-section], tiers 0-2 and CTAs all render with 'Comenzar'. The ONE broken user flow is the LanguageSwitcher while the modal is open: DOM logic works (verified with JS .click()), but pointer hit-testing routes the click to the modal overlay (elementFromPoint at the button's center returned the modal wrapper div). After main agent ships a fix (move switcher into modal header OR raise nav z-index), retest lang-toggle-en on /iniciar-sesion → URL /sign-in + title 'Sign in | Quantro', and lang-toggle-es on /sign-up → URL /crear-cuenta. Also, please seed a confirmed Supabase account to cover avatar popover (Ajustes/Pagar/Salir) and pricing 'Tu plan actual' badge.",
+  "rca_of_the_issue": "BUG: lang-toggle buttons unclickable on auth routes. REPRO: 1) open /iniciar-sesion, 2) try to click the EN button in the top-right navbar — nothing happens. EVIDENCE: document.elementFromPoint(buttonCenterX, buttonCenterY) returns the modal wrapper <div class='min-h-full flex items-start ...'> instead of the <button data-testid=lang-toggle-en>, proving the modal overlay absorbs the pointer event. The navbar sits under z-index:70 (the modal root) with no explicit stacking context of its own. MITIGATION: Render LanguageSwitcher inside PlatformAccessScreen's header card (highest-reliability fix, no z-index war), or wrap the navbar in position:relative + z-index:80 so it paints above the overlay. Do NOT just raise pointer-events on the switcher — the overlay's background blur is intentional."
+}

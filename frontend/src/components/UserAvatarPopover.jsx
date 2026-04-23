@@ -1,19 +1,19 @@
 import React, { useState } from "react";
+import { Settings, CreditCard, LogOut } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useLanguage } from "../hooks/useLanguage";
 import { getUserInitials } from "../lib/userIdentity";
 import { trackCTAClick } from "../lib/analytics";
+import { supabase } from "../lib/supabase";
+import { PLATFORMS } from "../lib/platformRoutes";
 
 /**
  * Account avatar button that opens a small popover with:
- *   • Full name (when available) + initials
- *   • Email
+ *   • Header — initials + full_name + email
  *   • Active plan badge (+ billing cycle)
- *   • "Cambiar plan" link that scrolls to #pricing
+ *   • Actions dropdown — Settings / Billing / Logout
  *
- * Fully self-contained. The parent Navbar passes user + profile and handlers.
- * The avatar is a separate clickable element — it is NOT nested inside the
- * "Ver mi plan" CTA, so tapping initials vs the CTA are two distinct actions.
+ * Avatar is a SEPARATE tap target from "Ver mi plan".
  */
 
 const SIZE_CLASSES = {
@@ -37,6 +37,7 @@ export const UserAvatarPopover = ({
   profile,
   size = "sm",
   onChangePlan,
+  onSignOut,
   source = "navbar",
   align = "end",
 }) => {
@@ -59,15 +60,47 @@ export const UserAvatarPopover = ({
     : "No active plan";
   const cycleLabel = cycle ? CYCLE_LABELS[cycle]?.[language] ?? cycle : null;
 
-  const handleChangePlan = () => {
-    trackCTAClick(`${source}_avatar_change_plan`);
+  const closeWith = (fn) => () => {
     setOpen(false);
+    // Defer to let popover animate out first
+    setTimeout(() => {
+      try {
+        fn?.();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn("[UserAvatarPopover] action error:", err?.message || err);
+      }
+    }, 80);
+  };
+
+  const handleBilling = closeWith(() => {
+    trackCTAClick(`${source}_avatar_billing`);
     if (typeof onChangePlan === "function") {
       onChangePlan();
     } else {
       document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
     }
-  };
+  });
+
+  const handleSettings = closeWith(() => {
+    trackCTAClick(`${source}_avatar_settings`);
+    // Open Quantro OS where user settings live
+    const url = PLATFORMS?.os?.url;
+    if (url && typeof window !== "undefined") {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  });
+
+  const handleSignOut = closeWith(async () => {
+    trackCTAClick(`${source}_avatar_sign_out`);
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("signOut failed:", err?.message || err);
+    }
+    if (typeof onSignOut === "function") onSignOut();
+  });
 
   const handleOpenChange = (next) => {
     if (next) trackCTAClick(`${source}_avatar_open`);
@@ -92,6 +125,7 @@ export const UserAvatarPopover = ({
         className="w-72 bg-[#0B1220] border-white/10 text-white shadow-xl shadow-black/40 p-0 overflow-hidden"
         data-testid={`${source}-user-avatar-popover`}
       >
+        {/* Header */}
         <div className="px-4 py-4 border-b border-white/5 flex items-center gap-3">
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] text-[13px] font-bold">
             {initials}
@@ -113,6 +147,7 @@ export const UserAvatarPopover = ({
           </div>
         </div>
 
+        {/* Plan row */}
         <div className="px-4 py-3 border-b border-white/5">
           <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 mb-1.5">
             {isEs ? "Plan activo" : "Active plan"}
@@ -136,17 +171,46 @@ export const UserAvatarPopover = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleChangePlan}
-          data-testid={`${source}-avatar-change-plan`}
-          className="w-full text-left px-4 py-3 text-[12px] font-medium text-[#00F5FF] hover:bg-white/[0.04] hover:text-[#7FF5FF] transition-colors flex items-center justify-between"
-        >
-          <span>{isEs ? "Cambiar plan" : "Change plan"}</span>
-          <span aria-hidden="true" className="text-[#00F5FF]/60">
-            →
-          </span>
-        </button>
+        {/* Actions dropdown */}
+        <div className="py-1" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleSettings}
+            data-testid={`${source}-avatar-settings`}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12px] font-medium text-slate-200 hover:bg-white/[0.04] hover:text-white transition-colors"
+          >
+            <Settings size={14} className="text-slate-400" />
+            <span className="flex-1 text-left">
+              {isEs ? "Ajustes" : "Settings"}
+            </span>
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleBilling}
+            data-testid={`${source}-avatar-billing`}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12px] font-medium text-slate-200 hover:bg-white/[0.04] hover:text-white transition-colors"
+          >
+            <CreditCard size={14} className="text-slate-400" />
+            <span className="flex-1 text-left">
+              {isEs ? "Pagar" : "Billing"}
+            </span>
+          </button>
+          <div className="h-px bg-white/5 mx-3 my-1" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleSignOut}
+            data-testid={`${source}-avatar-sign-out`}
+            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[12px] font-medium text-rose-300 hover:bg-rose-500/[0.06] hover:text-rose-200 transition-colors"
+          >
+            <LogOut size={14} />
+            <span className="flex-1 text-left">
+              {isEs ? "Salir" : "Sign out"}
+            </span>
+          </button>
+        </div>
       </PopoverContent>
     </Popover>
   );

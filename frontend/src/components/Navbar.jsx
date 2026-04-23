@@ -116,6 +116,7 @@ export const Navbar = () => {
                 size="sm"
                 source="navbar"
                 onChangePlan={() => handleViewPlan("navbar_avatar")}
+                onSignOut={openPlatformAccess}
               />
               {/* Secondary — Switch account */}
               <button
@@ -204,6 +205,7 @@ export const Navbar = () => {
                       source="mobile"
                       align="center"
                       onChangePlan={() => handleViewPlan("mobile_avatar")}
+                      onSignOut={openPlatformAccess}
                     />
                   </div>
                   {/* Secondary — Switch account */}

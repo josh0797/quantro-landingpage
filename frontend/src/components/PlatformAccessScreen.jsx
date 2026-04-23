@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   X,
   Brain,
@@ -19,6 +20,7 @@ import { resolveNextStep } from "../lib/billingGuards";
 import { saveIntent, patchIntent, clearIntent, loadIntent } from "../lib/checkoutResume";
 import { startStripeCheckout } from "../lib/stripe";
 import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
+import { AUTH_ROUTES, resolveAuthRoute } from "../lib/authRoutes";
 import AuthForm from "./auth/AuthForm";
 
 /**
@@ -184,9 +186,11 @@ const StepIndicator = ({ step, isEs }) => {
   );
 };
 
-export const PlatformAccessScreen = ({ open, onClose }) => {
+export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
   const { language } = useLanguage();
   const isEs = language === "es";
+  const navigate = useNavigate();
+  const location = useLocation();
   const {
     session,
     profile,
@@ -202,6 +206,8 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [stage, setStage] = useState("choose_platform");
+  const [authMode, setAuthMode] = useState("login");
+  const [autoOpenedForced, setAutoOpenedForced] = useState(false);
 
   // Detect fresh purchase (plan_updated_at within last 6 minutes) so we can
   // render a personalized welcome instead of a bare "opening…".
@@ -229,9 +235,66 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
   useEffect(() => {
     if (!open) return;
     if (isLoading) return;
+    // If the modal was opened with a forced stage (e.g. from /iniciar-sesion),
+    // respect it until the user completes that stage.
+    if (initial?.stage === "auth" && !session) {
+      setStage("auth");
+      return;
+    }
     const next = resolveNextStep({ session, profile, intent });
     setStage(next);
-  }, [open, isLoading, session, profile, intent]);
+  }, [open, isLoading, session, profile, intent, initial?.stage]);
+
+  // Sync initial authMode when modal is opened from an auth route
+  useEffect(() => {
+    if (!open) return;
+    if (initial?.authMode === "login" || initial?.authMode === "signup") {
+      setAuthMode(initial.authMode);
+    }
+  }, [open, initial?.authMode]);
+
+  // Push URL when stage becomes 'auth' and current URL isn't already an auth route.
+  // Pull URL change → update authMode when location changes underneath.
+  useEffect(() => {
+    if (!open) return;
+    if (stage !== "auth") return;
+    const currentMatch = resolveAuthRoute(location.pathname);
+    if (currentMatch) {
+      // URL is already the auth route; sync authMode from it
+      if (currentMatch.mode !== authMode) setAuthMode(currentMatch.mode);
+      return;
+    }
+    // Not on an auth route — push one matching current authMode + language
+    const key = authMode === "signup" ? "signUp" : "signIn";
+    const target = AUTH_ROUTES[key][language];
+    if (target && target !== location.pathname) {
+      navigate(target, { replace: false });
+    }
+  }, [open, stage, authMode, language, location.pathname, navigate]);
+
+  // When user toggles mode inside the form while on an auth route, push the
+  // equivalent URL so browser history stays truthful.
+  const handleAuthModeChange = (nextMode) => {
+    setAuthMode(nextMode);
+    const onAuthRoute = resolveAuthRoute(location.pathname);
+    if (!onAuthRoute) return;
+    const key = nextMode === "signup" ? "signUp" : "signIn";
+    const target = AUTH_ROUTES[key][language];
+    if (target && target !== location.pathname) {
+      navigate(target, { replace: true });
+    }
+  };
+
+  // When authenticated while the user was on an auth route, leave the auth
+  // URL: jump back to the intended location (state.from) or home.
+  useEffect(() => {
+    if (!open) return;
+    if (!session) return;
+    const onAuthRoute = resolveAuthRoute(location.pathname);
+    if (!onAuthRoute) return;
+    const dest = location.state?.from?.pathname || "/";
+    navigate(dest, { replace: true });
+  }, [open, session, location.pathname, location.state, navigate]);
 
   // Auto-redirect when we reach 'redirect' stage.
   // Extra delay when it's a fresh purchase so the user can read the welcome.
@@ -347,7 +410,14 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
               {/* Close */}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  // If the modal was opened directly via an auth route, leave
+                  // the URL (go home) so the user isn't stuck on /iniciar-sesion.
+                  if (resolveAuthRoute(location.pathname)) {
+                    navigate("/", { replace: true });
+                  }
+                  onClose();
+                }}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors z-10"
                 aria-label={isEs ? "Cerrar" : "Close"}
                 data-testid="platform-access-close"
@@ -399,7 +469,9 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                   <h2 className="font-satoshi font-bold text-3xl sm:text-4xl text-white leading-tight tracking-tight mb-2">
                     {stage === "choose_platform" &&
                       (isEs ? "¿A dónde quieres entrar?" : "Where do you want to go?")}
-                    {stage === "auth" &&
+                    {stage === "auth" && authMode === "signup" &&
+                      (isEs ? "Crea tu cuenta" : "Create your account")}
+                    {stage === "auth" && authMode !== "signup" &&
                       (isEs ? "Inicia sesión para continuar" : "Sign in to continue")}
                     {(stage === "choose_plan" || stage === "onboarding") &&
                       (isEs ? "Elige tu plan" : "Choose your plan")}
@@ -411,7 +483,11 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                       (isEs
                         ? "Elige la plataforma que quieres abrir. Te acompañamos paso a paso si aún no tienes cuenta o plan."
                         : "Pick the platform you want to open. We'll guide you through auth and plan selection if needed.")}
-                    {stage === "auth" &&
+                    {stage === "auth" && authMode === "signup" &&
+                      (isEs
+                        ? "Con tu cuenta obtienes acceso a Quantro OS y Quantro Flow."
+                        : "Your Quantro account unlocks both Quantro OS and Quantro Flow.")}
+                    {stage === "auth" && authMode !== "signup" &&
                       (isEs
                         ? "Tu sesión de Quantro funciona tanto en Quantro OS como en Quantro Flow."
                         : "Your Quantro session works on both Quantro OS and Quantro Flow.")}
@@ -460,8 +536,10 @@ export const PlatformAccessScreen = ({ open, onClose }) => {
                   {!isLoading && stage === "auth" && (
                     <AuthForm
                       onBack={backToPlatform}
-        onAuthenticated={handleAuthenticated}
+                      onAuthenticated={handleAuthenticated}
                       hideBackButton
+                      initialMode={authMode}
+                      onModeChange={handleAuthModeChange}
                     />
                   )}
 

@@ -19,6 +19,7 @@ import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
 import { PlatformAccessProvider } from "@/hooks/usePlatformAccess";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import AuthRouteBoot from "@/components/AuthRouteBoot";
 
 /**
  * Landing page (routed at "/").
@@ -83,6 +84,7 @@ const AppContent = () => <LandingShell />;
 export default function App() {
   return (
     <PlatformAccessProvider>
+      <AuthRouteBoot />
       <AppContent />
     </PlatformAccessProvider>
   );

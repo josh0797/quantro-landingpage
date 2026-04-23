@@ -15,6 +15,10 @@ root.render(
       <LanguageProvider>
         <Routes>
           <Route path="/" element={<App />} />
+          <Route path="/iniciar-sesion" element={<App />} />
+          <Route path="/crear-cuenta" element={<App />} />
+          <Route path="/sign-in" element={<App />} />
+          <Route path="/sign-up" element={<App />} />
           <Route path="/privacidad" element={<PrivacyPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terminos" element={<TermsPage />} />

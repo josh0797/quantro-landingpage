@@ -1,9 +1,23 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
+import { translateAuthRoute } from '../lib/authRoutes';
 
 const LanguageSwitcher = ({ className = '' }) => {
   const { language, setLanguage, isHydrated } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const changeLanguage = (next) => {
+    if (next === language) return;
+    setLanguage(next);
+    // If we're on an auth route, redirect to the equivalent in the new lang
+    const equivalent = translateAuthRoute(location.pathname, next);
+    if (equivalent && equivalent !== location.pathname) {
+      navigate(equivalent, { replace: true });
+    }
+  };
 
   if (!isHydrated) {
     return (
@@ -17,7 +31,7 @@ const LanguageSwitcher = ({ className = '' }) => {
   return (
     <div className={`flex items-center gap-1 bg-slate-800/50 border border-slate-700/50 rounded-full p-1 ${className}`}>
       <motion.button
-        onClick={() => setLanguage('es')}
+        onClick={() => changeLanguage('es')}
         data-testid="lang-toggle-es"
         aria-label="Switch to Spanish"
         className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
@@ -40,7 +54,7 @@ const LanguageSwitcher = ({ className = '' }) => {
       </motion.button>
       
       <motion.button
-        onClick={() => setLanguage('en')}
+        onClick={() => changeLanguage('en')}
         data-testid="lang-toggle-en"
         aria-label="Switch to English"
         className={`relative px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${

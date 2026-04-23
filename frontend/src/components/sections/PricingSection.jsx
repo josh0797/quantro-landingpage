@@ -32,7 +32,7 @@ export const PricingSection = () => {
   const isEs = language === "es";
   const [billing, setBilling] = useState("monthly"); // 'monthly' | 'annual'
   const isAnnual = billing === "annual";
-  const { billingState } = useUserBillingState();
+  const { billingState, plan: currentPlan, hasPaidPlan } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
 
   const tiers = [
@@ -234,6 +234,7 @@ export const PricingSection = () => {
         {/* Cards — on mobile Pro is shown first per UX spec */}
         <div className="grid lg:grid-cols-3 gap-6 items-stretch">
           {tiers.map((tier, i) => {
+            const isCurrentPlan = hasPaidPlan && currentPlan === tier.key;
             // Mobile order: Pro (1) → Essential (2) → Enterprise (3). Desktop keeps natural order.
             const mobileOrderClass = tier.highlighted
               ? "order-1 lg:order-none"
@@ -241,7 +242,9 @@ export const PricingSection = () => {
               ? "order-2 lg:order-none"
               : "order-3 lg:order-none";
 
-            const cardClass = tier.highlighted
+            const cardClass = isCurrentPlan
+              ? "bg-gradient-to-br from-[#00F5FF]/[0.10] via-slate-900/70 to-[#22D3EE]/[0.06] border-2 border-[#00F5FF]/80 shadow-2xl shadow-[#00F5FF]/30 lg:scale-[1.05] lg:-translate-y-3"
+              : tier.highlighted
               ? "bg-gradient-to-br from-[#00F5FF]/[0.06] via-slate-900/60 to-[#A020FF]/[0.05] border-2 border-[#00F5FF]/45 lg:scale-[1.05] lg:-translate-y-3 shadow-2xl shadow-[#00F5FF]/15"
               : tier.key === "enterprise"
               ? "bg-white/[0.02] border border-[#A020FF]/18 hover:border-[#A020FF]/32 lg:scale-[0.985]"
@@ -253,26 +256,43 @@ export const PricingSection = () => {
               variants={fadeInUp}
               className={`relative rounded-2xl p-7 flex flex-col transition-all duration-300 ${mobileOrderClass} ${cardClass}`}
               style={
-                tier.highlighted
+                tier.highlighted || isCurrentPlan
                   ? { backdropFilter: "blur(14px)" }
                   : { backdropFilter: "blur(6px)" }
               }
               data-testid={`pricing-tier-${i}`}
               data-tier={tier.key}
+              data-current-plan={isCurrentPlan || undefined}
             >
-              {/* Popular badge */}
-              {tier.highlighted && (
+              {/* Current plan badge — takes precedence over Popular */}
+              {isCurrentPlan ? (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span
                     className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full text-[#0A0F1C]"
                     style={{
                       background: "linear-gradient(90deg, #00F5FF, #22D3EE)",
-                      boxShadow: "0 0 20px -3px rgba(0, 245, 255, 0.6)",
+                      boxShadow: "0 0 24px -2px rgba(0, 245, 255, 0.75)",
                     }}
+                    data-testid={`pricing-current-plan-${tier.key}`}
                   >
-                    ⭐ {isEs ? "Más popular" : "Most popular"}
+                    <Check size={12} strokeWidth={3} />
+                    {isEs ? "Tu plan actual" : "Your current plan"}
                   </span>
                 </div>
+              ) : (
+                tier.highlighted && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full text-[#0A0F1C]"
+                      style={{
+                        background: "linear-gradient(90deg, #00F5FF, #22D3EE)",
+                        boxShadow: "0 0 20px -3px rgba(0, 245, 255, 0.6)",
+                      }}
+                    >
+                      ⭐ {isEs ? "Más popular" : "Most popular"}
+                    </span>
+                  </div>
+                )
               )}
 
               {/* Name + tagline */}
@@ -320,23 +340,46 @@ export const PricingSection = () => {
                 ))}
               </ul>
 
-              {/* CTA */}
-              <button
-                onClick={() => handleCtaClick(tier)}
-                className={`w-full py-3.5 rounded-xl font-semibold transition-all ${
-                  tier.highlighted
+              {/* CTA — label + style depend on whether this is the user's current plan */}
+              {(() => {
+                let tierCta;
+                let tierCtaClass;
+                let tierCtaDisabled = false;
+                if (isCurrentPlan) {
+                  tierCta = isEs ? "Plan actual" : "Current plan";
+                  tierCtaClass =
+                    "bg-white/[0.05] border border-[#00F5FF]/30 text-[#7FF5FF] cursor-default";
+                  tierCtaDisabled = true;
+                } else if (hasPaidPlan) {
+                  tierCta = isEs ? "Mejorar plan" : "Upgrade";
+                  tierCtaClass = tier.highlighted
+                    ? "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/30"
+                    : tier.key === "enterprise"
+                    ? "bg-white/[0.04] border border-[#A020FF]/30 text-white hover:bg-[#A020FF]/10 hover:border-[#A020FF]/50"
+                    : "bg-slate-800 text-white hover:bg-slate-700";
+                } else {
+                  tierCta = ctaLabel;
+                  tierCtaClass = tier.highlighted
                     ? billingState === "expired"
                       ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A0F1C] hover:shadow-lg hover:shadow-amber-400/30"
                       : "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/30"
                     : tier.key === "enterprise"
                     ? "bg-white/[0.04] border border-[#A020FF]/30 text-white hover:bg-[#A020FF]/10 hover:border-[#A020FF]/50"
-                    : "bg-slate-800 text-white hover:bg-slate-700"
-                }`}
-                data-testid={`pricing-cta-${i}`}
-                data-cta-state={billingState}
-              >
-                {ctaLabel}
-              </button>
+                    : "bg-slate-800 text-white hover:bg-slate-700";
+                }
+                return (
+                  <button
+                    onClick={() => !tierCtaDisabled && handleCtaClick(tier)}
+                    disabled={tierCtaDisabled}
+                    className={`w-full py-3.5 rounded-xl font-semibold transition-all ${tierCtaClass}`}
+                    data-testid={`pricing-cta-${i}`}
+                    data-cta-state={billingState}
+                    data-current-plan={isCurrentPlan || undefined}
+                  >
+                    {tierCta}
+                  </button>
+                );
+              })()}
 
               {/* Per-tier microcopy under the CTA */}
               {tier.microcopy?.type === "coupon" ? (
