@@ -266,8 +266,9 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
-### Feb 23, 2026 — Authenticated Navbar UX + Flow URL live + Signup redirect
-- **Quantro Flow URL live**: `PLATFORMS.flow.url` updated from mock (`quantro-os.emergent.host/dashboard`) to production domain `https://quantroflow.online` in `/app/frontend/src/lib/platformRoutes.js`.
+### Feb 23, 2026 — Authenticated Navbar UX + Flow URL live + Signup redirect + User Avatar
+- **User initials avatar**: new helper `/app/frontend/src/lib/userIdentity.js` (`deriveInitials`) producing 1–2 char uppercase initials from (in priority) `user.user_metadata.full_name|name|first_name+last_name` → `profile.company_name` → email local-part (split by `. _ -`). Rendered as a dark inner pill (`w-6 h-6` desktop, `w-7 h-7` mobile, `rounded-md`, `bg-[#0A0F1C]/25`, ring) inside the "Ver mi plan" button on both desktop and mobile. Falls back to no-avatar when no signal available.
+- **Quantro Flow URL live**: `PLATFORMS.flow.url` updated from mock to production domain `https://quantroflow.online` in `/app/frontend/src/lib/platformRoutes.js`.
 - **Desktop authenticated CTA overhaul** (`/app/frontend/src/components/Navbar.jsx`):
   - Before: single amber "Actualizar pago" / cyan "Ir al sistema" CTA.
   - After (when `isAuthenticated`): inline `[ Cambiar cuenta ]` (ghost, white/10 border, low-weight) + `[ Ver mi plan ]` (cyan primary gradient). Unauthenticated state unchanged (single "Comenzar" CTA).

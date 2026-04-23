@@ -7,6 +7,7 @@ import { getCTACopy } from "../lib/billingGuards";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
 import { trackCTAClick } from "../lib/analytics";
 import { supabase } from "../lib/supabase";
+import { deriveInitials } from "../lib/userIdentity";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { QuantroLogoMark } from "./QuantroLogoMark";
 
@@ -14,9 +15,10 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language } = useLanguage();
-  const { billingState, isAuthenticated } = useUserBillingState();
+  const { billingState, isAuthenticated, user, profile } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
   const ctaLabel = getCTACopy(billingState, language);
+  const initials = deriveInitials({ user, profile });
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -121,9 +123,18 @@ export const Navbar = () => {
                 onClick={() => handleViewPlan("navbar")}
                 data-testid="nav-view-plan"
                 data-cta-state={billingState}
-                className="px-4 py-2 font-medium text-sm rounded-lg transition-all bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20"
+                className="pl-1.5 pr-4 py-1 font-medium text-sm rounded-lg transition-all bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 flex items-center gap-2"
               >
-                {language === "es" ? "Ver mi plan" : "View my plan"}
+                {initials && (
+                  <span
+                    data-testid="nav-user-avatar"
+                    aria-label={user?.email || "account"}
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#0A0F1C]/25 text-[#0A0F1C] text-[10px] font-bold tracking-wide ring-1 ring-[#0A0F1C]/20"
+                  >
+                    {initials}
+                  </span>
+                )}
+                <span>{language === "es" ? "Ver mi plan" : "View my plan"}</span>
               </button>
             </div>
           ) : (
@@ -199,9 +210,18 @@ export const Navbar = () => {
                     onClick={() => handleViewPlan("mobile_menu")}
                     data-testid="mobile-view-plan"
                     data-cta-state={billingState}
-                    className="px-4 py-3 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"
+                    className="pl-2 pr-4 py-2.5 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all flex items-center justify-center gap-2"
                   >
-                    {language === "es" ? "Ver mi plan" : "View my plan"}
+                    {initials && (
+                      <span
+                        data-testid="mobile-user-avatar"
+                        aria-label={user?.email || "account"}
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#0A0F1C]/25 text-[#0A0F1C] text-[11px] font-bold tracking-wide ring-1 ring-[#0A0F1C]/20"
+                      >
+                        {initials}
+                      </span>
+                    )}
+                    <span>{language === "es" ? "Ver mi plan" : "View my plan"}</span>
                   </button>
                 </div>
               ) : (
