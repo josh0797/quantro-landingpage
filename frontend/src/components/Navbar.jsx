@@ -7,9 +7,9 @@ import { getCTACopy } from "../lib/billingGuards";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
 import { trackCTAClick } from "../lib/analytics";
 import { supabase } from "../lib/supabase";
-import { deriveInitials } from "../lib/userIdentity";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { QuantroLogoMark } from "./QuantroLogoMark";
+import { UserAvatarPopover } from "./UserAvatarPopover";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -18,7 +18,6 @@ export const Navbar = () => {
   const { billingState, isAuthenticated, user, profile } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
   const ctaLabel = getCTACopy(billingState, language);
-  const initials = deriveInitials({ user, profile });
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -110,6 +109,14 @@ export const Navbar = () => {
           <LanguageSwitcher />
           {isAuthenticated ? (
             <div className="flex items-center gap-2" data-testid="nav-auth-actions">
+              {/* Avatar — opens popover with email, plan, change-plan link */}
+              <UserAvatarPopover
+                user={user}
+                profile={profile}
+                size="sm"
+                source="navbar"
+                onChangePlan={() => handleViewPlan("navbar_avatar")}
+              />
               {/* Secondary — Switch account */}
               <button
                 onClick={() => handleSwitchAccount("navbar")}
@@ -123,18 +130,9 @@ export const Navbar = () => {
                 onClick={() => handleViewPlan("navbar")}
                 data-testid="nav-view-plan"
                 data-cta-state={billingState}
-                className="pl-1.5 pr-4 py-1 font-medium text-sm rounded-lg transition-all bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 flex items-center gap-2"
+                className="px-4 py-2 font-medium text-sm rounded-lg transition-all bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20"
               >
-                {initials && (
-                  <span
-                    data-testid="nav-user-avatar"
-                    aria-label={user?.email || "account"}
-                    className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-[#0A0F1C]/25 text-[#0A0F1C] text-[10px] font-bold tracking-wide ring-1 ring-[#0A0F1C]/20"
-                  >
-                    {initials}
-                  </span>
-                )}
-                <span>{language === "es" ? "Ver mi plan" : "View my plan"}</span>
+                {language === "es" ? "Ver mi plan" : "View my plan"}
               </button>
             </div>
           ) : (
@@ -197,6 +195,17 @@ export const Navbar = () => {
 
               {isAuthenticated ? (
                 <div className="flex flex-col gap-3 mt-2">
+                  {/* Avatar + popover — separate tap target above the buttons */}
+                  <div className="flex justify-center pb-1">
+                    <UserAvatarPopover
+                      user={user}
+                      profile={profile}
+                      size="md"
+                      source="mobile"
+                      align="center"
+                      onChangePlan={() => handleViewPlan("mobile_avatar")}
+                    />
+                  </div>
                   {/* Secondary — Switch account */}
                   <button
                     onClick={() => handleSwitchAccount("mobile_menu")}
@@ -210,18 +219,9 @@ export const Navbar = () => {
                     onClick={() => handleViewPlan("mobile_menu")}
                     data-testid="mobile-view-plan"
                     data-cta-state={billingState}
-                    className="pl-2 pr-4 py-2.5 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all flex items-center justify-center gap-2"
+                    className="px-4 py-3 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"
                   >
-                    {initials && (
-                      <span
-                        data-testid="mobile-user-avatar"
-                        aria-label={user?.email || "account"}
-                        className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-[#0A0F1C]/25 text-[#0A0F1C] text-[11px] font-bold tracking-wide ring-1 ring-[#0A0F1C]/20"
-                      >
-                        {initials}
-                      </span>
-                    )}
-                    <span>{language === "es" ? "Ver mi plan" : "View my plan"}</span>
+                    {language === "es" ? "Ver mi plan" : "View my plan"}
                   </button>
                 </div>
               ) : (

@@ -19,7 +19,7 @@ import { VALID_PLANS } from "../lib/platformRoutes";
  */
 
 const PROFILE_COLUMNS =
-  "id, email, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at";
+  "id, email, full_name, company_name, industry, language, plan, billing_cycle, stripe_customer_id, stripe_subscription_id, plan_updated_at";
 
 const fetchProfile = async (userId) => {
   if (!userId) return null;

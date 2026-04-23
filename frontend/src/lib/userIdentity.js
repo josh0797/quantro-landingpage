@@ -1,19 +1,19 @@
 /**
- * Derive 1–2 char uppercase initials from whatever identity signal is available.
- * Priority:
- *   1. user.user_metadata.full_name / name / first+last
- *   2. profile.company_name
- *   3. email local part (split by . _ -)
+ * Derive 1–2 char uppercase initials from the user's identity.
  *
- * Always returns a non-empty 1–2 char string. Returns null if no signal at all.
+ * Priority (per PRD — DB-backed only, no schema changes):
+ *   1. profile.full_name
+ *      • "Juan Pérez"  → "JP"   (first letter of first word + first letter of last word)
+ *      • "Juan"         → "JU"  (first 2 letters of the only word)
+ *   2. email (profile.email || user.email)
+ *      • first 2 letters of the local part
+ *
+ * Always returns a non-empty 1–2 char uppercase string, or null if nothing is available.
  */
-export const deriveInitials = ({ user, profile } = {}) => {
-  const pickFromWords = (raw) => {
+export const getUserInitials = (user, profile) => {
+  const fromWords = (raw) => {
     if (!raw || typeof raw !== "string") return null;
-    const words = raw
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
+    const words = raw.trim().split(/\s+/).filter(Boolean);
     if (words.length === 0) return null;
     if (words.length === 1) {
       const w = words[0];
@@ -22,40 +22,27 @@ export const deriveInitials = ({ user, profile } = {}) => {
     return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   };
 
-  // 1. user_metadata
-  const meta = user?.user_metadata || {};
-  const metaFullName =
-    meta.full_name || meta.name || meta.display_name || null;
-  if (metaFullName) {
-    const r = pickFromWords(metaFullName);
-    if (r) return r;
-  }
-  if (meta.first_name || meta.last_name) {
-    const fn = (meta.first_name || "").trim();
-    const ln = (meta.last_name || "").trim();
-    if (fn || ln) {
-      return ((fn[0] || "") + (ln[0] || "")).toUpperCase() || null;
-    }
-  }
-
-  // 2. profile.company_name
-  if (profile?.company_name) {
-    const r = pickFromWords(profile.company_name);
+  // 1. profile.full_name
+  if (profile?.full_name) {
+    const r = fromWords(profile.full_name);
     if (r) return r;
   }
 
-  // 3. email local part
-  const email = user?.email || profile?.email;
+  // 2. email → first 2 letters of local part
+  const email = profile?.email || user?.email;
   if (email && typeof email === "string") {
     const local = email.split("@")[0] || "";
     if (local) {
-      const parts = local.split(/[._-]+/).filter(Boolean);
-      if (parts.length >= 2) {
-        return (parts[0][0] + parts[1][0]).toUpperCase();
-      }
       return (local.length >= 2 ? local.slice(0, 2) : local).toUpperCase();
     }
   }
 
   return null;
 };
+
+/**
+ * @deprecated Kept for backwards compatibility with earlier callers.
+ * Prefer `getUserInitials(user, profile)`.
+ */
+export const deriveInitials = ({ user, profile } = {}) =>
+  getUserInitials(user, profile);

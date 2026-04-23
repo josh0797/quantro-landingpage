@@ -266,8 +266,19 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
-### Feb 23, 2026 — Authenticated Navbar UX + Flow URL live + Signup redirect + User Avatar
-- **User initials avatar**: new helper `/app/frontend/src/lib/userIdentity.js` (`deriveInitials`) producing 1–2 char uppercase initials from (in priority) `user.user_metadata.full_name|name|first_name+last_name` → `profile.company_name` → email local-part (split by `. _ -`). Rendered as a dark inner pill (`w-6 h-6` desktop, `w-7 h-7` mobile, `rounded-md`, `bg-[#0A0F1C]/25`, ring) inside the "Ver mi plan" button on both desktop and mobile. Falls back to no-avatar when no signal available.
+### Feb 23, 2026 — Avatar + Account Popover (Stripe/Linear-style)
+- **New helper** `/app/frontend/src/lib/userIdentity.js` → `getUserInitials(user, profile)` with priority `profile.full_name` (first + last word initial, or first 2 chars if single word) → email local-part (first 2 chars). Returns null when no signal. `deriveInitials({user,profile})` kept as deprecated alias.
+- **`full_name` added to PROFILE_COLUMNS** in `useUserBillingState.js` (DB already had the column — no schema change).
+- **New component** `/app/frontend/src/components/UserAvatarPopover.jsx`: circular cyan-gradient avatar button. On click opens a Radix Popover (bg `#0B1220`) with three sections:
+  1. Header: large initials + `full_name` (if present) + `email`
+  2. Active plan: pill badge (`essential|pro|enterprise` + billing cycle) with glowing dot when plan exists, muted "Sin plan activo" otherwise
+  3. Footer: "Cambiar plan" action scrolling to `#pricing`
+  - GA4 events: `<source>_avatar_open`, `<source>_avatar_change_plan` (source = `navbar` or `mobile`).
+- **Navbar integration**: avatar is a SEPARATE tap target from "Ver mi plan" — desktop: `[avatar] [Cambiar cuenta] [Ver mi plan]`; mobile menu: avatar centered above the button stack with `size="md"`.
+- Unit test (node) validated initials for 10 cases (JP, MG, JU, A, JU, AL, A, null, null, KK).
+- Smoke screenshot confirms unauthenticated navbar intact.
+
+### Feb 23, 2026 — Authenticated Navbar UX + Flow URL live + Signup redirect
 - **Quantro Flow URL live**: `PLATFORMS.flow.url` updated from mock to production domain `https://quantroflow.online` in `/app/frontend/src/lib/platformRoutes.js`.
 - **Desktop authenticated CTA overhaul** (`/app/frontend/src/components/Navbar.jsx`):
   - Before: single amber "Actualizar pago" / cyan "Ir al sistema" CTA.
