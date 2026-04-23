@@ -22,6 +22,7 @@ import { startStripeCheckout } from "../lib/stripe";
 import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
 import { AUTH_ROUTES, resolveAuthRoute } from "../lib/authRoutes";
 import AuthForm from "./auth/AuthForm";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 /**
  * Full-screen modal that orchestrates the real production flow:
@@ -424,6 +425,12 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
               >
                 <X size={18} />
               </button>
+
+              {/* Language switcher inside the modal — the overlay hides the
+                  navbar one, so auth routes need their own reachable toggle. */}
+              <div className="absolute top-3.5 right-14 z-10 scale-[0.85] origin-right">
+                <LanguageSwitcher />
+              </div>
 
               {/* Back (only on auth stage) */}
               <AnimatePresence>

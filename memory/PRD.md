@@ -266,6 +266,19 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 23, 2026 — Auth Routes + full_name + Pricing Current Plan + Avatar Dropdown
+- **Real auth routes** (React Router): `/iniciar-sesion`, `/crear-cuenta`, `/sign-in`, `/sign-up` (mapping in `/app/frontend/src/lib/authRoutes.js`). Each route auto-opens `PlatformAccessScreen` at auth stage via new `AuthRouteBoot` component, which also sets `document.title` from `AUTH_PAGE_TITLES` and syncs language with URL.
+- **Bidirectional URL↔mode↔language sync**: switching AuthForm mode updates the URL (`switch to signup on /iniciar-sesion → /crear-cuenta`); switching language on an auth route redirects to the equivalent path (`/iniciar-sesion + click EN → /sign-in`). After successful auth from an auth route, navigates to `location.state.from || '/'`.
+- **LanguageSwitcher inside the modal header** (`top-right, next to close button`): the `z-70` overlay previously blocked clicks on the navbar toggle — regression surfaced by QA iteration_20 — now resolved by rendering a compact switcher inside the modal card.
+- **`full_name` in signup**: AuthForm now has a required `User`-icon input with `isValidFullName(name)` regex validation (min 2 words). Rejected inputs show `"Ingresa tu nombre y apellido."`. On successful `supabase.auth.signUp`, `full_name` is passed in `options.data` (user_metadata) AND upserted to `profiles.full_name` when a session exists.
+- **AuthForm mode title fix**: the modal H2 now correctly reflects signup mode (`"Crea tu cuenta"` instead of the stale `"Inicia sesión para continuar"`).
+- **Pricing current-plan highlight** (`PricingSection.jsx`): when `profile.plan === tier.key`, the card gets a stronger cyan border + "Tu plan actual" / "Your current plan" badge (replaces "Más popular"). CTA becomes `"Plan actual"` (disabled, neutral ring) for current tier and `"Mejorar plan"` / `"Upgrade"` for other tiers when user has any active plan.
+- **UserAvatarPopover → Dropdown**: now includes a 3-item action menu below the header + plan row:
+  - **Ajustes / Settings** → opens Quantro OS in a new tab
+  - **Pagar / Billing** → scrolls to `#pricing` (consistent with "Cambiar plan")
+  - **Salir / Sign out** → `supabase.auth.signOut()` + reopens PlatformAccessScreen
+- **QA coverage (iteration_20)**: 10/12 features PASS. 1 critical issue (LanguageSwitcher unreachable under modal) was fixed in the same session. Authenticated-only assertions (avatar dropdown, current-plan badge) await a confirmed Supabase test account.
+
 ### Feb 23, 2026 — Avatar + Account Popover (Stripe/Linear-style)
 - **New helper** `/app/frontend/src/lib/userIdentity.js` → `getUserInitials(user, profile)` with priority `profile.full_name` (first + last word initial, or first 2 chars if single word) → email local-part (first 2 chars). Returns null when no signal. `deriveInitials({user,profile})` kept as deprecated alias.
 - **`full_name` added to PROFILE_COLUMNS** in `useUserBillingState.js` (DB already had the column — no schema change).
