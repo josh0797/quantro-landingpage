@@ -20,9 +20,10 @@ import { resolveNextStep } from "../lib/billingGuards";
 import { saveIntent, patchIntent, clearIntent, loadIntent } from "../lib/checkoutResume";
 import { startStripeCheckout } from "../lib/stripe";
 import { trackCTAClick, trackCheckoutStarted } from "../lib/analytics";
-import { AUTH_ROUTES, resolveAuthRoute } from "../lib/authRoutes";
+import { AUTH_ROUTES, resolveAuthRoute, resolvePickerRoute } from "../lib/authRoutes";
 import AuthForm from "./auth/AuthForm";
 import LanguageSwitcher from "./LanguageSwitcher";
+import AccessPickerPanel from "./AccessPickerPanel";
 
 /**
  * Full-screen modal that orchestrates the real production flow:
@@ -323,7 +324,19 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
   }, [intent]);
 
   const choosePlatform = (platformId) => {
-    setIntent((prev) => ({ ...prev, platform: platformId }));
+    // If this flow was triggered from Pricing (intent.tier set), keep the
+    // existing orchestrated flow: save platform, advance to auth → plan → pay.
+    if (intent?.tier) {
+      setIntent((prev) => ({ ...prev, platform: platformId }));
+      return;
+    }
+    // Otherwise this is a direct access request — each product handles its
+    // own auth. Redirect out immediately.
+    const url = getPlatformRedirectUrl(platformId);
+    if (url) {
+      trackCTAClick(`direct_access_${platformId}`);
+      window.location.href = url;
+    }
   };
 
   const backToPlatform = () => {
@@ -412,9 +425,12 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
               <button
                 type="button"
                 onClick={() => {
-                  // If the modal was opened directly via an auth route, leave
-                  // the URL (go home) so the user isn't stuck on /iniciar-sesion.
-                  if (resolveAuthRoute(location.pathname)) {
+                  // If opened via a deep-link route (auth or picker), leave
+                  // the URL — navigate home so the user isn't stuck.
+                  if (
+                    resolveAuthRoute(location.pathname) ||
+                    resolvePickerRoute(location.pathname)
+                  ) {
                     navigate("/", { replace: true });
                   }
                   onClose();
@@ -473,44 +489,51 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
                       {isEs ? "Acceso a plataforma" : "Platform access"}
                     </span>
                   </div>
-                  <h2 className="font-satoshi font-bold text-3xl sm:text-4xl text-white leading-tight tracking-tight mb-2">
-                    {stage === "choose_platform" &&
-                      (isEs ? "¿A dónde quieres entrar?" : "Where do you want to go?")}
-                    {stage === "auth" && authMode === "signup" &&
-                      (isEs ? "Crea tu cuenta" : "Create your account")}
-                    {stage === "auth" && authMode !== "signup" &&
-                      (isEs ? "Inicia sesión para continuar" : "Sign in to continue")}
-                    {(stage === "choose_plan" || stage === "onboarding") &&
-                      (isEs ? "Elige tu plan" : "Choose your plan")}
-                    {stage === "redirect" &&
-                      (isEs ? "Entrando a tu plataforma…" : "Entering your platform…")}
-                  </h2>
-                  <p className="text-[13px] text-slate-400 max-w-[560px]">
-                    {stage === "choose_platform" &&
-                      (isEs
-                        ? "Elige la plataforma que quieres abrir. Te acompañamos paso a paso si aún no tienes cuenta o plan."
-                        : "Pick the platform you want to open. We'll guide you through auth and plan selection if needed.")}
-                    {stage === "auth" && authMode === "signup" &&
-                      (isEs
-                        ? "Con tu cuenta obtienes acceso a Quantro OS y Quantro Flow."
-                        : "Your Quantro account unlocks both Quantro OS and Quantro Flow.")}
-                    {stage === "auth" && authMode !== "signup" &&
-                      (isEs
-                        ? "Tu sesión de Quantro funciona tanto en Quantro OS como en Quantro Flow."
-                        : "Your Quantro session works on both Quantro OS and Quantro Flow.")}
-                    {(stage === "choose_plan" || stage === "onboarding") &&
-                      (isEs
-                        ? "Prueba cualquier plan con $1 USD. Cancelas cuando quieras."
-                        : "Try any plan for $1 USD. Cancel anytime.")}
-                    {stage === "redirect" &&
-                      (isEs
-                        ? "Te estamos redirigiendo a tu producto. No cierres esta ventana."
-                        : "We're sending you to your product. Don't close this window.")}
-                  </p>
+                  {stage !== "choose_platform" && (
+                    <>
+                      <h2 className="font-satoshi font-bold text-3xl sm:text-4xl text-white leading-tight tracking-tight mb-2">
+                        {stage === "auth" && authMode === "signup" &&
+                          (isEs ? "Crea tu cuenta" : "Create your account")}
+                        {stage === "auth" && authMode !== "signup" &&
+                          (isEs ? "Inicia sesión para continuar" : "Sign in to continue")}
+                        {(stage === "choose_plan" || stage === "onboarding") &&
+                          (isEs ? "Elige tu plan" : "Choose your plan")}
+                        {stage === "redirect" &&
+                          (isEs ? "Entrando a tu plataforma…" : "Entering your platform…")}
+                      </h2>
+                      <p className="text-[13px] text-slate-400 max-w-[560px]">
+                        {stage === "auth" && authMode === "signup" &&
+                          (isEs
+                            ? "Con tu cuenta obtienes acceso a Quantro OS y Quantro Flow."
+                            : "Your Quantro account unlocks both Quantro OS and Quantro Flow.")}
+                        {stage === "auth" && authMode !== "signup" &&
+                          (isEs
+                            ? "Tu sesión de Quantro funciona tanto en Quantro OS como en Quantro Flow."
+                            : "Your Quantro session works on both Quantro OS and Quantro Flow.")}
+                        {(stage === "choose_plan" || stage === "onboarding") &&
+                          (isEs
+                            ? "Prueba cualquier plan con $1 USD. Cancelas cuando quieras."
+                            : "Try any plan for $1 USD. Cancel anytime.")}
+                        {stage === "redirect" &&
+                          (isEs
+                            ? "Te estamos redirigiendo a tu producto. No cierres esta ventana."
+                            : "We're sending you to your product. Don't close this window.")}
+                      </p>
+                    </>
+                  )}
+                  {stage === "choose_platform" && (
+                    <p className="text-[13px] text-slate-400 max-w-[560px]" data-testid="access-microcopy">
+                      {isEs
+                        ? "Selecciona la experiencia que quieres abrir. Cada sistema opera de forma independiente."
+                        : "Pick the experience you want to open. Each system runs independently."}
+                    </p>
+                  )}
 
-                  <div className="mt-4">
-                    <StepIndicator step={stepIndex} isEs={isEs} />
-                  </div>
+                  {stage !== "choose_platform" && (
+                    <div className="mt-4">
+                      <StepIndicator step={stepIndex} isEs={isEs} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Body by stage */}
@@ -526,18 +549,7 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
                   )}
 
                   {!isLoading && stage === "choose_platform" && (
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <PlatformCard
-                        platform={PLATFORMS.os}
-                        onChoose={choosePlatform}
-                        isEs={isEs}
-                      />
-                      <PlatformCard
-                        platform={PLATFORMS.flow}
-                        onChoose={choosePlatform}
-                        isEs={isEs}
-                      />
-                    </div>
+                    <AccessPickerPanel isEs={isEs} onPick={choosePlatform} />
                   )}
 
                   {!isLoading && stage === "auth" && (

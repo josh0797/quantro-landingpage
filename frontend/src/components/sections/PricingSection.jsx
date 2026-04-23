@@ -39,20 +39,40 @@ export const PricingSection = () => {
     {
       key: "essential",
       name: "Essential",
-      tagline: isEs ? "Empieza con claridad y control" : "Start with clarity and control",
+      tagline: isEs ? "Claridad + control" : "Clarity + control",
+      subtagline: isEs
+        ? "Perfecto para comenzar con claridad operativa"
+        : "Perfect to start with operational clarity",
       prices: { monthly: "$59", annual: "$590" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
         ? "Para emprendedores que quieren dejar el caos y empezar a operar como sistema."
         : "For founders who want to leave chaos behind and start operating as a system.",
-      features: [
-        isEs ? "Quantro OS + Flow + Intelligence incluidos" : "Quantro OS + Flow + Intelligence included",
-        isEs ? "Dashboard y scorecard en tiempo real" : "Real-time dashboard and scorecard",
-        isEs ? "Inbox + CRM con seguimiento básico" : "Inbox + CRM with basic follow-up",
-        isEs ? "Agentes IA (consultas mensuales limitadas)" : "AI Agents (limited monthly queries)",
-        isEs ? "Automatizaciones esenciales" : "Essential automations",
-        isEs ? "Contabilidad y facturación integrada" : "Integrated accounting and invoicing",
-      ],
+      features: isEs
+        ? [
+            "Quantro OS + Flow + Intelligence incluidos",
+            "Dashboard en tiempo real",
+            "Scorecard semanal inteligente",
+            "To-Dos + seguimiento básico",
+            "CRM + Inbox con ejecución automática",
+            "AI Coach (10 consultas/mes)",
+            "Automatizaciones básicas",
+            "Insights iniciales de negocio",
+            "Contabilidad básica con categorización automática",
+            "Integraciones CFDI 4.0",
+          ]
+        : [
+            "Quantro OS + Flow + Intelligence included",
+            "Real-time dashboard",
+            "Smart weekly scorecard",
+            "To-Dos + basic follow-up",
+            "CRM + Inbox with automated execution",
+            "AI Coach (10 queries/mo)",
+            "Basic automations",
+            "Initial business insights",
+            "Basic accounting with auto-categorization",
+            "CFDI 4.0 integrations",
+          ],
       highlighted: false,
       accent: "#94A3B8",
       microcopy: {
@@ -63,21 +83,36 @@ export const PricingSection = () => {
     {
       key: "pro",
       name: "Pro",
-      tagline: isEs ? "Escala con inteligencia, no con esfuerzo" : "Scale with intelligence, not effort",
+      tagline: isEs ? "Ejecución + inteligencia" : "Execution + intelligence",
+      subtagline: isEs
+        ? "Escala con inteligencia, no con esfuerzo"
+        : "Scale with intelligence, not effort",
       prices: { monthly: "$209", annual: "$2,090" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
         ? "Para negocios que buscan crecer con decisiones claras y ejecución constante."
         : "For businesses that want to grow with clear decisions and constant execution.",
-      features: [
-        isEs ? "Todo en Essential" : "Everything in Essential",
-        isEs ? "Automatización avanzada de procesos" : "Advanced process automation",
-        isEs ? "Flow + CRM + Inbox con ejecución automatizada" : "Flow + CRM + Inbox with automated execution",
-        isEs ? "Quantro Intelligence activo (análisis continuo)" : "Quantro Intelligence active (continuous analysis)",
-        isEs ? "Agentes IA ejecutando tareas" : "AI Agents executing tasks",
-        isEs ? "Decisiones inteligentes + plan de acción" : "Smart decisions + action plan",
-        isEs ? "Multiusuario (3 asientos)" : "Multi-user (3 seats)",
-      ],
+      features: isEs
+        ? [
+            "Todo lo de Essential",
+            "Agentes IA ejecutando tareas",
+            "Quantro Intelligence (análisis continuo)",
+            "Decisiones sugeridas + plan de acción",
+            "Automatizaciones avanzadas",
+            "Multiusuario (3 asientos)",
+            "Contabilidad avanzada con categorización impulsada por Quantro Intelligence",
+            "Integraciones CFDI 4.0",
+          ]
+        : [
+            "Everything in Essential",
+            "AI Agents executing tasks",
+            "Quantro Intelligence (continuous analysis)",
+            "Suggested decisions + action plan",
+            "Advanced automations",
+            "Multi-user (3 seats)",
+            "Advanced accounting powered by Quantro Intelligence",
+            "CFDI 4.0 integrations",
+          ],
       highlighted: true,
       accent: "#00F5FF",
       microcopy: {
@@ -91,25 +126,40 @@ export const PricingSection = () => {
     {
       key: "enterprise",
       name: "Enterprise",
-      tagline: isEs
-        ? "Automatización y control en su máxima expresión"
-        : "Automation and control at their peak",
+      tagline: isEs ? "Autonomía real" : "True autonomy",
+      subtagline: isEs
+        ? "Para empresas que buscan autonomía total"
+        : "For companies seeking total autonomy",
       prices: { monthly: "$499", annual: "$4,990" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
         ? "Para negocios que buscan optimización continua y ventaja competitiva."
         : "For businesses seeking continuous optimization and competitive edge.",
-      features: [
-        isEs ? "Todo en Pro" : "Everything in Pro",
-        isEs ? "Inteligencia más profunda y frecuente" : "Deeper, more frequent intelligence",
-        isEs ? "Quantro Revenue (optimización de ingresos)" : "Quantro Revenue (revenue optimization)",
-        isEs ? "Automatizaciones personalizadas" : "Custom automations",
-        isEs ? "Lean Management module" : "Lean Management module",
-        isEs ? "Multiusuario (10 asientos)" : "Multi-user (10 seats)",
-        isEs ? "Mayor capacidad de agentes IA" : "Higher AI agent capacity",
-        isEs ? "Soporte prioritario" : "Priority support",
-        isEs ? "Acceso anticipado a nuevas funciones" : "Early access to new features",
-      ],
+      features: isEs
+        ? [
+            "Todo lo de Pro",
+            "Motor de decisiones avanzado",
+            "Simulación de escenarios (margen, pricing)",
+            "Multiusuario ampliado (10 asientos)",
+            "Lean Management Module completo",
+            "Quantro Revenue",
+            "Onboarding dedicado",
+            "Soporte prioritario",
+            "Agentes personalizados (próximamente)",
+            "Integraciones avanzadas (próximamente)",
+          ]
+        : [
+            "Everything in Pro",
+            "Advanced decision engine",
+            "Scenario simulation (margin, pricing)",
+            "Extended multi-user (10 seats)",
+            "Full Lean Management Module",
+            "Quantro Revenue",
+            "Dedicated onboarding",
+            "Priority support",
+            "Custom agents (coming soon)",
+            "Advanced integrations (coming soon)",
+          ],
       highlighted: false,
       accent: "#C084FC",
       microcopy: {
@@ -231,17 +281,12 @@ export const PricingSection = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Cards — on mobile Pro is shown first per UX spec */}
+        {/* Cards — explicit order: Essential → Pro → Enterprise on every breakpoint */}
         <div className="grid lg:grid-cols-3 gap-6 items-stretch">
           {tiers.map((tier, i) => {
             const isCurrentPlan = hasPaidPlan && currentPlan === tier.key;
-            // Mobile order: Pro (1) → Essential (2) → Enterprise (3). Desktop keeps natural order.
-            const mobileOrderClass = tier.highlighted
-              ? "order-1 lg:order-none"
-              : tier.key === "essential"
-              ? "order-2 lg:order-none"
-              : "order-3 lg:order-none";
-
+            // Stable order — no mobile reshuffle. "Más popular" is a badge,
+            // not a layout trigger.
             const cardClass = isCurrentPlan
               ? "bg-gradient-to-br from-[#00F5FF]/[0.10] via-slate-900/70 to-[#22D3EE]/[0.06] border-2 border-[#00F5FF]/80 shadow-2xl shadow-[#00F5FF]/30 lg:scale-[1.05] lg:-translate-y-3"
               : tier.highlighted
@@ -254,7 +299,7 @@ export const PricingSection = () => {
             <motion.div
               key={tier.key}
               variants={fadeInUp}
-              className={`relative rounded-2xl p-7 flex flex-col transition-all duration-300 ${mobileOrderClass} ${cardClass}`}
+              className={`relative rounded-2xl p-7 flex flex-col transition-all duration-300 ${cardClass}`}
               style={
                 tier.highlighted || isCurrentPlan
                   ? { backdropFilter: "blur(14px)" }
@@ -305,11 +350,16 @@ export const PricingSection = () => {
                   {tier.name}
                 </h3>
                 <p
-                  className="text-sm font-medium mt-1"
+                  className="text-sm font-semibold mt-1"
                   style={{ color: tier.accent }}
                 >
                   {tier.tagline}
                 </p>
+                {tier.subtagline && (
+                  <p className="text-[12.5px] text-slate-400 leading-snug mt-0.5">
+                    {tier.subtagline}
+                  </p>
+                )}
               </div>
 
               {/* Price */}

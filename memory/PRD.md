@@ -266,6 +266,22 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 23, 2026 — Acceso Screen Redesign (Apple-style) + Pricing Order Fix + New Plan Content
+- **New routes** `/acceso` (ES) and `/access` (EN) via `PICKER_ROUTES` in `authRoutes.js`. `AuthRouteBoot` handles both auth and picker routes. `PICKER_PAGE_TITLES`: "Acceso | Quantro" / "Access | Quantro".
+- **Decoupled platform picker** from auth orchestration: new component `/app/frontend/src/components/AccessPickerPanel.jsx` replaces the in-modal choose_platform layout. Clicking a card now redirects DIRECTLY to the external product URL (`window.location.href = PLATFORMS[id].url`) — each app handles its own auth. (Pricing flow still uses the chained orchestration when `intent.tier` is set.)
+- **Apple-style narrative** (staggered fade-ins via framer-motion):
+  - STEP 1 — Statement: "Esto no es una app." → 0.9s later: "Es un sistema que piensa y ejecuta por ti."
+  - STEP 2 — Reveal: "Quantro funciona en dos capas" + two glassmorphism cards (OS / Flow)
+  - Closing: "Entender es el inicio. / Ejecutar es lo que genera resultados. / Así es como tu negocio avanza."
+- **Micro-interactions on cards**: glow intensifies on hover via radial gradient overlay, scale 1.02 + y:-3 lift, animated bottom line sweep, arrow translate on hover.
+- **Header microcopy** updated: "Selecciona la experiencia que quieres abrir. Cada sistema opera de forma independiente." (replaces "Te acompañamos paso a paso…"). Stage indicator and H2 hidden on `choose_platform` since the panel has its own narrative.
+- **Pricing mobile order FIX** (`PricingSection.jsx`): removed the `order-*` Tailwind classes that forced Pro first on mobile. Stable DOM order `essential → pro → enterprise` on every breakpoint; "Más popular" remains as a badge, not a layout trigger. Verified via Playwright DOM inspection.
+- **Pricing plan content rewrite** per user's spec:
+  - Essential tagline: "Claridad + control" / subtagline "Perfecto para comenzar con claridad operativa" + 10 bullets (Dashboard, Scorecard, To-Dos, CRM/Inbox, AI Coach 10 queries/mo, Automatizaciones básicas, Insights iniciales, Contabilidad básica, CFDI 4.0).
+  - Pro tagline: "Ejecución + inteligencia" / subtagline "Escala con inteligencia, no con esfuerzo" + 8 bullets (Agentes IA ejecutando tareas, Intelligence continuo, Decisiones sugeridas, Automatizaciones avanzadas, 3 asientos, Contabilidad avanzada impulsada por Intelligence, CFDI 4.0).
+  - Enterprise tagline: "Autonomía real" / subtagline "Para empresas que buscan autonomía total" + 10 bullets (Motor de decisiones avanzado, Simulación de escenarios, 10 asientos, Lean Management Module, Quantro Revenue, Onboarding dedicado, Soporte prioritario, Agentes personalizados "próximamente", Integraciones avanzadas "próximamente").
+- Added `subtagline` field next to `tagline` in the card render for a two-line tier description.
+
 ### Feb 23, 2026 — Auth Routes + full_name + Pricing Current Plan + Avatar Dropdown
 - **Real auth routes** (React Router): `/iniciar-sesion`, `/crear-cuenta`, `/sign-in`, `/sign-up` (mapping in `/app/frontend/src/lib/authRoutes.js`). Each route auto-opens `PlatformAccessScreen` at auth stage via new `AuthRouteBoot` component, which also sets `document.title` from `AUTH_PAGE_TITLES` and syncs language with URL.
 - **Bidirectional URL↔mode↔language sync**: switching AuthForm mode updates the URL (`switch to signup on /iniciar-sesion → /crear-cuenta`); switching language on an auth route redirects to the equivalent path (`/iniciar-sesion + click EN → /sign-in`). After successful auth from an auth route, navigates to `location.state.from || '/'`.

@@ -19,6 +19,8 @@ root.render(
           <Route path="/crear-cuenta" element={<App />} />
           <Route path="/sign-in" element={<App />} />
           <Route path="/sign-up" element={<App />} />
+          <Route path="/acceso" element={<App />} />
+          <Route path="/access" element={<App />} />
           <Route path="/privacidad" element={<PrivacyPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terminos" element={<TermsPage />} />
