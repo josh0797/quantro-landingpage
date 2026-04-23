@@ -198,8 +198,10 @@ const FlowVisualization = ({ isEs }) => {
                     duration: 0.45,
                     ease: [0.22, 1, 0.36, 1],
                   }}
-                  className={`flex flex-col items-center ${
-                    alignTop ? "justify-start pt-2" : "justify-end pb-2"
+                  className={`flex items-center ${
+                    alignTop
+                      ? "flex-col justify-start pt-2"
+                      : "flex-col-reverse justify-start pb-2"
                   }`}
                 >
                   <motion.div
@@ -222,7 +224,9 @@ const FlowVisualization = ({ isEs }) => {
                       duration: 0.35,
                       ease: [0.22, 1, 0.36, 1],
                     }}
-                    className="mt-2.5 text-[10px] font-medium text-slate-400 uppercase tracking-widest"
+                    className={`text-[10px] font-medium text-slate-400 uppercase tracking-widest ${
+                      alignTop ? "mt-2.5" : "mb-2.5"
+                    }`}
                   >
                     {cell.label}
                   </motion.span>

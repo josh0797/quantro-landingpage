@@ -61,7 +61,17 @@ Premium SaaS landing page for "Quantro" — "Autonomous Business Operating Syste
 
 ## What's Been Implemented
 
-### Feb 22, 2026 — SEO + Modal "Volver" + Pricing refactor (full)
+### Feb 23, 2026 — Mobile Z-layout + Auth mobile menu + Problem status reorder
+- **Mobile FlowVisualization (IntelligenceSection) rebuilt**: 2×2 grid (DATOS / ANÁLISIS / DECISIÓN / ACCIÓN) with a single continuous SVG Z-path that connects all 4 dots. viewBox coords tuned (26,6 / 74,6 / 26,104 / 74,104). Top cells use `flex-col + justify-start pt-2`; bottom cells use `flex-col-reverse + pb-2` so the dot sits at the bottom edge and lines up with the SVG endpoint (fixed 27px misalignment from iter19 review). Desktop variant unchanged.
+- **Navbar mobile menu — authenticated state**:
+  - When `isAuthenticated=true`: mobile panel renders two buttons stacked.
+    - Secondary (top): `Cambiar cuenta` / `Switch account` — ghost (bg-white/[0.02] + border-white/10), calls `supabase.auth.signOut()` then opens PlatformAccessScreen.
+    - Primary (bottom): `Ver mi plan` / `View my plan` — cyan gradient, smooth-scrolls to `#pricing`.
+  - When `isAuthenticated=false`: original single CTA (`mobile-cta`) with state-driven label.
+- **ProblemSystemSection status reorder**: the status (Sin responder / Caos / Duplicados) now sits ABOVE the problem sentence as a title-pill (red-tinted with pulsing dot) — higher visual hierarchy. The card reads as: `Status → Problem → Solution → Result badge`. New `data-testid="problem-status-{i}"`.
+- Testing iteration_19: 12/13 PASS on first run → bottom-row dot alignment fixed → re-validated via screenshot.
+
+
 - **SEO metadata update** (`/app/frontend/public/index.html`):
   - `<title>` → "Quantro — Despierta con decisiones listas para ejecutar en tu negocio"
   - `<meta name="description">` → "Quantro conecta tus datos, detecta oportunidades y propone acciones listas para ejecutar. Un solo sistema para operar, decidir y crecer — incluso mientras duermes."
