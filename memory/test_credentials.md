@@ -12,7 +12,11 @@
 - Valid plans: `essential | pro | enterprise`
 - The testing agent may create a throwaway account via `supabase.auth.signUp`
   using the same anon key; cleanup is optional.
+- NOTE: Supabase project has email confirmation ENABLED for signup. Newly created
+  accounts via `signUp` return `session: null` until the confirmation email is
+  clicked. For authenticated-state UI tests, use an EXISTING confirmed account
+  via `signInWithPassword`, or seed via service role if available.
 
 ## Platform redirect URLs (see /app/frontend/src/lib/platformRoutes.js)
-- Quantro OS: `https://quantro-os.emergent.host/dashboard`
-- Quantro Flow: **not yet wired** — renders as "Próximamente" disabled card
+- Quantro OS: `https://konta-seven.vercel.app`
+- Quantro Flow: `https://quantroflow.online`

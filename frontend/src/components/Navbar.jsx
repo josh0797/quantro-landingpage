@@ -35,14 +35,14 @@ export const Navbar = () => {
     openPlatformAccess();
   };
 
-  const handleViewPlan = async () => {
-    trackCTAClick("mobile_menu_view_plan");
+  const handleViewPlan = (source = "mobile_menu") => {
+    trackCTAClick(`${source}_view_plan`);
     setMobileMenuOpen(false);
     document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSwitchAccount = async () => {
-    trackCTAClick("mobile_menu_switch_account");
+  const handleSwitchAccount = async (source = "mobile_menu") => {
+    trackCTAClick(`${source}_switch_account`);
     try {
       await supabase.auth.signOut();
     } catch (err) {
@@ -106,14 +106,36 @@ export const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-4">
           <LanguageSwitcher />
-          <button
-            onClick={() => handleCTA("navbar")}
-            data-testid="nav-cta"
-            data-cta-state={billingState}
-            className={`px-4 py-2 font-medium text-sm rounded-lg transition-all ${ctaClasses}`}
-          >
-            {ctaLabel}
-          </button>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2" data-testid="nav-auth-actions">
+              {/* Secondary — Switch account */}
+              <button
+                onClick={() => handleSwitchAccount("navbar")}
+                data-testid="nav-switch-account"
+                className="px-3 py-2 text-sm font-medium text-white/60 hover:text-white rounded-lg border border-white/10 hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.05] transition-all"
+              >
+                {language === "es" ? "Cambiar cuenta" : "Switch account"}
+              </button>
+              {/* Primary — View my plan */}
+              <button
+                onClick={() => handleViewPlan("navbar")}
+                data-testid="nav-view-plan"
+                data-cta-state={billingState}
+                className="px-4 py-2 font-medium text-sm rounded-lg transition-all bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20"
+              >
+                {language === "es" ? "Ver mi plan" : "View my plan"}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => handleCTA("navbar")}
+              data-testid="nav-cta"
+              data-cta-state={billingState}
+              className={`px-4 py-2 font-medium text-sm rounded-lg transition-all ${ctaClasses}`}
+            >
+              {ctaLabel}
+            </button>
+          )}
         </div>
 
         <button
@@ -166,7 +188,7 @@ export const Navbar = () => {
                 <div className="flex flex-col gap-3 mt-2">
                   {/* Secondary — Switch account */}
                   <button
-                    onClick={handleSwitchAccount}
+                    onClick={() => handleSwitchAccount("mobile_menu")}
                     data-testid="mobile-switch-account"
                     className="px-4 py-2.5 text-sm font-medium text-white/70 hover:text-white rounded-lg border border-white/10 hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.05] transition-all w-full"
                   >
@@ -174,7 +196,7 @@ export const Navbar = () => {
                   </button>
                   {/* Primary — View my plan */}
                   <button
-                    onClick={handleViewPlan}
+                    onClick={() => handleViewPlan("mobile_menu")}
                     data-testid="mobile-view-plan"
                     data-cta-state={billingState}
                     className="px-4 py-3 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"

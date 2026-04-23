@@ -51,6 +51,10 @@ export const AuthForm = ({ onBack, onAuthenticated, hideBackButton = false }) =>
         const { data, error: authError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo:
+              typeof window !== "undefined" ? window.location.origin : undefined,
+          },
         });
         if (authError) throw authError;
         // If email confirmation is disabled, session is returned immediately.

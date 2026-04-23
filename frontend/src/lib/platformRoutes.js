@@ -31,7 +31,7 @@ export const PLATFORMS = {
       es: "Inbox unificado, CRM, seguimiento y automatización que ejecuta por ti.",
       en: "Unified inbox, CRM, follow-ups and automation that executes for you.",
     },
-    url: "https://quantro-os.emergent.host/dashboard",
+    url: "https://quantroflow.online",
     accent: "#A020FF",
     available: true,
   },

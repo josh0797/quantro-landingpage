@@ -266,6 +266,18 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 23, 2026 — Authenticated Navbar UX + Flow URL live + Signup redirect
+- **Quantro Flow URL live**: `PLATFORMS.flow.url` updated from mock (`quantro-os.emergent.host/dashboard`) to production domain `https://quantroflow.online` in `/app/frontend/src/lib/platformRoutes.js`.
+- **Desktop authenticated CTA overhaul** (`/app/frontend/src/components/Navbar.jsx`):
+  - Before: single amber "Actualizar pago" / cyan "Ir al sistema" CTA.
+  - After (when `isAuthenticated`): inline `[ Cambiar cuenta ]` (ghost, white/10 border, low-weight) + `[ Ver mi plan ]` (cyan primary gradient). Unauthenticated state unchanged (single "Comenzar" CTA).
+  - `Ver mi plan` scrolls to `#pricing` (no Stripe direct). `Cambiar cuenta` calls `supabase.auth.signOut()` then opens `PlatformAccessScreen`.
+- **Mobile authenticated menu**: same button semantics as before (stacked `Cambiar cuenta` over `Ver mi plan`), now uses shared handlers with source-aware GA4 tracking (`navbar_*` vs `mobile_menu_*`).
+- **Signup email confirmation support** (`/app/frontend/src/components/auth/AuthForm.jsx`): `supabase.auth.signUp` now passes `options.emailRedirectTo: window.location.origin` so the confirmation link routes users back to the landing. UI already handles the "session: null" (awaiting confirmation) case with the `auth-info` banner.
+- Strategic UX shift: from urgency-driven ("paga ahora") to status-driven ("revisa tu estado") — more premium, lower friction.
+- Testing: self-verified unauthenticated desktop + landing via screenshot; authenticated state relies on user Supabase session for end-to-end verification.
+
+
 ### Feb 21, 2026 — P2 PDF + Email + P3 Pricing toggle + Remove FinalCTA
 - **PDF Download**: `/public/assets/quantro-os-overview.pdf` (15KB) linked from Hero (`hero-pdf-link` testid)
 - **Resend email**: Welcome email in Spanish with Quantro branding sent from `no-reply@quantroos.com` on first paid transition (idempotent via `welcome_email_sent` flag)
