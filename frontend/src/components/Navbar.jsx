@@ -6,6 +6,7 @@ import { useUserBillingState } from "../hooks/useUserBillingState";
 import { getCTACopy } from "../lib/billingGuards";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
 import { trackCTAClick } from "../lib/analytics";
+import { supabase } from "../lib/supabase";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { QuantroLogoMark } from "./QuantroLogoMark";
 
@@ -13,7 +14,7 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language } = useLanguage();
-  const { billingState } = useUserBillingState();
+  const { billingState, isAuthenticated } = useUserBillingState();
   const { open: openPlatformAccess } = usePlatformAccess();
   const ctaLabel = getCTACopy(billingState, language);
 
@@ -30,6 +31,24 @@ export const Navbar = () => {
 
   const handleCTA = (source = "navbar") => {
     trackCTAClick(`${source}_open_platform_access`);
+    setMobileMenuOpen(false);
+    openPlatformAccess();
+  };
+
+  const handleViewPlan = async () => {
+    trackCTAClick("mobile_menu_view_plan");
+    setMobileMenuOpen(false);
+    document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleSwitchAccount = async () => {
+    trackCTAClick("mobile_menu_switch_account");
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("signOut failed:", err);
+    }
     setMobileMenuOpen(false);
     openPlatformAccess();
   };
@@ -142,14 +161,37 @@ export const Navbar = () => {
               <div className="pt-2 flex justify-center">
                 <LanguageSwitcher />
               </div>
-              <button
-                onClick={() => handleCTA("mobile_menu")}
-                data-testid="mobile-cta"
-                data-cta-state={billingState}
-                className={`px-4 py-3 font-medium text-sm rounded-lg w-full mt-2 ${ctaClasses}`}
-              >
-                {ctaLabel}
-              </button>
+
+              {isAuthenticated ? (
+                <div className="flex flex-col gap-3 mt-2">
+                  {/* Secondary — Switch account */}
+                  <button
+                    onClick={handleSwitchAccount}
+                    data-testid="mobile-switch-account"
+                    className="px-4 py-2.5 text-sm font-medium text-white/70 hover:text-white rounded-lg border border-white/10 hover:border-white/25 bg-white/[0.02] hover:bg-white/[0.05] transition-all w-full"
+                  >
+                    {language === "es" ? "Cambiar cuenta" : "Switch account"}
+                  </button>
+                  {/* Primary — View my plan */}
+                  <button
+                    onClick={handleViewPlan}
+                    data-testid="mobile-view-plan"
+                    data-cta-state={billingState}
+                    className="px-4 py-3 font-semibold text-sm rounded-lg w-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all"
+                  >
+                    {language === "es" ? "Ver mi plan" : "View my plan"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleCTA("mobile_menu")}
+                  data-testid="mobile-cta"
+                  data-cta-state={billingState}
+                  className={`px-4 py-3 font-medium text-sm rounded-lg w-full mt-2 ${ctaClasses}`}
+                >
+                  {ctaLabel}
+                </button>
+              )}
             </div>
           </motion.div>
         )}

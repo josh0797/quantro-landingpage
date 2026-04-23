@@ -6,8 +6,9 @@ import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
 
 // Organic data → decision → action flow visualization.
-// Desktop: single horizontal flowing curve across 4 nodes.
-// Mobile: S-shaped curve that wraps into two rows so nothing gets clipped.
+// Desktop: horizontal flowing curve across 4 nodes.
+// Mobile: 2x2 grid with a single Z-shaped SVG line that visually connects
+//         all nodes (top-left → top-right → diagonal down-left → bottom-right).
 const FlowVisualization = ({ isEs }) => {
   const labels = {
     datos: isEs ? "Datos" : "Data",
@@ -16,7 +17,7 @@ const FlowVisualization = ({ isEs }) => {
     accion: isEs ? "Acción" : "Action",
   };
 
-  // Desktop nodes (4 columns, gentle vertical wave)
+  /* -------- DESKTOP (horizontal organic curve) -------- */
   const desktopNodes = [
     { x: 5, y: 50, label: labels.datos },
     { x: 35, y: 25, label: labels.analisis },
@@ -25,24 +26,16 @@ const FlowVisualization = ({ isEs }) => {
   ];
   const desktopPath = "M 5,50 Q 20,10 35,25 T 65,75 Q 80,95 95,50";
 
-  // Mobile nodes (2 rows): Datos/Análisis top, Decisión/Acción bottom
-  const mobileNodes = [
-    { x: 14, y: 28, label: labels.datos, labelBelow: true },
-    { x: 78, y: 28, label: labels.analisis, labelBelow: true },
-    { x: 22, y: 72, label: labels.decision, labelBelow: true },
-    { x: 86, y: 72, label: labels.accion, labelBelow: true },
-  ];
-  // Smooth S from top-left → top-right → down & back → bottom-left → bottom-right
-  const mobilePath =
-    "M 14,28 C 40,20 60,28 78,28 C 94,32 92,52 50,56 C 10,60 8,70 22,72 C 50,74 62,72 86,72";
-
-  const Dot = ({ node, i }) => (
+  const DesktopDot = ({ node, i }) => (
     <motion.div
-      key={`${node.label}-${i}`}
-      initial={{ opacity: 0, scale: 0.5 }}
+      initial={{ opacity: 0, scale: 0.82 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ delay: i * 0.35, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      transition={{
+        delay: 0.5 + i * 0.22,
+        duration: 0.45,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className="absolute -translate-x-1/2 -translate-y-1/2"
       style={{ left: `${node.x}%`, top: `${node.y}%` }}
     >
@@ -50,67 +43,48 @@ const FlowVisualization = ({ isEs }) => {
         className="relative w-3 h-3 rounded-full bg-[#00F5FF]"
         animate={{
           boxShadow: [
-            "0 0 0 0 rgba(0, 245, 255, 0.5)",
-            "0 0 0 12px rgba(0, 245, 255, 0)",
-            "0 0 0 0 rgba(0, 245, 255, 0.5)",
+            "0 0 0 0 rgba(0, 245, 255, 0.45)",
+            "0 0 0 10px rgba(0, 245, 255, 0)",
+            "0 0 0 0 rgba(0, 245, 255, 0.45)",
           ],
         }}
-        transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.3 }}
+        transition={{ duration: 2.8, repeat: Infinity, delay: i * 0.35 }}
       />
-      <span
-        className={`absolute left-1/2 -translate-x-1/2 ${
-          node.labelBelow ? "top-5" : "top-5"
-        } text-[10px] font-medium text-slate-400 whitespace-nowrap uppercase tracking-widest`}
+      <motion.span
+        initial={{ opacity: 0, y: 8 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{
+          delay: 0.5 + i * 0.22 + 0.12,
+          duration: 0.35,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        className="absolute left-1/2 -translate-x-1/2 top-5 text-[10px] font-medium text-slate-400 whitespace-nowrap uppercase tracking-widest"
       >
         {node.label}
-      </span>
+      </motion.span>
     </motion.div>
   );
 
-  const PathSvg = ({ d }) => (
-    <svg
-      className="absolute inset-0 w-full h-full"
-      viewBox="0 0 100 100"
-      preserveAspectRatio="none"
-    >
-      <defs>
-        <linearGradient id="flowLineGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#00F5FF" stopOpacity="0.2" />
-          <stop offset="50%" stopColor="#22D3EE" stopOpacity="0.85" />
-          <stop offset="100%" stopColor="#A020FF" stopOpacity="0.2" />
-        </linearGradient>
-        <filter id="flowGlow">
-          <feGaussianBlur stdDeviation="1" />
-        </filter>
-      </defs>
+  /* -------- MOBILE (grid 2x2 + connecting Z path) -------- */
+  // Coordinates tuned to match the actual dot centers inside the 2x2 grid below.
+  // Grid height=240px, px-6 horizontal padding, gap-x-6 between cells.
+  // With preserveAspectRatio="none", viewBox units map linearly to px.
+  const mobileNodeCoords = {
+    datos: { x: 26, y: 6 },
+    analisis: { x: 74, y: 6 },
+    decision: { x: 26, y: 104 },
+    accion: { x: 74, y: 104 },
+  };
+  // Z path: top-left → top-right (horizontal) → down-left (diagonal) → bottom-right (horizontal)
+  const mobilePath = `M ${mobileNodeCoords.datos.x},${mobileNodeCoords.datos.y} L ${mobileNodeCoords.analisis.x},${mobileNodeCoords.analisis.y} L ${mobileNodeCoords.decision.x},${mobileNodeCoords.decision.y} L ${mobileNodeCoords.accion.x},${mobileNodeCoords.accion.y}`;
 
-      <motion.path
-        d={d}
-        fill="none"
-        stroke="url(#flowLineGrad)"
-        strokeWidth="0.8"
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-        style={{ strokeWidth: "1.4px" }}
-        initial={{ pathLength: 0, opacity: 0 }}
-        whileInView={{ pathLength: 1, opacity: 1 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 2, ease: [0.22, 1, 0.36, 1] }}
-      />
-
-      <motion.circle
-        r="1"
-        fill="#00F5FF"
-        filter="url(#flowGlow)"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: [0, 1, 1, 0] }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 3, delay: 0.8, ease: "linear" }}
-      >
-        <animateMotion dur="3s" begin="0.8s" fill="freeze" path={d} />
-      </motion.circle>
-    </svg>
-  );
+  const mobileCells = [
+    { key: "datos", label: labels.datos, delay: 0.5 },
+    { key: "analisis", label: labels.analisis, delay: 0.72 },
+    { key: "decision", label: labels.decision, delay: 0.94 },
+    { key: "accion", label: labels.accion, delay: 1.16 },
+  ];
 
   return (
     <>
@@ -119,21 +93,144 @@ const FlowVisualization = ({ isEs }) => {
         className="hidden sm:block relative w-full h-40 mb-16 overflow-hidden"
         data-testid="flow-visualization-desktop"
       >
-        <PathSvg d={desktopPath} />
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="flowLineGradDesktop" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#00F5FF" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="#22D3EE" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#A020FF" stopOpacity="0.25" />
+            </linearGradient>
+            <filter id="flowGlowDesktop">
+              <feGaussianBlur stdDeviation="1" />
+            </filter>
+          </defs>
+          <motion.path
+            d={desktopPath}
+            fill="none"
+            stroke="url(#flowLineGradDesktop)"
+            strokeWidth="0.6"
+            strokeLinecap="round"
+            style={{ strokeWidth: "1.6px" }}
+            vectorEffect="non-scaling-stroke"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: 0.32, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <motion.circle r="1" fill="#00F5FF" filter="url(#flowGlowDesktop)">
+            <animateMotion dur="3s" begin="1.4s" repeatCount="indefinite" path={desktopPath} />
+          </motion.circle>
+        </svg>
         {desktopNodes.map((node, i) => (
-          <Dot key={`d-${node.label}`} node={node} i={i} />
+          <DesktopDot key={`d-${node.label}`} node={node} i={i} />
         ))}
       </div>
 
-      {/* Mobile variant — S curve across 2 rows */}
+      {/* Mobile variant — 2x2 grid with connecting Z line */}
       <div
-        className="sm:hidden relative w-full h-56 mb-12 overflow-hidden px-2"
+        className="sm:hidden relative w-full mb-12"
         data-testid="flow-visualization-mobile"
       >
-        <PathSvg d={mobilePath} />
-        {mobileNodes.map((node, i) => (
-          <Dot key={`m-${node.label}`} node={node} i={i} />
-        ))}
+        {/* Relative wrapper so SVG overlays grid cells perfectly */}
+        <div className="relative">
+          {/* SVG line OVER the grid — viewBox matches the grid proportions */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 100 110"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            <defs>
+              <linearGradient id="flowLineGradMobile" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#00F5FF" stopOpacity="0.25" />
+                <stop offset="50%" stopColor="#22D3EE" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#A020FF" stopOpacity="0.25" />
+              </linearGradient>
+              <filter id="flowGlowMobile">
+                <feGaussianBlur stdDeviation="0.5" />
+              </filter>
+            </defs>
+            <motion.path
+              d={mobilePath}
+              fill="none"
+              stroke="url(#flowLineGradMobile)"
+              strokeWidth="0.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ strokeWidth: "1.8px" }}
+              vectorEffect="non-scaling-stroke"
+              filter="url(#flowGlowMobile)"
+              initial={{ pathLength: 0, opacity: 0 }}
+              whileInView={{ pathLength: 1, opacity: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: 0.32, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <motion.circle r="0.9" fill="#00F5FF" filter="url(#flowGlowMobile)">
+              <animateMotion
+                dur="4s"
+                begin="1.6s"
+                repeatCount="indefinite"
+                path={mobilePath}
+              />
+            </motion.circle>
+          </svg>
+
+          {/* 2x2 grid of nodes — positions aligned with mobileNodeCoords */}
+          <div
+            className="grid grid-cols-2 gap-y-14 gap-x-6 px-6 relative z-10"
+            style={{ height: 240 }}
+          >
+            {mobileCells.map((cell) => {
+              const coord = mobileNodeCoords[cell.key];
+              const alignTop = coord.y < 50;
+              return (
+                <motion.div
+                  key={cell.key}
+                  initial={{ opacity: 0, scale: 0.82 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{
+                    delay: cell.delay,
+                    duration: 0.45,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                  className={`flex flex-col items-center ${
+                    alignTop ? "justify-start pt-2" : "justify-end pb-2"
+                  }`}
+                >
+                  <motion.div
+                    className="relative w-3 h-3 rounded-full bg-[#00F5FF]"
+                    animate={{
+                      boxShadow: [
+                        "0 0 0 0 rgba(0, 245, 255, 0.45)",
+                        "0 0 0 10px rgba(0, 245, 255, 0)",
+                        "0 0 0 0 rgba(0, 245, 255, 0.45)",
+                      ],
+                    }}
+                    transition={{ duration: 2.8, repeat: Infinity }}
+                  />
+                  <motion.span
+                    initial={{ opacity: 0, y: 8 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{
+                      delay: cell.delay + 0.12,
+                      duration: 0.35,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="mt-2.5 text-[10px] font-medium text-slate-400 uppercase tracking-widest"
+                  >
+                    {cell.label}
+                  </motion.span>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </>
   );

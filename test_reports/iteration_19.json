@@ -1,0 +1,104 @@
+{
+  "summary": "Iteration 19 frontend review (mobile only): (A) Mobile FlowVisualization Z-grid, (B) Navbar mobile menu authenticated/unauthenticated branching, (C) ProblemSystemSection status pill above problem text. Verified via Playwright on the public preview URL at 390x844 + 1920x1080.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "IntelligenceSection > FlowVisualization (mobile)",
+        "issue": "Bottom-row dots are visually offset ~27px ABOVE the SVG Z-line endpoint. Top-row dots align within ~2-7px (OK), but bottom row dots show Δy≈27.2px because cell layout uses `justify-end pb-2` with the label rendered BELOW the dot (mt-2.5), so the dot center ends up ~27px above viewBox y=104. The acceptance criterion ('within a few pixels vertically') is NOT met for the bottom row.",
+        "selector": "[data-testid=flow-visualization-mobile] .grid > div (bottom row cells: Decisión, Acción)",
+        "priority": "MEDIUM",
+        "measurements": {
+          "datos (top-left)": {"path_y_screen": -185.4, "dot_y_screen": -183.5, "delta_y_px": 1.9},
+          "analisis (top-right)": {"path_y_screen": -185.4, "dot_y_screen": -178.8, "delta_y_px": 6.7},
+          "decision (bottom-left)": {"path_y_screen": 28.4, "dot_y_screen": 1.2, "delta_y_px": 27.2},
+          "accion (bottom-right)": {"path_y_screen": 28.4, "dot_y_screen": 1.2, "delta_y_px": 27.2},
+          "all_horizontal_delta_x_px": 2.6
+        },
+        "fix_suggestion": "Either (a) change bottom cells to put dot AFTER the label (so dot sits at the bottom), or (b) move the dot inside a fixed-height wrapper, or (c) bump bottom path Y to ~92 in the viewBox (instead of 104) so it lines up with where the dot actually renders. User said 'do NOT tweak these values' so option (a) — change DOM order in bottom row so dot is the visually lowest element — is preferred."
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "checks_performed": {
+    "mobile_flow_visualization": {
+      "container_visible": true,
+      "desktop_variant_hidden_on_mobile": true,
+      "single_svg_path_in_mobile_container": true,
+      "path_d": "M 26,6 L 74,6 L 26,104 L 74,104",
+      "dom_order_correct_DATOS_ANALISIS_DECISION_ACCION": true,
+      "spatial_2x2_layout_correct": true,
+      "datos_top_left": true,
+      "analisis_top_right": true,
+      "decision_bottom_left": true,
+      "accion_bottom_right": true,
+      "labels_not_clipped": true,
+      "top_row_alignment_within_few_px": true,
+      "bottom_row_alignment_within_few_px": false
+    },
+    "desktop_flow_visualization": {
+      "desktop_variant_visible": true,
+      "mobile_variant_hidden": true,
+      "horizontal_organic_curve_present": true
+    },
+    "problem_system_section": {
+      "card_0": {"status_text": "sin responder", "status_before_problem_in_dom": true, "status_above_problem_visually": true, "red_pill_count_in_card": 1},
+      "card_1": {"status_text": "caos", "status_before_problem_in_dom": true, "status_above_problem_visually": true, "red_pill_count_in_card": 1},
+      "card_2": {"status_text": "duplicados", "status_before_problem_in_dom": true, "status_above_problem_visually": true, "red_pill_count_in_card": 1},
+      "no_old_layout_pill_after_problem_text": true,
+      "red_accent_styling": "bg-red-500/10 + border-red-500/25 + animate-pulse red dot — verified via DOM inspection"
+    },
+    "navbar_mobile_unauthenticated": {
+      "mobile_cta_present": true,
+      "mobile_cta_text": "Comenzar",
+      "mobile_switch_account_present": false,
+      "mobile_view_plan_present": false,
+      "verdict": "PASS"
+    },
+    "navbar_mobile_authenticated": {
+      "tested_with_real_session": false,
+      "tested_with_localstorage_injected_session": true,
+      "tested_with_fetch_stub_session": true,
+      "isAuthenticated_promoted": false,
+      "reason": "Supabase v2 client validates the JWT against the auth endpoint on init. Even with localStorage-seeded session and stubbed /auth/v1/user + /auth/v1/token + /rest/v1/profiles fetch responses, the useUserBillingState hook still resolves isAuthenticated=false (nav-cta still shows 'Comenzar' / data-cta-state='not_logged'). External dependency: real Supabase signup is needed to validate the runtime authenticated UI.",
+      "code_path_review": {
+        "navbar_jsx_lines_165_194_isAuthenticated_branch_correct": true,
+        "mobile_switch_account_renders_ABOVE_mobile_view_plan_in_DOM": true,
+        "mobile_switch_account_label": "language === 'es' ? 'Cambiar cuenta' : 'Switch account' (line 173) — CORRECT",
+        "mobile_view_plan_label": "language === 'es' ? 'Ver mi plan' : 'View my plan' (line 182) — CORRECT",
+        "mobile_switch_account_ghost_styling": "px-4 py-2.5 text-sm font-medium text-white/70 ... border-white/10 ... bg-white/[0.02] (line 171) — CORRECT (ghost)",
+        "mobile_view_plan_primary_cyan_styling": "px-4 py-3 font-semibold text-sm ... bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] (line 180) — CORRECT (primary cyan gradient)",
+        "handleSwitchAccount_calls_supabase_auth_signOut_then_openPlatformAccess": "lines 44-54 — CORRECT",
+        "handleViewPlan_scrolls_to_pricing": "document.getElementById('pricing').scrollIntoView (line 41) — CORRECT",
+        "old_mobile_cta_NOT_rendered_when_isAuthenticated_true": "lines 185-194 inside the else branch — CORRECT"
+      },
+      "verdict": "PASS by source-review (per agent_to_agent_context_note)"
+    },
+    "regression": {
+      "desktop_navbar_cta_unchanged": true,
+      "desktop_navbar_cta_text": "Comenzar",
+      "page_title": "Quantro — Despierta con decisiones listas para ejecutar en tu negocio",
+      "all_landing_sections_render": true,
+      "pricing_section_present": true
+    }
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix bottom-row dot vs SVG line vertical misalignment in mobile FlowVisualization (Δy=27px). The user explicitly said 'do NOT tweak the path coords / grid values', so the recommended fix is to reorder DOM in bottom cells so the dot is visually below the label (or wrap the dot at fixed offset). Alternatively, mounting the label as `absolute` outside the dot's flow so the dot itself sits where the path expects (viewBox y=104 → screen y=28 from svg top).",
+    "(External, not blocking) Authenticated mobile menu state (mobile-switch-account + mobile-view-plan) could not be runtime-verified because injecting a fake session does not survive Supabase v2's JWT validation. A real signup against the staging Supabase instance is required to e2e-verify the click handlers (signOut + scroll to #pricing). Source code review confirms the implementation is correct."
+  ],
+  "critical_code_review_comments": [
+    "FlowVisualization mobile: positioning approach is fragile — a flex column with `justify-end pb-2` plus a label `mt-2.5` below the dot inevitably pushes the dot upwards by (label height + mt + pb) ≈ 27px. Recommend computing dot positions absolutely inside the wrapper (similar to desktop variant) and rendering the label as a separate absolutely-positioned element relative to the dot, OR adopt a fixed grid where dot occupies a known centerline.",
+    "Navbar.jsx handleSwitchAccount could surface a brief toast on signOut failure rather than silent console.warn (cosmetic).",
+    "Navbar.jsx handleViewPlan is async but contains no awaited work — the async keyword is unnecessary."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped per request)", "frontend": "92% (12/13 spec items PASS; 1 alignment defect in mobile FlowVisualization bottom row)"},
+  "test_credentials": "see /app/memory/test_credentials.md — Supabase anon key in /app/frontend/.env",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter 19: Z-grid mobile FlowVisualization renders correctly (4 dots in 2x2, single SVG <path> with d='M 26,6 L 74,6 L 26,104 L 74,104'), but bottom-row dots are ~27px ABOVE the line endpoint due to flex `justify-end pb-2` + label `mt-2.5` ordering — this is a real visible misalignment, not a viewport rounding issue. ProblemSystemSection: status pill (sin responder/caos/duplicados) renders correctly ABOVE the problem text in DOM and visually for cards 0/1/2, with red accent + pulsing dot, no duplicate/old pill. Navbar mobile UNAUTH state renders single mobile-cta='Comenzar' as expected. AUTH state could not be runtime-verified (Supabase v2 rejects fake/injected sessions) — source review of Navbar.jsx lines 165-194 confirms the implementation is correct: mobile-switch-account ghost button ABOVE mobile-view-plan primary cyan button, correct ES/EN labels, correct handlers (signOut + scrollIntoView for #pricing). Desktop regression OK (FlowVisualization desktop visible, mobile hidden, page title correct, nav-cta='Comenzar', pricing present).",
+  "rca of the issue": "Mobile FlowVisualization bottom-row alignment: viewBox is 0 0 100 110 mapped via preserveAspectRatio='none' onto an absolute-positioned SVG covering the 2x2 grid container (height=240). Path bottom Y=104 maps to screen Y = svgTop + 104*(240/110) ≈ svgTop + 226.9. But bottom cells use Tailwind classes `justify-end pb-2` on a flex column whose children are [dot, label] in DOM order with label `mt-2.5`. This pushes the dot UP by approximately (label_height ~16px + mt-2.5 ~10px + pb-2 ~8px) ≈ 34px from the cell bottom, while the path expects the dot at the cell bottom (cellBottom ≈ svgTop + 226.9 + ~13). The result: dot center ≈ svgTop + 200 vs path point ≈ svgTop + 227 → ~27px gap. Repro: load https://decision-engine-61.preview.emergentagent.com at 390x844, scroll to intelligence section, getBoundingClientRect on [data-testid=flow-visualization-mobile] svg path bottom points vs the bottom dots (.bg-[#00F5FF] inside .grid > div:nth-child(3|4)). Mitigation: either reorder DOM so label is BEFORE dot in bottom cells (dot becomes the visually lowest element so `justify-end pb-2` sits the dot at the cell bottom), or place dots absolutely with explicit top values matching viewBox y."
+}

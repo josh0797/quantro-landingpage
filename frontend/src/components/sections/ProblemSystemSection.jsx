@@ -78,14 +78,20 @@ const ProblemCard = ({ item, index }) => (
         <div className="w-10 h-10 rounded-xl bg-slate-800/60 border border-slate-700/60 flex items-center justify-center text-slate-400 flex-shrink-0">
           {item.icon}
         </div>
-        <p className="text-base sm:text-lg text-slate-300 leading-snug font-medium pt-1">
-          {item.problem}
-        </p>
-      </div>
-      <div className="ml-13 pl-13">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/5 border border-red-500/15">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-400/70 animate-pulse" />
-          <span className="text-xs text-red-300/80 font-medium">{item.before}</span>
+        <div className="flex-1 min-w-0 pt-0.5">
+          {/* Status title pill — hierarchy as heading */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/25 mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-400/90 animate-pulse" />
+            <span
+              className="text-[10px] font-semibold text-red-300/90 tracking-[0.18em] uppercase"
+              data-testid={`problem-status-${index}`}
+            >
+              {item.before}
+            </span>
+          </div>
+          <p className="text-base sm:text-lg text-slate-300 leading-snug font-medium">
+            {item.problem}
+          </p>
         </div>
       </div>
     </div>
