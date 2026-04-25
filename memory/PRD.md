@@ -266,6 +266,25 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — Inventory Intelligence (Apple-keynote section)
+- **New section** `/app/frontend/src/components/sections/InventoryIntelligenceSection.jsx` registered in `App.js` between `IntelligenceSection` (Act 5 reveal) and `SuccessStoriesSection`, anchor `#inventory-intelligence`.
+- **Narrative structure** (Apple keynote style):
+  1. Eyebrow pill `NUEVO · QUANTRO OS`
+  2. Hero statement: `"Y ahora, tu inventario también piensa contigo."` (gradient cyan on the emphasis span)
+  3. Subtitle explaining real-time observation
+  4. Four capability cards (grid-2 mobile / grid-4 desktop): Faltantes de stock · Exceso de inventario · Movimientos óptimos · Compras inteligentes
+  5. Divider `FULFILLMENT INTELIGENTE` with gradient lines
+  6. Sub-hero: `"No solo detecta problemas. Propone la solución."`
+  7. Two-card demo:
+     - Red alert card: `"Estás perdiendo ventas en CDMX. Hay stock disponible en Bodega Central. Mover 25 unidades resolvería el problema."`
+     - ArrowDown connector
+     - Cyan move card: `MOVER STOCK · 25 unidades`, De `Bodega Central` → A `Tienda CDMX`, primary CTA `"Aprobar movimiento"`
+  8. Three impact bullets: menos pérdidas · mejor uso · decisiones rápidas
+  9. "Mientras tú duermes" card (Moon icon) → closing hero: `"Despiertas sabiendo exactamente qué mover, qué comprar y dónde actuar."`
+- Full ES/EN i18n via `useLanguage`. All stagger animations use framer-motion + `viewport={{ once: true }}`.
+- 12 `data-testid` anchors for QA: `inventory-intelligence-section`, `inventory-eyebrow`, `inventory-hero`, `inventory-capabilities`, `inventory-capability-[0..3]`, `inventory-demo`, `inventory-move-card`, `inventory-approve-move`, `inventory-impact`, `inventory-night-card`.
+- Verified visually: hero + 4 capabilities + demo card render correctly on desktop; lint clean.
+
 ### Feb 23, 2026 — Acceso Screen Redesign (Apple-style) + Pricing Order Fix + New Plan Content
 - **New routes** `/acceso` (ES) and `/access` (EN) via `PICKER_ROUTES` in `authRoutes.js`. `AuthRouteBoot` handles both auth and picker routes. `PICKER_PAGE_TITLES`: "Acceso | Quantro" / "Access | Quantro".
 - **Decoupled platform picker** from auth orchestration: new component `/app/frontend/src/components/AccessPickerPanel.jsx` replaces the in-modal choose_platform layout. Clicking a card now redirects DIRECTLY to the external product URL (`window.location.href = PLATFORMS[id].url`) — each app handles its own auth. (Pricing flow still uses the chained orchestration when `intent.tier` is set.)

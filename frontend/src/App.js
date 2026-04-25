@@ -11,6 +11,7 @@ import InteractiveDemoSection from "@/components/sections/InteractiveDemoSection
 import CinematicTransitionSection from "@/components/sections/CinematicTransitionSection";
 import AmanecerSection from "@/components/sections/AmanecerSection";
 import IntelligenceSection from "@/components/sections/IntelligenceSection";
+import InventoryIntelligenceSection from "@/components/sections/InventoryIntelligenceSection";
 import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
@@ -64,6 +65,9 @@ const LandingShell = () => (
 
     {/* Act 5 — Reveal: the system behind it all */}
     <IntelligenceSection />
+
+    {/* Act 5.5 — New capability: Inventory Intelligence keynote */}
+    <InventoryIntelligenceSection />
 
     {/* Proof + Offer */}
     <SuccessStoriesSection />
