@@ -1,21 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  X,
-  Brain,
-  Workflow,
-  ArrowRight,
-  ArrowLeft,
-  Loader2,
-  Lock,
-  Check,
-  Sparkles,
-  ExternalLink,
-} from "lucide-react";
+import { X, ArrowLeft, Loader2 } from "lucide-react";
 import { useUserBillingState } from "../hooks/useUserBillingState";
 import { useLanguage } from "../hooks/useLanguage";
-import { PLATFORMS, getPlatformRedirectUrl, mapTierToPlan } from "../lib/platformRoutes";
+import { getPlatformRedirectUrl, PLATFORMS } from "../lib/platformRoutes";
 import { resolveNextStep } from "../lib/billingGuards";
 import { saveIntent, patchIntent, clearIntent, loadIntent } from "../lib/checkoutResume";
 import { startStripeCheckout } from "../lib/stripe";
@@ -24,169 +13,52 @@ import { AUTH_ROUTES, resolveAuthRoute, resolvePickerRoute } from "../lib/authRo
 import AuthForm from "./auth/AuthForm";
 import LanguageSwitcher from "./LanguageSwitcher";
 import AccessPickerPanel from "./AccessPickerPanel";
+import PlatformAccessHeader from "./platformAccess/PlatformAccessHeader";
+import ChoosePlanPanel from "./platformAccess/ChoosePlanPanel";
+import OnboardingPanel from "./platformAccess/OnboardingPanel";
+import RedirectPanel from "./platformAccess/RedirectPanel";
+import StatusFooter from "./platformAccess/StatusFooter";
 
 /**
- * Full-screen modal that orchestrates the real production flow:
- *   pick platform → auth → pick plan → redirect
+ * Modal orchestrator for the production access flow.
  *
- * Uses Supabase as source of truth via useUserBillingState.
- * Persists the user's intent across the Stripe redirect via checkoutResume.
+ * Stages: choose_platform → auth → choose_plan → onboarding → redirect.
+ * Each stage's UI lives in its own panel under ./platformAccess/. This file
+ * is purely the state machine + URL sync + modal shell.
+ *
+ * Source of truth: Supabase via useUserBillingState.
+ * Intent persistence: localStorage via checkoutResume (survives Stripe).
  */
 
 const OVERLAY_BG =
   "linear-gradient(180deg, rgba(3, 7, 18, 0.85) 0%, rgba(3, 7, 18, 0.95) 100%)";
 
-const PLAN_TIERS = (isEs) => [
-  {
-    key: "essential",
-    plan: "essential",
-    name: "Essential",
-    price: "$59",
-    period: isEs ? "/mes" : "/mo",
-    tagline: isEs ? "Deja el caos atrás y gana claridad" : "Leave the chaos behind",
-    features: isEs
-      ? ["Automatizaciones básicas", "Dashboard esencial", "Agentes IA básicos"]
-      : ["Basic automations", "Essential dashboard", "Basic AI agents"],
-    highlighted: false,
-    accent: "#94A3B8",
-  },
-  {
-    key: "pro",
-    plan: "pro",
-    name: "Pro",
-    price: "$209",
-    period: isEs ? "/mes" : "/mo",
-    tagline: isEs ? "Escala con inteligencia, no con esfuerzo" : "Scale with intelligence",
-    features: isEs
-      ? ["Quantro OS + Flow completos", "Quantro Intelligence activo", "Multiusuario · 3 asientos"]
-      : ["Full Quantro OS + Flow", "Quantro Intelligence active", "Multi-user · 3 seats"],
-    highlighted: true,
-    accent: "#00F5FF",
-  },
-  {
-    key: "enterprise",
-    plan: "enterprise",
-    name: "Enterprise",
-    price: "$499",
-    period: isEs ? "/mes" : "/mo",
-    tagline: isEs
-      ? "Automatización y control en su máxima expresión"
-      : "Automation and control at their peak",
-    features: isEs
-      ? ["Todo en Pro", "Quantro Revenue", "Multiusuario · 10 asientos"]
-      : ["Everything in Pro", "Quantro Revenue", "Multi-user · 10 seats"],
-    highlighted: false,
-    accent: "#C084FC",
-  },
-];
+const FRESH_PURCHASE_WINDOW_MS = 6 * 60 * 1000;
+const REDIRECT_DELAY_MS = 700;
+const REDIRECT_DELAY_FRESH_MS = 2800;
 
-const PlatformCard = ({ platform, onChoose, disabled, isEs, labelOverride }) => {
-  const Icon = platform.id === "os" ? Brain : Workflow;
-  const isReady = platform.available && platform.url;
-  const actualDisabled = disabled || !isReady;
-
-  return (
-    <motion.button
-      whileHover={actualDisabled ? undefined : { y: -3 }}
-      whileTap={actualDisabled ? undefined : { y: 0 }}
-      transition={{ duration: 0.2 }}
-      type="button"
-      onClick={() => !actualDisabled && onChoose(platform.id)}
-      disabled={actualDisabled}
-      className="relative text-left rounded-2xl p-5 transition-all"
-      style={{
-        background:
-          "linear-gradient(160deg, rgba(12, 18, 34, 0.92), rgba(5, 10, 24, 0.82))",
-        border: `1px solid ${platform.accent}3A`,
-        boxShadow: actualDisabled
-          ? "none"
-          : `0 20px 48px -20px ${platform.accent}55, inset 0 1px 0 rgba(255,255,255,0.04)`,
-        opacity: actualDisabled ? 0.55 : 1,
-        cursor: actualDisabled ? "not-allowed" : "pointer",
-      }}
-      data-testid={`platform-card-${platform.id}`}
-    >
-      <div className="flex items-start gap-3">
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: `linear-gradient(135deg, ${platform.accent}2A, ${platform.accent}08)`,
-            border: `1px solid ${platform.accent}55`,
-          }}
-        >
-          <Icon size={18} style={{ color: platform.accent }} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="text-[9px] font-bold tracking-[0.2em] uppercase"
-              style={{ color: platform.accent }}
-            >
-              {labelOverride ||
-                (!isReady ? (isEs ? "Próximamente" : "Coming soon") : "Core")}
-            </span>
-          </div>
-          <div className="font-satoshi font-bold text-[18px] text-white leading-tight tracking-tight mt-0.5">
-            {platform.name}
-          </div>
-          <div className="text-[12px] text-slate-400 leading-snug mt-1">
-            {platform.tagline[isEs ? "es" : "en"]}
-          </div>
-          <div className="text-[11.5px] text-slate-500 leading-snug mt-2">
-            {platform.description[isEs ? "es" : "en"]}
-          </div>
-        </div>
-        {!actualDisabled && (
-          <ArrowRight
-            size={14}
-            className="text-slate-500 flex-shrink-0 mt-1"
-            style={{ color: platform.accent }}
-          />
-        )}
-        {!isReady && (
-          <Lock size={12} className="text-slate-500 flex-shrink-0 mt-1" />
-        )}
-      </div>
-    </motion.button>
-  );
+const stageToStepIndex = (stage) => {
+  switch (stage) {
+    case "auth":
+      return 1;
+    case "choose_plan":
+    case "onboarding":
+      return 2;
+    case "redirect":
+      return 3;
+    default:
+      return 0;
+  }
 };
 
-const StepIndicator = ({ step, isEs }) => {
-  const steps = useMemo(
-    () =>
-      isEs
-        ? ["Plataforma", "Acceso", "Plan", "Listo"]
-        : ["Platform", "Access", "Plan", "Ready"],
-    [isEs]
-  );
-  return (
-    <div className="flex items-center gap-1.5">
-      {steps.map((label, i) => {
-        const active = i === step;
-        const done = i < step;
-        return (
-          <div key={label} className="flex items-center gap-1.5">
-            <span
-              className="w-1.5 h-1.5 rounded-full transition-all"
-              style={{
-                backgroundColor: active ? "#00F5FF" : done ? "#22D3EE" : "#334155",
-                boxShadow: active ? "0 0 8px #00F5FF" : "none",
-              }}
-            />
-            <span
-              className={`text-[10px] tracking-wider uppercase ${
-                active ? "text-white" : done ? "text-slate-400" : "text-slate-600"
-              }`}
-            >
-              {label}
-            </span>
-            {i < steps.length - 1 && <span className="text-slate-700 mx-1">·</span>}
-          </div>
-        );
-      })}
-    </div>
-  );
+const deriveFirstName = (profile, user) => {
+  const raw = profile?.full_name || profile?.company_name || user?.email || "";
+  if (!raw) return "";
+  if (raw.includes("@")) return raw.split("@")[0].split(/[._-]/)[0];
+  return raw.split(" ")[0];
 };
+
+const PLAN_LABEL_MAP = { essential: "Starter", pro: "Pro", enterprise: "Scale" };
 
 export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
   const { language } = useLanguage();
@@ -203,51 +75,34 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
     refresh,
   } = useUserBillingState();
 
-  // Track the user intent as they progress through the flow
   const [intent, setIntent] = useState(() => loadIntent() || { platform: null });
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [stage, setStage] = useState("choose_platform");
   const [authMode, setAuthMode] = useState("login");
-  const [autoOpenedForced, setAutoOpenedForced] = useState(false);
 
-  // Detect fresh purchase (plan_updated_at within last 6 minutes) so we can
-  // render a personalized welcome instead of a bare "opening…".
   const isFreshPurchase = useMemo(() => {
     if (!profile?.plan_updated_at) return false;
     const age = Date.now() - new Date(profile.plan_updated_at).getTime();
-    return Number.isFinite(age) && age >= 0 && age < 6 * 60 * 1000;
+    return Number.isFinite(age) && age >= 0 && age < FRESH_PURCHASE_WINDOW_MS;
   }, [profile?.plan_updated_at]);
 
-  const firstName = useMemo(() => {
-    const raw = profile?.company_name || user?.email || "";
-    if (!raw) return "";
-    if (raw.includes("@")) return raw.split("@")[0].split(/[._-]/)[0];
-    return raw.split(" ")[0];
-  }, [profile?.company_name, user?.email]);
-
-  const planLabel = useMemo(() => {
-    const map = { essential: "Starter", pro: "Pro", enterprise: "Scale" };
-    return profile?.plan ? map[profile.plan] || profile.plan : "";
-  }, [profile?.plan]);
-
+  const firstName = useMemo(() => deriveFirstName(profile, user), [profile, user]);
+  const planLabel = profile?.plan ? PLAN_LABEL_MAP[profile.plan] || profile.plan : "";
   const platformName = intent?.platform ? PLATFORMS[intent.platform]?.name : "";
+  const stepIndex = useMemo(() => stageToStepIndex(stage), [stage]);
 
-  // Recompute stage whenever the underlying auth/profile/intent changes
+  // === Stage machine ============================================
   useEffect(() => {
-    if (!open) return;
-    if (isLoading) return;
-    // If the modal was opened with a forced stage (e.g. from /iniciar-sesion),
-    // respect it until the user completes that stage.
+    if (!open || isLoading) return;
     if (initial?.stage === "auth" && !session) {
       setStage("auth");
       return;
     }
-    const next = resolveNextStep({ session, profile, intent });
-    setStage(next);
+    setStage(resolveNextStep({ session, profile, intent }));
   }, [open, isLoading, session, profile, intent, initial?.stage]);
 
-  // Sync initial authMode when modal is opened from an auth route
+  // Force initial authMode when modal is opened from an auth route
   useEffect(() => {
     if (!open) return;
     if (initial?.authMode === "login" || initial?.authMode === "signup") {
@@ -255,18 +110,15 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
     }
   }, [open, initial?.authMode]);
 
-  // Push URL when stage becomes 'auth' and current URL isn't already an auth route.
-  // Pull URL change → update authMode when location changes underneath.
+  // === URL ↔ stage sync =========================================
+  // Push auth URL when we enter the 'auth' stage and current URL isn't already one.
   useEffect(() => {
-    if (!open) return;
-    if (stage !== "auth") return;
+    if (!open || stage !== "auth") return;
     const currentMatch = resolveAuthRoute(location.pathname);
     if (currentMatch) {
-      // URL is already the auth route; sync authMode from it
       if (currentMatch.mode !== authMode) setAuthMode(currentMatch.mode);
       return;
     }
-    // Not on an auth route — push one matching current authMode + language
     const key = authMode === "signup" ? "signUp" : "signIn";
     const target = AUTH_ROUTES[key][language];
     if (target && target !== location.pathname) {
@@ -274,64 +126,42 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
     }
   }, [open, stage, authMode, language, location.pathname, navigate]);
 
-  // When user toggles mode inside the form while on an auth route, push the
-  // equivalent URL so browser history stays truthful.
-  const handleAuthModeChange = (nextMode) => {
-    setAuthMode(nextMode);
-    const onAuthRoute = resolveAuthRoute(location.pathname);
-    if (!onAuthRoute) return;
-    const key = nextMode === "signup" ? "signUp" : "signIn";
-    const target = AUTH_ROUTES[key][language];
-    if (target && target !== location.pathname) {
-      navigate(target, { replace: true });
-    }
-  };
-
-  // When authenticated while the user was on an auth route, leave the auth
-  // URL: jump back to the intended location (state.from) or home.
+  // After auth on a routed URL, leave the route → home (or state.from).
   useEffect(() => {
-    if (!open) return;
-    if (!session) return;
-    const onAuthRoute = resolveAuthRoute(location.pathname);
-    if (!onAuthRoute) return;
+    if (!open || !session) return;
+    if (!resolveAuthRoute(location.pathname)) return;
     const dest = location.state?.from?.pathname || "/";
     navigate(dest, { replace: true });
   }, [open, session, location.pathname, location.state, navigate]);
 
-  // Auto-redirect when we reach 'redirect' stage.
-  // Extra delay when it's a fresh purchase so the user can read the welcome.
+  // === Auto-redirect at 'redirect' stage ========================
   useEffect(() => {
-    if (!open) return;
-    if (stage !== "redirect") return;
-    if (!intent?.platform) return;
+    if (!open || stage !== "redirect" || !intent?.platform) return;
     const url = getPlatformRedirectUrl(intent.platform);
     if (!url) return;
     setRedirecting(true);
     trackCTAClick(`platform_redirect_${intent.platform}`);
     clearIntent();
-    const delay = isFreshPurchase ? 2800 : 700;
+    const delay = isFreshPurchase ? REDIRECT_DELAY_FRESH_MS : REDIRECT_DELAY_MS;
     const id = setTimeout(() => {
       window.location.href = url;
     }, delay);
     return () => clearTimeout(id);
   }, [open, stage, intent, isFreshPurchase]);
 
-  // Persist intent changes
+  // Persist intent across reloads / Stripe redirect
   useEffect(() => {
-    if (intent && (intent.platform || intent.plan)) {
-      saveIntent(intent);
-    }
+    if (intent && (intent.platform || intent.plan)) saveIntent(intent);
   }, [intent]);
 
+  // === Handlers =================================================
   const choosePlatform = (platformId) => {
-    // If this flow was triggered from Pricing (intent.tier set), keep the
-    // existing orchestrated flow: save platform, advance to auth → plan → pay.
+    // Pricing-driven flow: keep orchestration (auth → plan → pay).
     if (intent?.tier) {
       setIntent((prev) => ({ ...prev, platform: platformId }));
       return;
     }
-    // Otherwise this is a direct access request — each product handles its
-    // own auth. Redirect out immediately.
+    // Direct access: each app handles its own auth — bounce out immediately.
     const url = getPlatformRedirectUrl(platformId);
     if (url) {
       trackCTAClick(`direct_access_${platformId}`);
@@ -345,25 +175,34 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
     setStage("choose_platform");
   };
 
+  const handleAuthModeChange = (nextMode) => {
+    setAuthMode(nextMode);
+    if (!resolveAuthRoute(location.pathname)) return;
+    const key = nextMode === "signup" ? "signUp" : "signIn";
+    const target = AUTH_ROUTES[key][language];
+    if (target && target !== location.pathname) {
+      navigate(target, { replace: true });
+    }
+  };
+
+  const handleAuthenticated = async () => {
+    await refresh();
+  };
+
   const handleTierPick = async (tier) => {
     if (!user) return;
-    const planCode = tier.plan; // essential | pro | enterprise
     setCheckoutLoading(true);
-
     const source = `platform_access_${intent.platform}_${tier.key}`;
     trackCTAClick(source);
-    trackCheckoutStarted({ packageId: planCode, source });
-
-    patchIntent({ tier: tier.key, plan: planCode, billing_cycle: "monthly" });
-
+    trackCheckoutStarted({ packageId: tier.plan, source });
+    patchIntent({ tier: tier.key, plan: tier.plan, billing_cycle: "monthly" });
     try {
       await startStripeCheckout({
-        plan: planCode,
+        plan: tier.plan,
         billingCycle: "monthly",
         email: user.email,
         language,
       });
-      // startStripeCheckout redirects; control should not reach here.
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error("Checkout failed:", err);
@@ -371,25 +210,14 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
     }
   };
 
-  const stepIndex = useMemo(() => {
-    switch (stage) {
-      case "choose_platform":
-        return 0;
-      case "auth":
-        return 1;
-      case "choose_plan":
-      case "onboarding":
-        return 2;
-      case "redirect":
-        return 3;
-      default:
-        return 0;
+  const handleClose = () => {
+    if (
+      resolveAuthRoute(location.pathname) ||
+      resolvePickerRoute(location.pathname)
+    ) {
+      navigate("/", { replace: true });
     }
-  }, [stage]);
-
-  // After auth succeeds, refresh profile so we re-evaluate stage
-  const handleAuthenticated = async () => {
-    await refresh();
+    onClose();
   };
 
   return (
@@ -414,8 +242,7 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full max-w-[880px] rounded-2xl overflow-hidden"
               style={{
-                background:
-                  "linear-gradient(180deg, #070D1C 0%, #050A18 100%)",
+                background: "linear-gradient(180deg, #070D1C 0%, #050A18 100%)",
                 border: "1px solid rgba(148, 163, 184, 0.12)",
                 boxShadow:
                   "0 40px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 245, 255, 0.04), 0 0 80px -10px rgba(0, 245, 255, 0.15)",
@@ -424,17 +251,7 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
               {/* Close */}
               <button
                 type="button"
-                onClick={() => {
-                  // If opened via a deep-link route (auth or picker), leave
-                  // the URL — navigate home so the user isn't stuck.
-                  if (
-                    resolveAuthRoute(location.pathname) ||
-                    resolvePickerRoute(location.pathname)
-                  ) {
-                    navigate("/", { replace: true });
-                  }
-                  onClose();
-                }}
+                onClick={handleClose}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors z-10"
                 aria-label={isEs ? "Cerrar" : "Close"}
                 data-testid="platform-access-close"
@@ -442,13 +259,12 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
                 <X size={18} />
               </button>
 
-              {/* Language switcher inside the modal — the overlay hides the
-                  navbar one, so auth routes need their own reachable toggle. */}
+              {/* Language switcher (overlay hides the navbar one on auth routes) */}
               <div className="absolute top-3.5 right-14 z-10 scale-[0.85] origin-right">
                 <LanguageSwitcher />
               </div>
 
-              {/* Back (only on auth stage) */}
+              {/* Back (auth stage only) */}
               <AnimatePresence>
                 {stage === "auth" && (
                   <motion.button
@@ -481,62 +297,13 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
               />
 
               <div className="relative p-6 sm:p-10">
-                {/* Header */}
-                <div className="mb-7">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-[#00F5FF]/25 bg-[#00F5FF]/[0.06] mb-4">
-                    <Sparkles size={11} className="text-[#00F5FF]" />
-                    <span className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#00F5FF]">
-                      {isEs ? "Acceso a plataforma" : "Platform access"}
-                    </span>
-                  </div>
-                  {stage !== "choose_platform" && (
-                    <>
-                      <h2 className="font-satoshi font-bold text-3xl sm:text-4xl text-white leading-tight tracking-tight mb-2">
-                        {stage === "auth" && authMode === "signup" &&
-                          (isEs ? "Crea tu cuenta" : "Create your account")}
-                        {stage === "auth" && authMode !== "signup" &&
-                          (isEs ? "Inicia sesión para continuar" : "Sign in to continue")}
-                        {(stage === "choose_plan" || stage === "onboarding") &&
-                          (isEs ? "Elige tu plan" : "Choose your plan")}
-                        {stage === "redirect" &&
-                          (isEs ? "Entrando a tu plataforma…" : "Entering your platform…")}
-                      </h2>
-                      <p className="text-[13px] text-slate-400 max-w-[560px]">
-                        {stage === "auth" && authMode === "signup" &&
-                          (isEs
-                            ? "Con tu cuenta obtienes acceso a Quantro OS y Quantro Flow."
-                            : "Your Quantro account unlocks both Quantro OS and Quantro Flow.")}
-                        {stage === "auth" && authMode !== "signup" &&
-                          (isEs
-                            ? "Tu sesión de Quantro funciona tanto en Quantro OS como en Quantro Flow."
-                            : "Your Quantro session works on both Quantro OS and Quantro Flow.")}
-                        {(stage === "choose_plan" || stage === "onboarding") &&
-                          (isEs
-                            ? "Prueba cualquier plan con $1 USD. Cancelas cuando quieras."
-                            : "Try any plan for $1 USD. Cancel anytime.")}
-                        {stage === "redirect" &&
-                          (isEs
-                            ? "Te estamos redirigiendo a tu producto. No cierres esta ventana."
-                            : "We're sending you to your product. Don't close this window.")}
-                      </p>
-                    </>
-                  )}
-                  {stage === "choose_platform" && (
-                    <p className="text-[13px] text-slate-400 max-w-[560px]" data-testid="access-microcopy">
-                      {isEs
-                        ? "Selecciona la experiencia que quieres abrir. Cada sistema opera de forma independiente."
-                        : "Pick the experience you want to open. Each system runs independently."}
-                    </p>
-                  )}
+                <PlatformAccessHeader
+                  stage={stage}
+                  authMode={authMode}
+                  isEs={isEs}
+                  stepIndex={stepIndex}
+                />
 
-                  {stage !== "choose_platform" && (
-                    <div className="mt-4">
-                      <StepIndicator step={stepIndex} isEs={isEs} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Body by stage */}
                 <div className="min-h-[280px]">
                   {isLoading && (
                     <div
@@ -563,221 +330,40 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
                   )}
 
                   {!isLoading && stage === "choose_plan" && (
-                    <div className="grid sm:grid-cols-3 gap-3">
-                      {PLAN_TIERS(isEs).map((tier) => (
-                        <motion.button
-                          key={tier.key}
-                          type="button"
-                          onClick={() => handleTierPick(tier)}
-                          disabled={checkoutLoading}
-                          whileHover={{ y: -2 }}
-                          transition={{ duration: 0.2 }}
-                          className={`relative rounded-xl p-4 text-left transition-all disabled:opacity-60 ${
-                            tier.highlighted ? "ring-1" : ""
-                          }`}
-                          style={{
-                            background:
-                              "linear-gradient(160deg, rgba(12,18,34,0.88), rgba(5,10,24,0.78))",
-                            border: `1px solid ${tier.accent}${tier.highlighted ? "55" : "28"}`,
-                            boxShadow: tier.highlighted
-                              ? `0 16px 40px -18px ${tier.accent}88`
-                              : "none",
-                          }}
-                          data-testid={`platform-plan-${tier.plan}`}
-                        >
-                          {tier.highlighted && (
-                            <span
-                              className="absolute -top-2 left-4 px-2 py-0.5 rounded-full text-[9px] font-semibold tracking-wider uppercase"
-                              style={{
-                                background:
-                                  "linear-gradient(90deg, #00F5FF, #22D3EE)",
-                                color: "#0A0F1C",
-                              }}
-                            >
-                              {isEs ? "Recomendado" : "Recommended"}
-                            </span>
-                          )}
-                          <div
-                            className="text-[10px] font-semibold tracking-wider uppercase mb-0.5"
-                            style={{ color: tier.accent }}
-                          >
-                            {tier.name}
-                          </div>
-                          <div className="text-[11px] text-slate-400 leading-snug mb-3">
-                            {tier.tagline}
-                          </div>
-                          <div className="flex items-baseline gap-1 mb-3">
-                            <span className="font-satoshi font-bold text-2xl text-white tabular-nums">
-                              {tier.price}
-                            </span>
-                            <span className="text-[10px] text-slate-500">{tier.period}</span>
-                          </div>
-                          <ul className="space-y-1.5 mb-3">
-                            {tier.features.map((f) => (
-                              <li
-                                key={f}
-                                className="flex items-start gap-1.5 text-[11px] text-slate-300 leading-snug"
-                              >
-                                <Check
-                                  size={11}
-                                  className="flex-shrink-0 mt-0.5"
-                                  style={{ color: tier.accent }}
-                                />
-                                {f}
-                              </li>
-                            ))}
-                          </ul>
-                          <div
-                            className="text-[11px] font-medium text-center py-1.5 rounded-md"
-                            style={{
-                              background: tier.highlighted
-                                ? "linear-gradient(90deg, #00F5FF, #22D3EE)"
-                                : "rgba(148,163,184,0.06)",
-                              color: tier.highlighted ? "#0A0F1C" : "#E2E8F0",
-                              border: tier.highlighted
-                                ? "none"
-                                : "1px solid rgba(148,163,184,0.12)",
-                            }}
-                          >
-                            {checkoutLoading ? (
-                              <Loader2 size={12} className="animate-spin inline" />
-                            ) : isEs ? (
-                              "Empezar por $1"
-                            ) : (
-                              "Start for $1"
-                            )}
-                          </div>
-                        </motion.button>
-                      ))}
-                    </div>
+                    <ChoosePlanPanel
+                      isEs={isEs}
+                      onPickTier={handleTierPick}
+                      loading={checkoutLoading}
+                    />
                   )}
 
                   {!isLoading && stage === "onboarding" && (
-                    <div
-                      className="rounded-xl p-6 text-center"
-                      style={{
-                        background: "rgba(148,163,184,0.04)",
-                        border: "1px solid rgba(148,163,184,0.12)",
-                      }}
-                      data-testid="platform-access-onboarding"
-                    >
-                      <p className="text-[13px] text-white font-medium mb-2">
-                        {isEs
-                          ? "Un paso más: completa tu perfil dentro de Quantro OS."
-                          : "One more step: complete your profile inside Quantro OS."}
-                      </p>
-                      <p className="text-[12px] text-slate-400 mb-4 max-w-md mx-auto">
-                        {isEs
-                          ? "Te llevamos directo al onboarding. Puedes regresar a Flow en cualquier momento."
-                          : "We'll take you straight to onboarding. You can switch to Flow anytime."}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setStage("redirect")}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] text-[12px] font-semibold hover:shadow-lg hover:shadow-[#00F5FF]/25 transition-all"
-                        data-testid="platform-onboarding-continue"
-                      >
-                        {isEs ? "Ir a Quantro OS" : "Go to Quantro OS"}{" "}
-                        <ArrowRight size={12} />
-                      </button>
-                    </div>
+                    <OnboardingPanel
+                      isEs={isEs}
+                      onContinue={() => setStage("redirect")}
+                    />
                   )}
 
                   {!isLoading && stage === "redirect" && (
-                    <div
-                      className="flex flex-col items-center justify-center py-10 text-center"
-                      data-testid="platform-access-redirect"
-                    >
-                      <motion.div
-                        initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", duration: 0.5, bounce: 0.4 }}
-                        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, rgba(0,245,255,0.22), rgba(0,245,255,0.05))",
-                          border: "1px solid rgba(0,245,255,0.45)",
-                          boxShadow: "0 0 32px -8px rgba(0,245,255,0.5)",
-                        }}
-                      >
-                        {isFreshPurchase ? (
-                          <Sparkles size={26} className="text-[#00F5FF]" />
-                        ) : (
-                          <ExternalLink size={22} className="text-[#00F5FF]" />
-                        )}
-                      </motion.div>
-                      {isFreshPurchase ? (
-                        <>
-                          <div className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#00F5FF] mb-1.5">
-                            {isEs ? "Pago confirmado" : "Payment confirmed"}
-                          </div>
-                          <div className="font-satoshi font-bold text-xl text-white mb-1 leading-tight">
-                            {isEs
-                              ? `¡Bienvenido${firstName ? `, ${firstName}` : ""}!`
-                              : `Welcome${firstName ? `, ${firstName}` : ""}!`}
-                          </div>
-                          <div className="text-[12px] text-slate-400 mb-3 max-w-sm">
-                            {isEs
-                              ? `Tu plan ${planLabel} está activo. Vamos a ${platformName}.`
-                              : `Your ${planLabel} plan is active. Let's head to ${platformName}.`}
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div className="text-[14px] font-semibold text-white mb-1">
-                            {isEs ? "Todo listo." : "All set."}
-                          </div>
-                          <div className="text-[12px] text-slate-400 mb-3">
-                            {isEs
-                              ? `Entrando a ${platformName}…`
-                              : `Opening ${platformName}…`}
-                          </div>
-                        </>
-                      )}
-                      {redirecting && (
-                        <Loader2 size={16} className="animate-spin text-[#00F5FF]" />
-                      )}
-                    </div>
+                    <RedirectPanel
+                      isEs={isEs}
+                      isFreshPurchase={isFreshPurchase}
+                      firstName={firstName}
+                      planLabel={planLabel}
+                      platformName={platformName}
+                      redirecting={redirecting}
+                    />
                   )}
                 </div>
 
-                {/* Footer — status strip */}
                 {!isLoading && (
-                  <div
-                    className="mt-8 pt-5 flex flex-wrap items-center justify-between gap-3 text-[10px] text-slate-500"
-                    style={{ borderTop: "1px solid rgba(148,163,184,0.08)" }}
-                  >
-                    <div className="flex items-center gap-2">
-                      {isAuthenticated ? (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                          {isEs ? "Sesión activa" : "Signed in"} ·{" "}
-                          <span className="text-slate-400">{user?.email}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-slate-500" />
-                          {isEs ? "Sin sesión" : "Not signed in"}
-                        </>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {hasPaidPlan ? (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-[#00F5FF]" />
-                          {isEs ? "Plan" : "Plan"}:{" "}
-                          <span className="text-white font-medium capitalize">
-                            {profile?.plan}
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="w-1 h-1 rounded-full bg-slate-500" />
-                          {isEs ? "Sin plan activo" : "No active plan"}
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  <StatusFooter
+                    isEs={isEs}
+                    isAuthenticated={isAuthenticated}
+                    userEmail={user?.email}
+                    hasPaidPlan={hasPaidPlan}
+                    plan={profile?.plan}
+                  />
                 )}
               </div>
             </motion.div>

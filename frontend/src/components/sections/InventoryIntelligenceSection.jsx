@@ -17,6 +17,7 @@ import {
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
+import InventoryMotionLoop from "./InventoryMotionLoop";
 
 /**
  * Inventory Intelligence — a feature reveal section for Quantro OS.
@@ -323,6 +324,18 @@ export const InventoryIntelligenceSection = () => {
               <MoveRight size={14} />
             </button>
           </div>
+        </motion.div>
+
+        {/* Motion loop — animated reveal of the recommendation cycle */}
+        <motion.div
+          variants={fadeInUp}
+          className="max-w-xl mx-auto mt-12"
+          data-testid="inventory-motion-loop-wrapper"
+        >
+          <p className="text-center text-[11px] font-bold tracking-[0.22em] uppercase text-slate-500 mb-3">
+            {isEs ? "Cómo se ve cada ciclo" : "What every cycle looks like"}
+          </p>
+          <InventoryMotionLoop isEs={isEs} />
         </motion.div>
 
         {/* Impact — three benefits */}

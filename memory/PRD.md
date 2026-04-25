@@ -266,8 +266,33 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
-### Feb 25, 2026 — Inventory Intelligence (Apple-keynote section)
-- **New section** `/app/frontend/src/components/sections/InventoryIntelligenceSection.jsx` registered in `App.js` between `IntelligenceSection` (Act 5 reveal) and `SuccessStoriesSection`, anchor `#inventory-intelligence`.
+### Feb 25, 2026 — Inventory Motion Loop + PlatformAccessScreen Refactor
+
+**A) Motion loop visualizando el ciclo de recomendación** (`/app/frontend/src/components/sections/InventoryMotionLoop.jsx`):
+- 5 fases sincronizadas en un ciclo de 4.5s (`repeat: Infinity`):
+  1. Bell pulsa rojo + label "Faltante detectado"
+  2. Badge "Aprobado" cyan fade-in + label cambia a "Movimiento aprobado"
+  3. Paquete viaja por SVG path Bézier (Bodega Central → Tienda CDMX) usando `offsetPath`
+  4. Barra origen baja (1.0 → 0.6), barra destino sube (0.2 → 0.95) sincronizadas con el viaje
+  5. Badge "Resuelto" emerald pop, hold, reset
+- Path activo se ilumina progresivamente con `pathLength` framer-motion + drop-shadow cyan
+- Label flotante "25 unidades" durante el viaje
+- Integrado entre el demo de cards y los impact bullets en `InventoryIntelligenceSection` con eyebrow "Cómo se ve cada ciclo"
+- 5 testids: `inventory-motion-loop`, `motion-alert-icon`, `motion-approve-badge`, `motion-units-label`, `motion-resolved-badge`
+
+**B) Refactor `PlatformAccessScreen.jsx` 792 → 377 líneas (-52%)**:
+- 6 paneles extraídos a `/app/frontend/src/components/platformAccess/`:
+  - `StepIndicator.jsx` (44 líneas) — indicador de 4 fases
+  - `PlatformAccessHeader.jsx` (72 líneas) — eyebrow + h2/p dinámicos por stage + step
+  - `ChoosePlanPanel.jsx` (141 líneas) — picker de 3 tiers con `buildTiers(isEs)` + Stripe trigger
+  - `OnboardingPanel.jsx` (38 líneas) — nudge + continue button
+  - `RedirectPanel.jsx` (75 líneas) — fresh purchase welcome / generic redirect
+  - `StatusFooter.jsx` (43 líneas) — strip de auth + plan status
+- `PlatformAccessScreen.jsx` quedó como orquestador puro: state machine + URL sync (auth ↔ picker routes) + modal shell
+- Helpers extraídos a top-level: `stageToStepIndex`, `deriveFirstName`, `PLAN_LABEL_MAP`, constantes de timing (`FRESH_PURCHASE_WINDOW_MS`, `REDIRECT_DELAY_MS`)
+- E2E verificado: `/`, `/acceso`, `/iniciar-sesion`, `/sign-up`, `/sign-in`, `/crear-cuenta`, `/access` siguen funcionando con headers/títulos/forms idénticos al pre-refactor.
+
+### Feb 25, 2026 — Inventory Intelligence (Apple-keynote section)- **New section** `/app/frontend/src/components/sections/InventoryIntelligenceSection.jsx` registered in `App.js` between `IntelligenceSection` (Act 5 reveal) and `SuccessStoriesSection`, anchor `#inventory-intelligence`.
 - **Narrative structure** (Apple keynote style):
   1. Eyebrow pill `NUEVO · QUANTRO OS`
   2. Hero statement: `"Y ahora, tu inventario también piensa contigo."` (gradient cyan on the emphasis span)
