@@ -5,7 +5,7 @@ import { QuantroLogoMark } from "../QuantroLogoMark";
 
 // Footer with routed legal links
 export const Footer = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   return (
     <footer className="py-12 px-6 border-t border-slate-800" data-testid="footer">
@@ -38,6 +38,13 @@ export const Footer = () => {
             data-testid="footer-link-contact"
           >
             {t("footer.contact")}
+          </Link>
+          <Link
+            to="/comparacion"
+            className="hover:text-white transition-colors"
+            data-testid="footer-link-comparison"
+          >
+            {language === "es" ? "Comparación" : "Comparison"}
           </Link>
         </div>
 

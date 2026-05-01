@@ -19,23 +19,11 @@ import DifferentiationSection from "@/components/sections/DifferentiationSection
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
-import { PlatformAccessProvider } from "@/hooks/usePlatformAccess";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
-import AuthRouteBoot from "@/components/AuthRouteBoot";
 
 /**
  * Landing page (routed at "/").
- * LanguageProvider + Router live in index.js.
- *
- * Structure:
- *   App (infrastructure: providers)
- *     └─ AppContent (hooks / guards)
- *          └─ LandingShell (the actual marketing page)
- *
- * Supabase auth + profiles state are read on demand via useUserBillingState
- * from any CTA or modal. The PlatformAccessProvider mounts the global
- * platform-access modal so every "Comenzar" / pricing CTA opens the same
- * real flow (pick platform → auth → pick plan → redirect).
+ * LanguageProvider + PlatformAccessProvider + AuthRouteBoot + Router live in index.js.
  */
 
 const LandingShell = () => (
@@ -90,10 +78,5 @@ const LandingShell = () => (
 const AppContent = () => <LandingShell />;
 
 export default function App() {
-  return (
-    <PlatformAccessProvider>
-      <AuthRouteBoot />
-      <AppContent />
-    </PlatformAccessProvider>
-  );
+  return <AppContent />;
 }

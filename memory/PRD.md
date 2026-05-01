@@ -266,6 +266,29 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — Comparison Page (`/comparacion` + 3 focused variants)
+- **New page** `/app/frontend/src/pages/ComparisonPage.jsx` with optional `focusKey` prop for variant routing.
+- **5 routes** registered in `index.js`:
+  - `/comparacion` (ES) + `/comparison` (EN) → general comparison (all 3 competitors)
+  - `/vs-ninety` → spotlight Quantro vs Ninety (other competitors dimmed)
+  - `/vs-eos` → spotlight Quantro vs EOS One
+  - `/vs-notion` → spotlight Quantro vs Notion + Excel + CRM
+- **Dynamic `document.title`** per variant: `Quantro vs {Competitor} | Quantro` or `Comparación | Quantro`.
+- **8 sections** (Apple/Stripe/Linear clean aesthetic, no aggressive attacks on competitors):
+  1. Hero with dual CTAs (primary "Empieza por $1 USD" + secondary "Ver cómo funciona Quantro")
+  2. Problem section — 5 bullets of what other systems don't do (with red ✖ markers)
+  3. **12-row comparison table** — 4 columns (Quantro + Ninety + EOS One + Notion+Excel+CRM), cells with ✓/−/✖ icons (cyan/amber/slate) and a legend row. Quantro column highlighted with cyan underline + subtle bg tint. Focus variants dim non-focused competitor columns to `opacity-30` while preserving full context.
+  4. "Sistema de decisión" — dual-card layout ("Otros / Te muestran lo que pasa" vs "Quantro / Te dice qué hacer") with 3-chip flow: Problema → Recomendación → Acción
+  5. Before/After — left card with stack of fragmented tools + right card with 5-item Quantro list (Dashboard/Inteligencia/Decisiones/Ejecución/Equipo). Before items customize per focus variant.
+  6. Real example — "Leads por debajo de meta" + Otros vs Quantro (5-step reaction: detecta → propone → To-Do → asigna → seguimiento)
+  7. Audience — 4 target profiles
+  8. Final CTA in a spotlight card
+- **Architecture refactor**: `PlatformAccessProvider` + `AuthRouteBoot` lifted from `App.js` into `index.js` so the comparison page (and future standalone pages) can consume `usePlatformAccess()` without wrapping landing-specific tree.
+- **Footer**: added `/comparacion` link on the landing footer for discoverability + internal cross-page nav on comparison footer (`vs Ninety`, `vs EOS`, `vs Notion`).
+- **GA4 tracking**: `comparison_page_primary[_variant]`, `comparison_page_secondary[_variant]`, `compare-final-cta-btn`.
+- **Full ES/EN i18n**, lint clean, 20+ `data-testid` anchors including `comparison-page`, `compare-hero`, `compare-table`, `compare-row-[key]`, `compare-col-[name]`, `compare-final-cta-btn`.
+- **Verified E2E**: all 5 routes return correct `data-focus`, titles, 12 table rows, hero + table + CTA present.
+
 ### Feb 25, 2026 — People OS section (interactive tabbed mockup)
 - **New section** `/app/frontend/src/components/sections/PeopleOSSection.jsx` registered in `App.js` right after `InventoryIntelligenceSection`, anchor `#people-os`.
 - **Layout**: 2-column grid (`lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]`). Left: narrative. Right: interactive app mockup.
