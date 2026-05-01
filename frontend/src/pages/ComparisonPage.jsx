@@ -39,7 +39,7 @@ import { applyPageMeta } from "../lib/pageMeta";
  */
 
 const COMPETITORS = [
-  { key: "quantro", name: "Quantro", tagline: { es: "Sistema operativo AOS", en: "AOS Operating System" }, accent: "#00F5FF", isQuantro: true },
+  { key: "quantro", name: "Quantro", tagline: { es: "Potenciado por AOS", en: "Powered by AOS" }, accent: "#00F5FF", isQuantro: true },
   { key: "ninety", name: "Ninety", tagline: { es: "Tracker alineado a EOS", en: "EOS-aligned tracker" }, accent: "#94A3B8" },
   { key: "eos", name: "EOS One", tagline: { es: "Toolset EOS tradicional", en: "Traditional EOS toolset" }, accent: "#94A3B8" },
   { key: "notion", name: "Notion + Excel + CRM", tagline: { es: "Stack de herramientas separadas", en: "Stack of separate tools" }, accent: "#94A3B8" },
@@ -469,16 +469,21 @@ const ComparisonTable = ({ isEs, focusKey }) => {
   // Grid template — responsive. Mobile packs 3 columns into the 390px
   // viewport (Funcionalidad 140 + Quantro 120 + first competitor 130 = 390
   // exactly visible; remaining competitors reachable via horizontal scroll).
-  // Desktop gets roomier columns so the taglines breathe.
+  // Desktop expands every column so the table fills the wider container
+  // (max-w-7xl ≈ 1232px usable) without dead side-space.
   const GRID =
-    "grid-cols-[140px_120px_130px_130px_150px] sm:grid-cols-[180px_150px_150px_150px_170px] lg:grid-cols-[240px_180px_170px_170px_200px]";
+    "grid-cols-[140px_120px_130px_130px_150px] sm:grid-cols-[180px_150px_150px_150px_170px] lg:grid-cols-[300px_240px_240px_240px_280px]";
   const STICKY_BG = "#0B1020";
+  // Quantro sticky column — solid dark base + faint cyan top-glow overlay.
+  // The base color is fully opaque so scrolling content never bleeds
+  // through the sticky column on mobile (no more "Ninety" text peeking
+  // behind the Quantro header).
   const QUANTRO_STICKY_BG =
-    "linear-gradient(180deg, rgba(0, 245, 255, 0.05), rgba(11, 16, 32, 1))";
+    "linear-gradient(180deg, rgba(0, 245, 255, 0.07) 0%, rgba(0, 245, 255, 0) 55%), #081522";
 
   return (
     <section className="relative py-20 px-6" data-testid="compare-table">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         <div className="text-center mb-10">
           <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]/80 mb-3">
             {isEs ? "Capacidades lado a lado" : "Capabilities side-by-side"}
@@ -516,7 +521,7 @@ const ComparisonTable = ({ isEs, focusKey }) => {
             style={{ WebkitOverflowScrolling: "touch" }}
             data-testid="compare-table-scroll"
           >
-            <div className={`min-w-[670px] sm:min-w-[800px] lg:min-w-[960px] ${GRID} grid`}>
+            <div className={`min-w-[670px] sm:min-w-[800px] lg:min-w-[1300px] ${GRID} grid`}>
               {/* ─── Header row ─── */}
               <HeaderCell sticky="left-0" align="start" style={{ background: STICKY_BG, zIndex: 15 }}>
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
@@ -524,14 +529,19 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                 </span>
               </HeaderCell>
               <HeaderCell
-                sticky="left-[140px] sm:left-[180px] lg:left-[240px]"
-                style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
+                sticky="left-[140px] sm:left-[180px] lg:left-[300px]"
+                style={{
+                  background: QUANTRO_STICKY_BG,
+                  zIndex: 14,
+                  boxShadow:
+                    "inset 1px 0 0 rgba(0, 245, 255, 0.18), inset -1px 0 0 rgba(0, 245, 255, 0.18)",
+                }}
                 testId="compare-col-quantro"
               >
                 <div className="w-full text-center">
                   <div className="text-[13px] font-bold tracking-tight text-white">Quantro</div>
                   <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight break-words">
-                    {isEs ? "Sistema operativo AOS" : "AOS OS"}
+                    {isEs ? "Potenciado por AOS" : "Powered by AOS"}
                   </div>
                   <span className="inline-block mt-1.5 w-10 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] shadow-[0_0_8px_rgba(0,245,255,0.6)]" />
                 </div>
@@ -573,9 +583,14 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                     </span>
                   </BodyCell>
                   <BodyCell
-                    sticky="left-[140px] sm:left-[180px] lg:left-[240px]"
+                    sticky="left-[140px] sm:left-[180px] lg:left-[300px]"
                     center
-                    style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
+                    style={{
+                      background: QUANTRO_STICKY_BG,
+                      zIndex: 14,
+                      boxShadow:
+                        "inset 1px 0 0 rgba(0, 245, 255, 0.12), inset -1px 0 0 rgba(0, 245, 255, 0.12)",
+                    }}
                   >
                     <ComparisonCell
                       value={row.quantro}

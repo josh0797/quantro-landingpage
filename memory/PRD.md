@@ -755,6 +755,53 @@ SwitchToQuantroSection, ComparisonPage). No console warnings. Self-tested
 via `mcp_screenshot_tool` (desktop 1920 + mobile 414 section-captures).
 
 
+## 2026-02-01 — Comparison Table fix v2 (Quantro column solidify + desktop width + header copy)
+
+User reported (with screenshots IMG_4800 / IMG_4802 + desktop capture) that:
+1. On mobile, when scrolling the inner table horizontally, the Ninety/EOS
+   text bled visually through the Quantro sticky column because its
+   background gradient started at `rgba(0, 245, 255, 0.05)` — practically
+   transparent at the top.
+2. On wide desktops the table was capped at `max-w-6xl` (1152px) leaving
+   excessive empty side-space and cramped columns.
+3. The "Sistema operativo AOS" tagline felt too technical.
+
+Resolved in `pages/ComparisonPage.jsx`:
+
+- `QUANTRO_STICKY_BG` rebuilt as a layered background — a faint cyan
+  top-glow gradient over a fully opaque `#081522` base:
+  `linear-gradient(180deg, rgba(0,245,255,0.07) 0%, rgba(0,245,255,0) 55%), #081522`.
+  Verified via `getComputedStyle`: the second background layer is
+  `rgb(8, 21, 34)` solid, so no scrolling cell ever bleeds through.
+- Subtle cyan side-borders added on the Quantro sticky column via
+  `boxShadow: inset 1px 0 0 rgba(0,245,255,.18), inset -1px 0 0 rgba(0,245,255,.18)`
+  (header) and `0.12` alpha for body cells. Glow is visible but never
+  obscures the data.
+- Z-index unchanged (header 14, body 14) — the opacity fix was the real
+  culprit; layering already worked.
+- Container expanded from `max-w-6xl` → `max-w-[1400px]`.
+- Grid template lg upgraded:
+  `lg:grid-cols-[300px_240px_240px_240px_280px]` (1300px total) and inner
+  scroll wrapper `lg:min-w-[1300px]` so the table now fills 1398px on a
+  1920px viewport instead of 1152px.
+- Sticky offset on Quantro column synced to new lg width:
+  `lg:left-[300px]`.
+- Header tagline rephrased per user direction:
+  - ES: "Sistema operativo AOS" → **"Potenciado por AOS"**
+  - EN: "AOS OS" → **"Powered by AOS"** (also updated in `COMPETITORS`
+    array for the focus-variant pages: `/vs-ninety`, `/vs-eos`, `/vs-notion`).
+
+Validated:
+- Lint clean (`mcp_lint_javascript` ✓).
+- Desktop screenshot at 1920×900: grid `300px 240px 240px 240px 280px`,
+  inner width 1398px, header reads "Quantro / Potenciado por AOS",
+  Quantro column has its solid dark base with cyan side-glow, table no
+  longer floats in empty space.
+- Mobile screenshot at 414×896: 3 columns visible at rest (Funcionalidad
+  + Quantro + Ninety partial), zero text bleeding through Quantro on
+  horizontal scroll (reproduced exactly the IMG_4800 scroll position at
+  `scrollLeft=80`).
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
