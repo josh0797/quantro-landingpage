@@ -707,6 +707,54 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   - Proof strip reordered: `100% asignadas`, `+35% velocidad`,
     `-50% reuniones`, `100% claridad`.
 
+
+## 2026-02-01 — Msg 480 feedback batch (Hero microcopy, Migration testimonial, Mobile comparison grid)
+
+Three refinements delivered and visually validated:
+
+### 1. Hero microcopy — 3-step reveal
+- `HeroSection.jsx` now crossfades between three lines above the dashboard:
+  1. "Mira a Quantro en acción." / "Watch Quantro in action." (initial frame)
+  2. "Esto ya está pasando en tu negocio." / "This is already happening in your business."
+  3. "Solo necesitas aprobar." / "You just need to approve."
+- Desktop: auto-advances on timers — step 1 at `MICROCOPY_STEP1_DELAY_MS` (2.8s),
+  step 2 at `MICROCOPY_STEP2_DELAY_MS` (5.5s).
+- Mobile: scroll-driven — step 1 appears past 80px, step 2 past 260px, so the
+  narrative unfolds as the user reads.
+- Validated via DOM `inner_text` polling (desktop): initial="Mira a Quantro en
+  acción.", 3.5s later="Esto ya está pasando en tu negocio.", 6.5s later="Solo
+  necesitas aprobar."
+
+### 2. Migration testimonial (`MigrationTestimonial`)
+- Added directly below the Shield subline in `SwitchToQuantroSection.jsx`.
+- Renders a single-line proof answering the implicit "how long?" objection:
+  _"Migramos 1 año de Excel en 47 minutos." — Distriglobal Logistics_
+- Visual: glass tile (white/[0.02] + white/[0.06] border), 36px circular
+  "DL" monogram with brand cyan gradient, italicized blockquote, kicker-style
+  attribution in uppercase tracking. `data-testid="switch-testimonial"`.
+- English variant: _"We migrated 1 year of Excel in 47 minutes."_
+
+### 3. Comparison table — mobile 3-column lock-in
+- `ComparisonPage.jsx` grid template now:
+  `grid-cols-[140px_120px_130px_130px_150px]` at base mobile (`min-w-[670px]`),
+  scaling up at sm/lg breakpoints.
+- Sticky offsets tightened to match new widths:
+  `left-0` (Funcionalidad) + `left-[140px] sm:left-[180px] lg:left-[240px]`
+  (Quantro column).
+- Each sticky cell uses opaque `#0B1020` (or Quantro cyan-gradient) background
+  with `z-index: 15 / 14` so scrolling rows paint beneath them — zero text
+  overlap during horizontal scroll.
+- Verified at viewport 390px (iPhone 14): `clientWidth=340`, sticky stack=260px,
+  leaving 80px of the third column (Ninety) visible at rest. Headers H0–H4
+  measured at x=25/165/285/415/545 with widths 140/120/130/130/150.
+- `z-index` layering confirmed: overflow scroll left-edge reveals Ninety →
+  EOS One → Notion without the Quantro column ever fading.
+
+Lint: `mcp_lint_javascript` clean on all three files (HeroSection,
+SwitchToQuantroSection, ComparisonPage). No console warnings. Self-tested
+via `mcp_screenshot_tool` (desktop 1920 + mobile 414 section-captures).
+
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
