@@ -574,23 +574,21 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
 ### May 1, 2026 — Hero Section keynote narrative + refined social proof (P0)
 - `HeroSection` rewritten as an 8–12s keynote-style narrative (respects
   `prefers-reduced-motion` by falling back to a static end-state):
-  pre-header "Mientras tú dormías…" → headline cascades word-by-word
-  ("Despierta con" → "decisiones listas" with repeating glow → "para
-  actuar.") → subheadline fades in → `SignalsLayer` drifts 5 floating
-  pills (+22% revenue, stock optimizado, 5 oportunidades detectadas,
-  clientes satisfechos, 100% tareas asignadas) into view with blur/opacity
-  animation → signals converge into a central decision card
-  "Plan de crecimiento activo / 3 acciones ejecutándose" → card fades,
-  dashboard reveals with zoom+fade → micro-copy above dashboard rotates
-  from "Esto ya está pasando en tu negocio." to "Solo necesitas aprobar."
-  → CTAs slide up AFTER the wow moment → signals subtly re-loop every
-  ~9.5s so the hero feels alive.
+  pre-header "Mientras tú dormías…" → **teaser push-notification** slides in
+  from the top-right of the stage ("Detecté +22% de revenue posible. / Hay
+  3 acciones listas para aprobar."), hovers ~1.4s, dismisses →
+  headline cascades word-by-word ("Despierta con" → "decisiones listas"
+  with repeating glow → "para actuar.") → subheadline fades in →
+  `SignalsLayer` drifts 5 floating pills into view → signals converge
+  into a central decision card "Plan de crecimiento activo / 3 acciones
+  ejecutándose" → dashboard reveals with zoom+fade → micro-copy above
+  dashboard rotates from "Esto ya está pasando en tu negocio." to
+  "Solo necesitas aprobar." → CTAs slide up AFTER the wow moment →
+  signals subtly re-loop every ~11s so the hero feels alive.
 - CTA primary relabeled to "Ver mi negocio con Quantro" (ES) /
   "See my business with Quantro" (EN).
-- Social proof refined to Notion-style: 5 gold stars +
-  "Donde se toman decisiones, está Quantro." + tiny uppercase tracking
-  company row `GRUPO NEXO · ALTURA RETAIL · NODO STUDIOS · GRUPO OCP`.
-  No heavy boxes, low opacity, light typography.
+- Social proof refined to Notion-style (5 stars + single quote + tiny
+  uppercase tracking company row).
 
 ## Prioritized Backlog
 

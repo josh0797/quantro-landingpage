@@ -23,22 +23,28 @@ import HeroDashboardPreview from "../HeroDashboardPreview";
 // ==========================================================================
 
 // Timings (seconds) — keep short delays early, give the dashboard room later.
+// The "teaser" push notification opens the story: while the pre-header says
+// "Mientras tú dormías…", a phone buzzes in the top-right of the stage and
+// announces what Quantro caught overnight. It dismisses before the headline
+// cascade begins so the reveal still feels clean.
 const T = {
   preHeader: 0.1,
-  h1a: 0.5,          // "Despierta con"
-  h1b: 1.0,          // "decisiones listas"
-  h1c: 1.55,         // "para actuar."
-  sub: 2.1,
-  signalsIn: 2.6,    // signals start floating
-  signalsConverge: 4.9,
-  cardVisible: 5.1,  // decision card visible
-  dashboard: 5.9,    // dashboard reveal
-  microcopyA: 6.4,   // "Esto ya está pasando…"
-  microcopyB: 8.2,   // "Solo necesitas aprobar."
-  ctas: 6.8,
-  social: 7.6,
-  pdf: 8.0,
-  loopEvery: 9.5,    // subtle signal loop (seconds)
+  teaserIn: 0.45,    // push notification slides in
+  teaserOut: 1.85,   // notification dismisses
+  h1a: 2.05,         // "Despierta con"
+  h1b: 2.55,         // "decisiones listas"
+  h1c: 3.1,          // "para actuar."
+  sub: 3.65,
+  signalsIn: 4.15,   // signals start floating
+  signalsConverge: 6.45,
+  cardVisible: 6.65, // decision card visible
+  dashboard: 7.45,   // dashboard reveal
+  microcopyA: 7.95,  // "Esto ya está pasando…"
+  microcopyB: 9.75,  // "Solo necesitas aprobar."
+  ctas: 8.35,
+  social: 9.15,
+  pdf: 9.55,
+  loopEvery: 11.0,   // subtle signal loop (seconds)
 };
 
 export const HeroSection = () => {
@@ -325,6 +331,11 @@ const HeroNarrativeStage = ({ language, reduce }) => {
 
   return (
     <div className="relative w-full" data-testid="hero-stage">
+      {/* Push-notification teaser — buzzes in from top-right, then dismisses
+          before the headline starts. Anchored in the right-column stage but
+          visually escapes it via negative insets so it reads as "phone buzz". */}
+      {!reduce && <HeroTeaserNotification isEs={isEs} />}
+
       {/* Signals layer — floats in then fades out (also subtly loops every
           ~9.5s so the hero always feels alive) */}
       {!reduce && (
@@ -469,6 +480,102 @@ const SignalsLayer = ({ signals, showStart, showEnd, loopEvery }) => {
         </motion.span>
       ))}
     </div>
+  );
+};
+
+// =========================================================================
+// HeroTeaserNotification — the "phone buzz" moment.
+// Slides in from the top-right of the stage like an iOS push notification,
+// hovers briefly, then dismisses — all before the headline begins cascading.
+// Reinforces "Mientras tú dormías…" with a concrete emotional trigger:
+// you went to bed, Quantro found +22% revenue opportunity, it just notified.
+// =========================================================================
+const HeroTeaserNotification = ({ isEs }) => {
+  const visibleDuration = T.teaserOut - T.teaserIn; // ~1.4s on-screen
+  return (
+    <motion.div
+      aria-hidden
+      className="absolute -top-4 right-0 sm:right-2 z-30 pointer-events-none"
+      initial={{ opacity: 0, y: -28, scale: 0.92, filter: "blur(4px)" }}
+      animate={{
+        opacity: [0, 1, 1, 0],
+        y: [-28, -4, -4, -16],
+        scale: [0.92, 1, 1, 0.96],
+        filter: ["blur(4px)", "blur(0px)", "blur(0px)", "blur(2px)"],
+      }}
+      transition={{
+        delay: T.teaserIn,
+        duration: visibleDuration + 0.35, // add exit tail
+        times: [0, 0.25, 0.78, 1],
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      data-testid="hero-teaser-notification"
+    >
+      <div
+        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl"
+        style={{
+          minWidth: "248px",
+          maxWidth: "320px",
+          background:
+            "linear-gradient(135deg, rgba(20, 28, 45, 0.92), rgba(10, 15, 28, 0.92))",
+          border: "1px solid rgba(0, 245, 255, 0.22)",
+          boxShadow:
+            "0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 245, 255, 0.05), 0 0 26px -4px rgba(0, 245, 255, 0.25)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* App icon (mini Q tile) */}
+        <div
+          className="relative w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{
+            background:
+              "linear-gradient(135deg, #0F172A 0%, #0B0F1A 100%)",
+            border: "1px solid rgba(0, 245, 255, 0.35)",
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" aria-hidden>
+            <defs>
+              <linearGradient id="htn-g" x1="8" y1="8" x2="56" y2="56">
+                <stop offset="0%" stopColor="#00E5FF" />
+                <stop offset="100%" stopColor="#22D3EE" />
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="31" r="11" stroke="url(#htn-g)" strokeWidth="4" fill="none" />
+            <path d="M39 38.5 L47 47" stroke="url(#htn-g)" strokeWidth="4" strokeLinecap="round" />
+          </svg>
+          {/* live dot */}
+          <span
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+            style={{
+              background: "#00F5FF",
+              boxShadow: "0 0 8px rgba(0, 245, 255, 0.9)",
+            }}
+          />
+        </div>
+
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10.5px] font-semibold tracking-wide text-slate-300">
+              Quantro
+            </span>
+            <span className="text-[9.5px] font-mono tabular-nums text-slate-500">
+              {isEs ? "ahora" : "now"}
+            </span>
+          </div>
+          <p className="text-[12.5px] font-medium text-white leading-snug mt-0.5 truncate">
+            {isEs
+              ? "Detecté +22% de revenue posible."
+              : "I detected +22% possible revenue."}
+          </p>
+          <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">
+            {isEs
+              ? "Hay 3 acciones listas para aprobar."
+              : "3 actions ready for you to approve."}
+          </p>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
