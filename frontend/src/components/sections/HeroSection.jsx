@@ -1,114 +1,48 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
 import { trackCTAClick } from "../../lib/analytics";
-import { usePlatformAccess } from "../../hooks/usePlatformAccess";
 import HeroDashboardPreview from "../HeroDashboardPreview";
 
-// ==========================================================================
-// Hero Section — keynote-style narrative
-//
-// 8–12s mini-story the user experiences without reading:
-//   (1) Midnight silence: "Mientras tú dormías…"
-//   (2) Headline cascades word-by-word, "decisiones listas" glows softly
-//   (3) Floating signals drift in — the system is thinking
-//   (4) Signals converge → a single decision card
-//   (5) Dashboard reveals with zoom + fade
-//   (6) Micro-copy rotates: "Esto ya está pasando" → "Solo necesitas aprobar"
-//   (7) CTAs slide up (only AFTER the wow moment)
-//   (8) Signals re-enter subtly forever so the hero feels alive
-//
-// Respects prefers-reduced-motion by collapsing the narrative to a
-// static end-state snapshot.
-// ==========================================================================
+/**
+ * Hero Section — optimized for performance and conversion clarity.
+ *
+ * Static text (no cascade / fade / glow pulse / teaser / signal layer).
+ * Only two live micro-behaviours remain:
+ *   1. The dashboard preview keeps its own subtle loop (counters, live dot).
+ *   2. A micro-copy above the dashboard crossfades between two lines to
+ *      anchor the conversion pitch:
+ *        "Esto ya está pasando en tu negocio." → "Solo necesitas aprobar."
+ *
+ * Primary CTA navigates to `/comparacion` so visitors move from curiosity
+ * to self-qualification with one click.
+ */
 
-// Pool of teaser notifications — rotates deterministically each page load
-// via a localStorage counter. That way the hero feels "alive" (it found
-// something different tonight) without being random/unpredictable.
-const TEASER_POOL = [
-  {
-    id: "revenue",
-    title: { es: "Detecté +22% de revenue posible.", en: "I detected +22% possible revenue." },
-    sub: { es: "Hay 3 acciones listas para aprobar.", en: "3 actions ready for you to approve." },
-  },
-  {
-    id: "stock",
-    title: { es: "Stock crítico en 3 SKUs.", en: "Critical stock on 3 SKUs." },
-    sub: { es: "Sugerí reabasto automático esta noche.", en: "I suggested auto-replenishment tonight." },
-  },
-  {
-    id: "meta",
-    title: { es: "Campaña Meta pausada.", en: "Meta campaign paused." },
-    sub: { es: "ROI bajo el umbral que definiste.", en: "ROI below the threshold you set." },
-  },
-  {
-    id: "margin",
-    title: { es: "+18% de margen detectado.", en: "+18% margin detected." },
-    sub: { es: "Segmento Pro listo para una promo.", en: "Pro segment ready for a promo." },
-  },
-  {
-    id: "leads",
-    title: { es: "Lead score disparado en 5 cuentas.", en: "Lead score spiked on 5 accounts." },
-    sub: { es: "Ventas puede cerrar hoy.", en: "Sales can close today." },
-  },
-];
-
-const TEASER_STORAGE_KEY = "quantro_hero_teaser_seen";
-
-const useRotatingTeaser = () => {
-  const [index, setIndex] = useState(0);
-  const didRunRef = useRef(false);
-  useEffect(() => {
-    // Guard against React StrictMode's double-invoke in development so the
-    // counter doesn't advance twice per page load.
-    if (didRunRef.current) return;
-    didRunRef.current = true;
-    try {
-      const raw = window.localStorage.getItem(TEASER_STORAGE_KEY);
-      const prev = raw ? parseInt(raw, 10) || 0 : 0;
-      const next = (prev + 1) % TEASER_POOL.length;
-      setIndex(prev % TEASER_POOL.length);
-      window.localStorage.setItem(TEASER_STORAGE_KEY, String(next));
-    } catch {
-      setIndex(0);
-    }
-  }, []);
-  return TEASER_POOL[index];
-};
-
-// Timings (seconds) — keep short delays early, give the dashboard room later.
-// The "teaser" push notification opens the story: while the pre-header says
-// "Mientras tú dormías…", a phone buzzes in the top-right of the stage and
-// announces what Quantro caught overnight. It dismisses before the headline
-// cascade begins so the reveal still feels clean.
-const T = {
-  preHeader: 0.1,
-  teaserIn: 0.45,    // push notification slides in
-  teaserOut: 1.85,   // notification dismisses
-  h1a: 2.05,         // "Despierta con"
-  h1b: 2.55,         // "decisiones listas"
-  h1c: 3.1,          // "para actuar."
-  sub: 3.65,
-  signalsIn: 4.15,   // signals start floating
-  signalsConverge: 6.45,
-  cardVisible: 6.65, // decision card visible
-  dashboard: 7.45,   // dashboard reveal
-  microcopyA: 7.95,  // "Esto ya está pasando…"
-  microcopyB: 9.75,  // "Solo necesitas aprobar."
-  ctas: 8.35,
-  social: 9.15,
-  pdf: 9.55,
-  loopEvery: 11.0,   // subtle signal loop (seconds)
-};
+const MICROCOPY_DELAY_MS = 2600; // 2–3 seconds before swap
 
 export const HeroSection = () => {
   const { language } = useLanguage();
-  const { open: openPlatformAccess } = usePlatformAccess();
-  const reduce = useReducedMotion();
+  const isEs = language === "es";
 
   const scrollToSection = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Microcopy crossfade — starts on state 0, switches to state 1 after a
+  // short pause, and stays there. Only text changes; container height stays
+  // fixed so nothing else reflows.
+  const [microIndex, setMicroIndex] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setMicroIndex(1), MICROCOPY_DELAY_MS);
+    return () => clearTimeout(t);
+  }, []);
+
+  const microcopy = isEs
+    ? ["Esto ya está pasando en tu negocio.", "Solo necesitas aprobar."]
+    : ["This is already happening in your business.", "You just need to approve."];
+
+  const comparisonPath = isEs ? "/comparacion" : "/comparison";
 
   return (
     <section
@@ -116,104 +50,110 @@ export const HeroSection = () => {
       style={{ background: "linear-gradient(180deg, #0A0F1C 0%, #030712 100%)" }}
       data-testid="hero-section"
     >
-      {/* Ambient orbs */}
+      {/* Ambient orbs — static, no animation */}
       <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#00F5FF]/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-[#A020FF]/5 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* ─────── Left column — narrative text ─────── */}
+          {/* ─────── Left column — static text ─────── */}
           <div className="order-1">
-            {/* Pre-header micro-copy — "Mientras tú dormías…" */}
-            <motion.p
-              initial={reduce ? { opacity: 0.8 } : { opacity: 0, y: -4 }}
-              animate={{ opacity: 0.85, y: 0 }}
-              transition={{ delay: reduce ? 0 : T.preHeader, duration: 0.6 }}
+            {/* Eyebrow */}
+            <p
               className="text-[11px] sm:text-[12px] font-mono tracking-[0.3em] uppercase text-slate-500 mb-5"
               data-testid="hero-preheader"
             >
               <span className="inline-flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-[#00F5FF] shadow-[0_0_6px_rgba(0,245,255,0.9)]" />
-                {language === "es" ? "Mientras tú dormías…" : "While you were sleeping…"}
+                {isEs ? "Mientras tú dormías…" : "While you were sleeping…"}
               </span>
-            </motion.p>
+            </p>
 
-            {/* Headline — word-by-word cascade. No block fade: each chunk
-                breathes in sequentially to feel like a keynote reveal. */}
+            {/* Headline — static */}
             <h1
               className="font-satoshi font-bold text-[32px] sm:text-[44px] lg:text-[56px] xl:text-[64px] leading-[1.1] tracking-tight text-white mb-4"
               data-testid="hero-headline"
             >
-              <HeadlineChunk delay={T.h1a} reduce={reduce}>
-                {language === "es" ? "Despierta con " : "Wake up with "}
-              </HeadlineChunk>
-              <HeadlineChunk delay={T.h1b} reduce={reduce} glow>
-                <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
-                  {language === "es" ? "decisiones listas" : "ready decisions"}
-                </span>
-              </HeadlineChunk>
-              <HeadlineChunk delay={T.h1c} reduce={reduce}>
-                {language === "es" ? " para actuar." : " to act."}
-              </HeadlineChunk>
+              {isEs ? (
+                <>
+                  Despierta con{" "}
+                  <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                    decisiones listas
+                  </span>{" "}
+                  para actuar.
+                </>
+              ) : (
+                <>
+                  Wake up with{" "}
+                  <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                    ready decisions
+                  </span>{" "}
+                  to act.
+                </>
+              )}
             </h1>
 
             {/* Subheadline */}
-            <motion.p
-              initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : T.sub, duration: 0.6 }}
+            <p
               className="text-base sm:text-lg lg:text-xl text-slate-400 leading-relaxed mb-6 max-w-xl"
               data-testid="hero-subheadline"
             >
-              {language === "es"
+              {isEs
                 ? "Quantro OS conecta tus datos, detecta oportunidades y te propone acciones claras — y con Quantro Flow, las ejecuta por ti."
                 : "Quantro OS connects your data, detects opportunities and proposes clear actions — and with Quantro Flow, executes them for you."}
-            </motion.p>
+            </p>
 
-            {/* CTAs — arrive AFTER the wow moment */}
-            <motion.div
-              initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduce ? 0 : T.ctas, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="flex flex-col sm:flex-row gap-3 mb-8"
-            >
-              <motion.button
-                onClick={() => {
-                  trackCTAClick("hero_open_platform_access");
-                  openPlatformAccess();
-                }}
-                animate={
-                  reduce
-                    ? { boxShadow: "0 0 0 0 rgba(0, 245, 255, 0)" }
-                    : { boxShadow: [
-                        "0 0 0 0 rgba(0, 245, 255, 0)",
-                        "0 0 28px 0 rgba(0, 245, 255, 0.32)",
-                        "0 0 0 0 rgba(0, 245, 255, 0)",
-                      ] }
-                }
-                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: T.ctas + 1 }}
-                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02]"
+            {/* CTAs — primary now routes to /comparacion */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+              <Link
+                to={comparisonPath}
+                onClick={() => trackCTAClick("hero_cta_comparison")}
+                className="px-6 py-3.5 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] font-satoshi font-bold text-base rounded-xl hover:shadow-lg hover:shadow-[#00F5FF]/20 transition-all duration-200 hover:scale-[1.02] text-center"
                 data-testid="hero-cta-primary"
               >
-                {language === "es" ? "Ver mi negocio con Quantro" : "See my business with Quantro"}
-              </motion.button>
+                {isEs ? "Quantro vs Otros sistemas" : "Quantro vs other systems"}
+              </Link>
               <button
                 onClick={() => scrollToSection("interactive-demo")}
                 className="px-6 py-3.5 border border-slate-600 text-white font-medium text-base rounded-xl hover:border-slate-500 hover:bg-slate-800/30 transition-all duration-200"
                 data-testid="hero-cta-secondary"
               >
-                {language === "es" ? "Ver cómo funciona" : "See how it works"}
+                {isEs ? "Ver cómo funciona" : "See how it works"}
               </button>
-            </motion.div>
+            </div>
 
-            {/* Refined social proof — Notion-style, light, quiet */}
-            <RefinedSocialProof language={language} reduce={reduce} delay={T.social} />
+            {/* Social proof — Notion-style, static */}
+            <div className="space-y-2" data-testid="hero-social-proof">
+              <div className="flex items-center gap-2.5 text-[13px] text-slate-300/90">
+                <span className="flex text-[#FACC15]/90" aria-label="5 stars">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <svg key={i} className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </span>
+                <span className="font-normal tracking-tight">
+                  {isEs
+                    ? "\u201CDonde se toman decisiones, está Quantro.\u201D"
+                    : "\u201CWhere decisions are made, Quantro is there.\u201D"}
+                </span>
+              </div>
 
-            {/* PDF download — unchanged */}
-            <motion.a
-              initial={reduce ? { opacity: 0.9 } : { opacity: 0 }}
-              animate={{ opacity: 0.9 }}
-              transition={{ delay: reduce ? 0 : T.pdf, duration: 0.6 }}
+              <div
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] tracking-[0.22em] uppercase text-slate-500/70"
+                data-testid="hero-social-companies"
+              >
+                {["Grupo Nexo", "Altura Retail", "Nodo Studios", "Grupo OCP"].map((c, i, arr) => (
+                  <React.Fragment key={c}>
+                    <span>{c}</span>
+                    {i < arr.length - 1 && <span className="text-slate-600/50" aria-hidden>·</span>}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+
+            {/* PDF download — static */}
+            <a
               href="/assets/quantro-os-overview.pdf"
               target="_blank"
               rel="noopener noreferrer"
@@ -227,406 +167,38 @@ export const HeroSection = () => {
                 <line x1="12" y1="18" x2="12" y2="12" />
                 <polyline points="9 15 12 12 15 15" />
               </svg>
-              <span>{language === "es" ? "Descarga el Quantro OS Overview (PDF)" : "Download the Quantro OS Overview (PDF)"}</span>
+              <span>{isEs ? "Descarga el Quantro OS Overview (PDF)" : "Download the Quantro OS Overview (PDF)"}</span>
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
-            </motion.a>
+            </a>
           </div>
 
-          {/* ─────── Right column — narrative stage ─────── */}
-          <div className="order-2 lg:order-2 relative min-h-[360px] sm:min-h-[460px]">
-            <HeroNarrativeStage language={language} reduce={reduce} />
+          {/* ─────── Right column — dashboard + crossfading microcopy ─────── */}
+          <div className="order-2 lg:order-2 relative">
+            {/* Microcopy above dashboard — only animated element on the left-side stack.
+                Fixed-height wrapper so layout doesn't reflow when the text changes. */}
+            <div
+              className="mb-3 text-center sm:text-left min-h-[18px]"
+              data-testid="hero-microcopy"
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.p
+                  key={microIndex}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 0.9 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="text-[11.5px] font-medium text-slate-400 leading-tight"
+                >
+                  {microcopy[microIndex]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+
+            <HeroDashboardPreview />
           </div>
         </div>
       </div>
     </section>
-  );
-};
-
-// =========================================================================
-// HeadlineChunk — single word/phrase that fades + slides up on cue.
-// When `glow` is true, a soft repeating glow plays after the reveal.
-// =========================================================================
-const HeadlineChunk = ({ children, delay, reduce, glow = false }) => (
-  <motion.span
-    initial={reduce ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-    animate={
-      glow
-        ? { opacity: 1, y: 0 }
-        : { opacity: 1, y: 0 }
-    }
-    transition={{ delay: reduce ? 0 : delay, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className={glow ? "inline-block" : "inline"}
-    style={
-      glow
-        ? {
-            filter: reduce ? "none" : "drop-shadow(0 0 0 rgba(0,245,255,0))",
-          }
-        : undefined
-    }
-  >
-    {glow && !reduce ? (
-      <motion.span
-        initial={{ filter: "drop-shadow(0 0 0 rgba(0,245,255,0))" }}
-        animate={{
-          filter: [
-            "drop-shadow(0 0 0 rgba(0,245,255,0))",
-            "drop-shadow(0 0 14px rgba(0,245,255,0.45))",
-            "drop-shadow(0 0 6px rgba(0,245,255,0.18))",
-            "drop-shadow(0 0 12px rgba(0,245,255,0.35))",
-          ],
-        }}
-        transition={{
-          duration: 3.6,
-          ease: "easeInOut",
-          repeat: Infinity,
-          delay: delay + 0.4,
-        }}
-        className="inline-block"
-      >
-        {children}
-      </motion.span>
-    ) : (
-      children
-    )}
-  </motion.span>
-);
-
-// =========================================================================
-// RefinedSocialProof — Notion-style: 5 stars, single quote, light company
-// row. No heavy boxes, no long paragraphs.
-// =========================================================================
-const RefinedSocialProof = ({ language, reduce, delay }) => {
-  const companies = ["Grupo Nexo", "Altura Retail", "Nodo Studios", "Grupo OCP"];
-  return (
-    <motion.div
-      initial={reduce ? { opacity: 0.9 } : { opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: reduce ? 0 : delay, duration: 0.7 }}
-      className="space-y-2"
-      data-testid="hero-social-proof"
-    >
-      {/* Stars + quote in one quiet line */}
-      <div className="flex items-center gap-2.5 text-[13px] text-slate-300/90">
-        <span className="flex text-[#FACC15]/90" aria-label="5 stars">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <svg key={i} className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          ))}
-        </span>
-        <span className="font-normal tracking-tight">
-          {language === "es"
-            ? "\u201CDonde se toman decisiones, está Quantro.\u201D"
-            : "\u201CWhere decisions are made, Quantro is there.\u201D"}
-        </span>
-      </div>
-
-      {/* Company names — tiny, uppercase, quiet */}
-      <div
-        className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] tracking-[0.22em] uppercase text-slate-500/70"
-        data-testid="hero-social-companies"
-      >
-        {companies.map((c, i) => (
-          <React.Fragment key={c}>
-            <span>{c}</span>
-            {i < companies.length - 1 && (
-              <span className="text-slate-600/50" aria-hidden>·</span>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    </motion.div>
-  );
-};
-
-// =========================================================================
-// HeroNarrativeStage — the "right column" stage.
-// Sequences: signals drifting → converge → decision card → dashboard reveal
-// (dashboard always rendered, faded until signals clear so the morph feels
-// continuous). A rotating micro-copy sits above the dashboard.
-// =========================================================================
-const HeroNarrativeStage = ({ language, reduce }) => {
-  const isEs = language === "es";
-
-  const signals = isEs
-    ? [
-        { text: "+22% revenue", accent: "#00F5FF", x: "6%", y: "8%", dur: 6 },
-        { text: "stock optimizado", accent: "#22D3EE", x: "62%", y: "2%", dur: 7 },
-        { text: "5 oportunidades detectadas", accent: "#A5F3FC", x: "2%", y: "62%", dur: 6.5 },
-        { text: "clientes satisfechos", accent: "#C084FC", x: "68%", y: "58%", dur: 7.5 },
-        { text: "100% tareas asignadas", accent: "#00F5FF", x: "28%", y: "80%", dur: 6.8 },
-      ]
-    : [
-        { text: "+22% revenue", accent: "#00F5FF", x: "6%", y: "8%", dur: 6 },
-        { text: "stock optimized", accent: "#22D3EE", x: "62%", y: "2%", dur: 7 },
-        { text: "5 opportunities detected", accent: "#A5F3FC", x: "2%", y: "62%", dur: 6.5 },
-        { text: "customers delighted", accent: "#C084FC", x: "68%", y: "58%", dur: 7.5 },
-        { text: "100% tasks assigned", accent: "#00F5FF", x: "28%", y: "80%", dur: 6.8 },
-      ];
-
-  // Track which microcopy is showing over the dashboard
-  const [microIndex, setMicroIndex] = useState(0);
-  useEffect(() => {
-    if (reduce) {
-      setMicroIndex(1);
-      return;
-    }
-    const t1 = setTimeout(() => setMicroIndex(0), T.microcopyA * 1000);
-    const t2 = setTimeout(() => setMicroIndex(1), T.microcopyB * 1000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [reduce]);
-
-  const microcopy = isEs
-    ? ["Esto ya está pasando en tu negocio.", "Solo necesitas aprobar."]
-    : ["This is already happening in your business.", "You just need to approve."];
-
-  return (
-    <div className="relative w-full" data-testid="hero-stage">
-      {/* Push-notification teaser — buzzes in from top-right, then dismisses
-          before the headline starts. Anchored in the right-column stage but
-          visually escapes it via negative insets so it reads as "phone buzz". */}
-      {!reduce && <HeroTeaserNotification isEs={isEs} />}
-
-      {/* Signals layer — floats in then fades out (also subtly loops every
-          ~9.5s so the hero always feels alive) */}
-      {!reduce && (
-        <SignalsLayer
-          signals={signals}
-          showStart={T.signalsIn}
-          showEnd={T.signalsConverge + 0.6}
-          loopEvery={T.loopEvery}
-        />
-      )}
-
-      {/* Decision card — converges in the middle, then fades */}
-      {!reduce && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, filter: "blur(8px)" }}
-          animate={{
-            opacity: [0, 0, 1, 1, 0],
-            scale: [0.9, 0.9, 1, 1, 1.02],
-            filter: ["blur(8px)", "blur(6px)", "blur(0px)", "blur(0px)", "blur(4px)"],
-          }}
-          transition={{
-            duration: T.dashboard,
-            times: [0, T.cardVisible / T.dashboard - 0.12, T.cardVisible / T.dashboard, (T.cardVisible + 0.5) / T.dashboard, 1],
-            ease: "easeInOut",
-          }}
-          className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-          data-testid="hero-decision-card"
-          aria-hidden
-        >
-          <div
-            className="rounded-2xl px-5 py-4 text-center"
-            style={{
-              background:
-                "linear-gradient(160deg, rgba(14, 22, 40, 0.95), rgba(5, 10, 24, 0.92))",
-              border: "1px solid rgba(0, 245, 255, 0.35)",
-              boxShadow: "0 30px 80px -20px rgba(0, 245, 255, 0.4)",
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#7FF5FF] mb-1">
-              {isEs ? "Plan de crecimiento activo" : "Growth plan active"}
-            </p>
-            <p className="font-satoshi font-semibold text-white text-[15px] leading-tight">
-              {isEs ? "3 acciones ejecutándose" : "3 actions running"}
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Micro-copy above the dashboard */}
-      <motion.div
-        initial={reduce ? { opacity: 0.85 } : { opacity: 0, y: -4 }}
-        animate={{ opacity: 0.9, y: 0 }}
-        transition={{ delay: reduce ? 0 : T.microcopyA, duration: 0.6 }}
-        className="mb-3 text-center sm:text-left text-[11.5px] font-medium text-slate-400 min-h-[18px]"
-        data-testid="hero-microcopy"
-      >
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={microIndex}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.4 }}
-          >
-            {microcopy[microIndex]}
-          </motion.span>
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Dashboard reveal — fades in with slight zoom after signals clear */}
-      <motion.div
-        initial={reduce ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduce ? 0 : T.dashboard, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10"
-        data-testid="hero-dashboard-reveal"
-      >
-        <HeroDashboardPreview />
-      </motion.div>
-    </div>
-  );
-};
-
-// =========================================================================
-// SignalsLayer — floating translucent pills that drift gently, then converge
-// toward the center before fading. Loops softly so the hero feels alive.
-// =========================================================================
-const SignalsLayer = ({ signals, showStart, showEnd, loopEvery }) => {
-  const [tick, setTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), loopEvery * 1000);
-    return () => clearInterval(id);
-  }, [loopEvery]);
-
-  const cycleDelay = tick === 0 ? showStart : 0;
-
-  return (
-    <div
-      className="absolute inset-0 pointer-events-none z-10"
-      data-testid="hero-signals-layer"
-      aria-hidden
-      key={tick}
-    >
-      {signals.map((s, i) => (
-        <motion.span
-          key={`${s.text}-${i}-${tick}`}
-          initial={{ opacity: 0, x: 0, y: 14, scale: 0.9, filter: "blur(6px)" }}
-          animate={{
-            opacity: tick === 0
-              ? [0, 0.55, 0.55, 0.0]
-              : [0, 0.28, 0],
-            y: [14, -6, -10, -30],
-            x: tick === 0 ? [0, 0, 0, `calc(40% - ${s.x})`] : [0, 0, 0],
-            scale: tick === 0 ? [0.9, 1, 1, 0.85] : [0.9, 0.95, 0.9],
-            filter: tick === 0
-              ? ["blur(6px)", "blur(0px)", "blur(0px)", "blur(3px)"]
-              : ["blur(6px)", "blur(1px)", "blur(5px)"],
-          }}
-          transition={{
-            delay: cycleDelay + i * 0.18,
-            duration: tick === 0 ? showEnd - showStart : 3.6,
-            times: tick === 0 ? [0, 0.22, 0.7, 1] : [0, 0.4, 1],
-            ease: "easeInOut",
-          }}
-          className="absolute inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium tracking-tight whitespace-nowrap"
-          style={{
-            left: s.x,
-            top: s.y,
-            background: `${s.accent}12`,
-            border: `1px solid ${s.accent}3D`,
-            color: "#E2E8F0",
-            boxShadow: `0 0 18px ${s.accent}22`,
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          <span
-            className="w-1 h-1 rounded-full"
-            style={{ background: s.accent, boxShadow: `0 0 6px ${s.accent}` }}
-          />
-          {s.text}
-        </motion.span>
-      ))}
-    </div>
-  );
-};
-
-// =========================================================================
-// HeroTeaserNotification — the "phone buzz" moment.
-// Slides in from the top-right of the stage like an iOS push notification,
-// hovers briefly, then dismisses — all before the headline begins cascading.
-// Reinforces "Mientras tú dormías…" with a concrete emotional trigger:
-// you went to bed, Quantro found +22% revenue opportunity, it just notified.
-// =========================================================================
-const HeroTeaserNotification = ({ isEs }) => {
-  const teaser = useRotatingTeaser();
-  const visibleDuration = T.teaserOut - T.teaserIn; // ~1.4s on-screen
-  return (
-    <motion.div
-      aria-hidden
-      className="absolute -top-4 right-0 sm:right-2 z-30 pointer-events-none"
-      initial={{ opacity: 0, y: -28, scale: 0.92, filter: "blur(4px)" }}
-      animate={{
-        opacity: [0, 1, 1, 0],
-        y: [-28, -4, -4, -16],
-        scale: [0.92, 1, 1, 0.96],
-        filter: ["blur(4px)", "blur(0px)", "blur(0px)", "blur(2px)"],
-      }}
-      transition={{
-        delay: T.teaserIn,
-        duration: visibleDuration + 0.35, // add exit tail
-        times: [0, 0.25, 0.78, 1],
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      data-testid="hero-teaser-notification"
-    >
-      <div
-        className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl"
-        style={{
-          minWidth: "248px",
-          maxWidth: "320px",
-          background:
-            "linear-gradient(135deg, rgba(20, 28, 45, 0.92), rgba(10, 15, 28, 0.92))",
-          border: "1px solid rgba(0, 245, 255, 0.22)",
-          boxShadow:
-            "0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 245, 255, 0.05), 0 0 26px -4px rgba(0, 245, 255, 0.25)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
-      >
-        {/* App icon (mini Q tile) */}
-        <div
-          className="relative w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{
-            background:
-              "linear-gradient(135deg, #0F172A 0%, #0B0F1A 100%)",
-            border: "1px solid rgba(0, 245, 255, 0.35)",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 64 64" fill="none" aria-hidden>
-            <defs>
-              <linearGradient id="htn-g" x1="8" y1="8" x2="56" y2="56">
-                <stop offset="0%" stopColor="#00E5FF" />
-                <stop offset="100%" stopColor="#22D3EE" />
-              </linearGradient>
-            </defs>
-            <circle cx="32" cy="31" r="11" stroke="url(#htn-g)" strokeWidth="4" fill="none" />
-            <path d="M39 38.5 L47 47" stroke="url(#htn-g)" strokeWidth="4" strokeLinecap="round" />
-          </svg>
-          {/* live dot */}
-          <span
-            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-            style={{
-              background: "#00F5FF",
-              boxShadow: "0 0 8px rgba(0, 245, 255, 0.9)",
-            }}
-          />
-        </div>
-
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10.5px] font-semibold tracking-wide text-slate-300">
-              Quantro
-            </span>
-            <span className="text-[9.5px] font-mono tabular-nums text-slate-500">
-              {isEs ? "ahora" : "now"}
-            </span>
-          </div>
-          <p className="text-[12.5px] font-medium text-white leading-snug mt-0.5 truncate" data-testid="hero-teaser-title">
-            {teaser.title[isEs ? "es" : "en"]}
-          </p>
-          <p className="text-[10.5px] text-slate-400 mt-0.5 truncate" data-testid="hero-teaser-sub">
-            {teaser.sub[isEs ? "es" : "en"]}
-          </p>
-        </div>
-      </div>
-    </motion.div>
   );
 };
 

@@ -572,27 +572,30 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   faltantes y ofrece decisiones de compra o promociones…").
 
 ### May 1, 2026 — Hero Section keynote narrative + refined social proof (P0)
-- `HeroSection` rewritten as an 8–12s keynote-style narrative (respects
-  `prefers-reduced-motion` by falling back to a static end-state):
-  pre-header "Mientras tú dormías…" → **teaser push-notification** slides in
-  from the top-right of the stage, hovers ~1.4s, dismisses →
-  headline cascades word-by-word ("Despierta con" → "decisiones listas"
-  with repeating glow → "para actuar.") → subheadline fades in →
-  `SignalsLayer` drifts 5 floating pills into view → signals converge
-  into a central decision card "Plan de crecimiento activo / 3 acciones
-  ejecutándose" → dashboard reveals with zoom+fade → micro-copy above
-  dashboard rotates from "Esto ya está pasando en tu negocio." to
-  "Solo necesitas aprobar." → CTAs slide up AFTER the wow moment →
-  signals subtly re-loop every ~11s so the hero feels alive.
-- Teaser rotates deterministically across 5 notifications using a
-  `localStorage` counter (`quantro_hero_teaser_seen`): +22% revenue →
-  stock crítico → Meta pausada → +18% margen → lead score, then wraps.
-  `useRef` guard protects against React StrictMode's double-fire in
-  development so the counter advances exactly once per page load.
-- CTA primary relabeled to "Ver mi negocio con Quantro" (ES) /
-  "See my business with Quantro" (EN).
-- Social proof refined to Notion-style (5 stars + single quote + tiny
-  uppercase tracking company row).
+- Initial keynote narrative implementation (teaser, signals, decision card,
+  animated headline, rotating microcopy, delayed CTA) — now deprecated in
+  favour of a lighter static hero for performance and clarity.
+- Refined social proof to Notion-style (5 stars + single quote + tiny
+  uppercase tracking company row) — retained.
+
+### May 1, 2026 — Hero Section simplified for performance (P0)
+- Removed: teaser push-notification, signals floating pool (+22%, stock,
+  margin, etc.), decision-card convergence, headline word-by-word cascade,
+  glow pulse on "decisiones listas", CTA fade/glow-pulse, subheadline fade
+  and social-proof fade. Hero text is now fully static.
+- Primary CTA re-anchored: **"Quantro vs Otros sistemas"** (ES) /
+  "Quantro vs other systems" (EN) linking via React Router
+  `<Link to="/comparacion">` (or `/comparison`). Secondary CTA unchanged
+  ("Ver cómo funciona" → `#interactive-demo`).
+- Only animations that remain in the hero:
+  1. `HeroDashboardPreview`'s own subtle loop (live indicator, counters).
+  2. A single `AnimatePresence` crossfade on the micro-copy above the
+     dashboard that swaps "Esto ya está pasando en tu negocio." →
+     "Solo necesitas aprobar." at 2.6s. Fixed-height wrapper so nothing
+     reflows.
+- `useRotatingTeaser` hook + `TEASER_POOL` removed from the hero. If
+  needed later, the localStorage-based rotation logic lives in the git
+  history.
 
 ## Prioritized Backlog
 
