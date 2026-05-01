@@ -439,17 +439,23 @@ const ComparisonTable = ({ isEs, focusKey }) => {
   // /vs-notion) the non-focused ones dim to 35% so the comparison narrows
   // visually without losing context.
   const scrollRef = useRef(null);
-  const [scrollState, setScrollState] = useState({ left: true, right: false });
+  const [scrollState, setScrollState] = useState({ atStart: true, atEnd: false, progress: 0, hasOverflow: false });
 
-  // Track which edge fades to show (left fade hidden at start, right fade
-  // hidden when scrolled to the end).
+  // Track scroll progress (0..1) and edge state. We derive `hasOverflow` so
+  // the progress indicator only renders when the table is actually wider than
+  // its container (typically mobile/tablet).
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     const update = () => {
-      const atStart = el.scrollLeft <= 4;
-      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
-      setScrollState({ left: atStart, right: atEnd });
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      const progress = max > 0 ? el.scrollLeft / max : 0;
+      setScrollState({
+        atStart: el.scrollLeft <= 4,
+        atEnd: el.scrollLeft + el.clientWidth >= el.scrollWidth - 4,
+        progress,
+        hasOverflow: max > 4,
+      });
     };
     update();
     el.addEventListener("scroll", update, { passive: true });
@@ -460,12 +466,11 @@ const ComparisonTable = ({ isEs, focusKey }) => {
     };
   }, []);
 
-  // Grid template: Funcionalidad (240px sticky) | Quantro (140px sticky) |
-  // Ninety | EOS One | Notion+Excel+CRM. Fixed widths make sticky math predictable.
-  const GRID = "grid-cols-[240px_140px_130px_130px_160px]";
-  // Shared solid backgrounds so sticky cells don't reveal rows scrolling
-  // underneath them. Matches the card background.
-  const STICKY_BG = "#0B1020"; // blends with the card's translucent surface
+  // Grid template — wider columns so the longer taglines breathe (previously
+  // 140/130/130/160 caused header text like "Tracker alineado a EOS" to bleed
+  // across cell boundaries).
+  const GRID = "grid-cols-[240px_170px_160px_160px_180px]";
+  const STICKY_BG = "#0B1020";
   const QUANTRO_STICKY_BG =
     "linear-gradient(180deg, rgba(0, 245, 255, 0.05), rgba(11, 16, 32, 1))";
 
@@ -496,7 +501,7 @@ const ComparisonTable = ({ isEs, focusKey }) => {
             aria-hidden
             className="pointer-events-none absolute top-0 bottom-[56px] right-0 w-16 z-20 transition-opacity duration-300"
             style={{
-              opacity: scrollState.right ? 0 : 1,
+              opacity: scrollState.atEnd ? 0 : 1,
               background:
                 "linear-gradient(to left, rgba(11, 16, 32, 1), rgba(11, 16, 32, 0))",
             }}
@@ -509,9 +514,9 @@ const ComparisonTable = ({ isEs, focusKey }) => {
             style={{ WebkitOverflowScrolling: "touch" }}
             data-testid="compare-table-scroll"
           >
-            <div className={`min-w-[800px] ${GRID} grid`}>
+            <div className={`min-w-[910px] ${GRID} grid`}>
               {/* ─── Header row ─── */}
-              <HeaderCell sticky="left-0" style={{ background: STICKY_BG, zIndex: 15 }}>
+              <HeaderCell sticky="left-0" align="start" style={{ background: STICKY_BG, zIndex: 15 }}>
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
                   {isEs ? "Funcionalidad" : "Capability"}
                 </span>
@@ -521,18 +526,18 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                 style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
                 testId="compare-col-quantro"
               >
-                <div className="text-center">
+                <div className="w-full text-center">
                   <div className="text-[13px] font-bold tracking-tight text-white">Quantro</div>
-                  <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight">
+                  <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight break-words">
                     {isEs ? "Sistema operativo AOS" : "AOS OS"}
                   </div>
                   <span className="inline-block mt-1.5 w-10 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] shadow-[0_0_8px_rgba(0,245,255,0.6)]" />
                 </div>
               </HeaderCell>
               {[
-                { key: "ninety", name: "Ninety", tagline: isEs ? "Tracker alineado a EOS" : "EOS-aligned tracker" },
-                { key: "eos", name: "EOS One", tagline: isEs ? "Toolset EOS tradicional" : "Traditional EOS toolset" },
-                { key: "notion", name: "Notion + Excel + CRM", tagline: isEs ? "Stack de herramientas separadas" : "Stack of separate tools" },
+                { key: "ninety", name: "Ninety", tagline: isEs ? "Tracker EOS" : "EOS tracker" },
+                { key: "eos", name: "EOS One", tagline: isEs ? "EOS tradicional" : "Traditional EOS" },
+                { key: "notion", name: "Notion + Excel + CRM", tagline: isEs ? "Stack separado" : "Separate stack" },
               ].map((c) => {
                 const dim = focusKey && c.key !== focusKey;
                 return (
@@ -541,11 +546,11 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                     testId={`compare-col-${c.key}`}
                     style={{ background: STICKY_BG, opacity: dim ? 0.35 : 1 }}
                   >
-                    <div className="text-center">
-                      <div className="text-[12px] font-bold tracking-tight text-slate-300 leading-tight">
+                    <div className="w-full text-center">
+                      <div className="text-[12px] font-bold tracking-tight text-slate-300 leading-tight break-words">
                         {c.name}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight break-words">
                         {c.tagline}
                       </div>
                     </div>
@@ -600,11 +605,32 @@ const ComparisonTable = ({ isEs, focusKey }) => {
             </div>
           </div>
 
+          {/* iOS-style scroll progress indicator — a thin track with a
+              gliding dot. Only shows when the table actually overflows
+              (mobile/tablet). */}
+          {scrollState.hasOverflow && (
+            <div
+              className="flex items-center justify-center pt-3 pb-1"
+              data-testid="compare-table-progress"
+              aria-hidden
+            >
+              <div className="relative h-[3px] w-28 rounded-full bg-white/[0.08]">
+                <div
+                  className="absolute top-0 h-[3px] rounded-full bg-white/80 shadow-[0_0_6px_rgba(255,255,255,0.5)] transition-[left,width] duration-200 ease-out"
+                  style={{
+                    width: "14px",
+                    left: `${scrollState.progress * (112 - 14)}px`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Mobile hint */}
           <div
-            className="lg:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
+            className="lg:hidden flex items-center justify-center gap-1.5 px-4 pt-1 pb-1 text-[10.5px] text-slate-500"
             data-testid="compare-table-mobile-hint"
-            style={{ opacity: scrollState.right ? 0.3 : 0.9, transition: "opacity 0.3s" }}
+            style={{ opacity: scrollState.atEnd ? 0.3 : 0.9, transition: "opacity 0.3s" }}
           >
             <ArrowRight size={11} className="opacity-70" />
             {isEs ? "Desliza para comparar" : "Swipe to compare"}
@@ -635,10 +661,13 @@ const ComparisonTable = ({ isEs, focusKey }) => {
 };
 
 // Small presentational helpers for the compare table — keep row markup tidy.
-const HeaderCell = ({ children, sticky, style, testId }) => (
+// HeaderCell centers its content by default (pass `align="start"` for the
+// Funcionalidad label column). `overflow-hidden` + `min-w-0` prevent
+// long taglines from bleeding into the next cell during horizontal scroll.
+const HeaderCell = ({ children, sticky, style, testId, align = "center" }) => (
   <div
     data-testid={testId}
-    className={`p-4 border-b border-white/[0.08] flex items-center justify-start ${sticky ? `sticky ${sticky}` : ""}`}
+    className={`p-4 border-b border-white/[0.08] flex items-center ${align === "center" ? "justify-center" : "justify-start"} overflow-hidden min-w-0 ${sticky ? `sticky ${sticky}` : ""}`}
     style={style}
   >
     {children}
@@ -648,7 +677,7 @@ const HeaderCell = ({ children, sticky, style, testId }) => (
 const BodyCell = ({ children, sticky, style, center = false, testId }) => (
   <div
     data-testid={testId}
-    className={`px-4 py-3 border-b border-white/[0.04] flex items-center ${center ? "justify-center" : "justify-start"} ${sticky ? `sticky ${sticky}` : ""}`}
+    className={`px-4 py-3 border-b border-white/[0.04] flex items-center ${center ? "justify-center" : "justify-start"} overflow-hidden min-w-0 ${sticky ? `sticky ${sticky}` : ""}`}
     style={style}
   >
     {children}

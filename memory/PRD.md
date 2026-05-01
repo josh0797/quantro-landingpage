@@ -587,12 +587,21 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   opacity 65%. Slate-400 instead of slate-500.
 - Comparison table (`/comparacion`) restored to 4 competitor columns
   (Quantro + Ninety + EOS One + Notion + Excel + CRM) with sticky UX:
-  - Fixed-width grid `grid-cols-[240px_140px_130px_130px_160px]`, total
-    min-width 800px.
+  - Fixed-width grid `grid-cols-[240px_170px_160px_160px_180px]`, total
+    min-width 910px.
   - **Sticky left columns:** Funcionalidad (sticky `left-0`) and Quantro
     (sticky `left-[240px]`) keep context during horizontal scroll.
   - **Fade edges:** right-side gradient overlay fades in/out based on
-    scroll position (tracked via `onScroll` + `onResize` listeners).
+    scroll position.
+  - **iOS-style scroll progress indicator:** thin 112px track with a 14px
+    white dot that glides as the user scrolls. Only renders when the
+    table actually overflows (mobile/tablet). Smooth `transition-[left]`
+    for buttery motion.
+  - **Header overflow fix:** `HeaderCell` + `BodyCell` now use
+    `justify-center` by default, `overflow-hidden`, `min-w-0` and
+    `break-words` so long taglines never bleed into adjacent columns.
+    Taglines shortened ("Tracker EOS", "EOS tradicional", "Stack
+    separado") so they fit cleanly at all column widths.
   - Mobile hint "Desliza para comparar" auto-dims when user reaches the
     end of the scroll.
   - Solid `#0B1020` backgrounds on sticky cells prevent bleed-through.
