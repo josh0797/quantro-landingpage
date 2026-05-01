@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -435,28 +435,43 @@ const ComparisonCell = ({ value, isEs, tooltip, live, columnKey }) => {
 };
 
 const ComparisonTable = ({ isEs, focusKey }) => {
-  // On focused variants (/vs-ninety, /vs-eos, /vs-notion) show that specific
-  // competitor as the right column. On the general page, collapse the 3
-  // alternatives into a single "Otros sistemas" column so the comparison
-  // reads clearly at a glance.
-  const rightCompetitor = focusKey
-    ? COMPETITORS.find((c) => c.key === focusKey)
-    : null;
-  const rightMeta = rightCompetitor
-    ? {
-        key: rightCompetitor.key,
-        name: rightCompetitor.name,
-        tagline: rightCompetitor.tagline[isEs ? "es" : "en"],
-      }
-    : {
-        key: "others",
-        name: OTHERS_META[isEs ? "es" : "en"].name,
-        tagline: OTHERS_META[isEs ? "es" : "en"].tagline,
-      };
+  // All 4 competitors are rendered. On focused variants (/vs-ninety, /vs-eos,
+  // /vs-notion) the non-focused ones dim to 35% so the comparison narrows
+  // visually without losing context.
+  const scrollRef = useRef(null);
+  const [scrollState, setScrollState] = useState({ left: true, right: false });
+
+  // Track which edge fades to show (left fade hidden at start, right fade
+  // hidden when scrolled to the end).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const atStart = el.scrollLeft <= 4;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4;
+      setScrollState({ left: atStart, right: atEnd });
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  // Grid template: Funcionalidad (240px sticky) | Quantro (140px sticky) |
+  // Ninety | EOS One | Notion+Excel+CRM. Fixed widths make sticky math predictable.
+  const GRID = "grid-cols-[240px_140px_130px_130px_160px]";
+  // Shared solid backgrounds so sticky cells don't reveal rows scrolling
+  // underneath them. Matches the card background.
+  const STICKY_BG = "#0B1020"; // blends with the card's translucent surface
+  const QUANTRO_STICKY_BG =
+    "linear-gradient(180deg, rgba(0, 245, 255, 0.05), rgba(11, 16, 32, 1))";
 
   return (
     <section className="relative py-20 px-6" data-testid="compare-table">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10">
           <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]/80 mb-3">
             {isEs ? "Capacidades lado a lado" : "Capabilities side-by-side"}
@@ -472,108 +487,127 @@ const ComparisonTable = ({ isEs, focusKey }) => {
         </div>
 
         <div
-          className="rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01]"
-          style={{ backdropFilter: "blur(12px)" }}
+          className="relative rounded-2xl overflow-hidden border border-white/[0.06]"
+          style={{ background: STICKY_BG, backdropFilter: "blur(12px)" }}
         >
-          {/* Mobile-friendly horizontal scroll wrapper.
-              Page scroll stays vertical; the TABLE itself gets horizontal scroll
-              on small viewports while staying readable on desktop. */}
+          {/* Edge fade overlays — positioned above the scroll area but not
+              over the sticky columns so the first 2 columns never fade. */}
           <div
-            className="overflow-x-auto no-scrollbar"
+            aria-hidden
+            className="pointer-events-none absolute top-0 bottom-[56px] right-0 w-16 z-20 transition-opacity duration-300"
+            style={{
+              opacity: scrollState.right ? 0 : 1,
+              background:
+                "linear-gradient(to left, rgba(11, 16, 32, 1), rgba(11, 16, 32, 0))",
+            }}
+          />
+
+          {/* Scroll container */}
+          <div
+            ref={scrollRef}
+            className="overflow-x-auto no-scrollbar relative"
             style={{ WebkitOverflowScrolling: "touch" }}
             data-testid="compare-table-scroll"
           >
-            <div className="min-w-[560px]">
-              {/* Header row — 3 cols: Funcionalidad | Quantro (highlighted) | Otros */}
-              <div className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-white/[0.08]">
-                <div className="p-4 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
+            <div className={`min-w-[800px] ${GRID} grid`}>
+              {/* ─── Header row ─── */}
+              <HeaderCell sticky="left-0" style={{ background: STICKY_BG, zIndex: 15 }}>
+                <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
                   {isEs ? "Funcionalidad" : "Capability"}
-                </div>
-                {/* Quantro column — highlighted */}
-                <div
-                  className="p-4 text-center relative"
-                  data-column="quantro"
-                  data-testid="compare-col-quantro"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, rgba(0, 245, 255, 0.06), rgba(0, 245, 255, 0.015))",
-                  }}
-                >
-                  <div className="text-[13px] font-bold tracking-tight text-white">
-                    Quantro
-                  </div>
+                </span>
+              </HeaderCell>
+              <HeaderCell
+                sticky="left-[240px]"
+                style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
+                testId="compare-col-quantro"
+              >
+                <div className="text-center">
+                  <div className="text-[13px] font-bold tracking-tight text-white">Quantro</div>
                   <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight">
-                    {isEs ? "Sistema operativo AOS" : "AOS Operating System"}
+                    {isEs ? "Sistema operativo AOS" : "AOS OS"}
                   </div>
                   <span className="inline-block mt-1.5 w-10 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] shadow-[0_0_8px_rgba(0,245,255,0.6)]" />
                 </div>
-                {/* Others column — neutral */}
-                <div
-                  className="p-4 text-center"
-                  data-column={rightMeta.key}
-                  data-testid={`compare-col-${rightMeta.key}`}
-                >
-                  <div className="text-[13px] font-bold tracking-tight text-slate-300">
-                    {rightMeta.name}
-                  </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                    {rightMeta.tagline}
-                  </div>
-                </div>
-              </div>
-
-              {/* Body rows */}
-              {ROWS.map((row) => {
-                const othersValue = focusKey ? row[focusKey] : row.others;
-                const quantroTooltip = row.tooltips ? row.tooltips.quantro : undefined;
-                const othersTooltip = row.tooltips
-                  ? focusKey
-                    ? row.tooltips[focusKey]
-                    : row.tooltips.others
-                  : undefined;
+              </HeaderCell>
+              {[
+                { key: "ninety", name: "Ninety", tagline: isEs ? "Tracker alineado a EOS" : "EOS-aligned tracker" },
+                { key: "eos", name: "EOS One", tagline: isEs ? "Toolset EOS tradicional" : "Traditional EOS toolset" },
+                { key: "notion", name: "Notion + Excel + CRM", tagline: isEs ? "Stack de herramientas separadas" : "Stack of separate tools" },
+              ].map((c) => {
+                const dim = focusKey && c.key !== focusKey;
                 return (
-                  <div
-                    key={row.key}
-                    className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
-                    data-testid={`compare-row-${row.key}`}
+                  <HeaderCell
+                    key={c.key}
+                    testId={`compare-col-${c.key}`}
+                    style={{ background: STICKY_BG, opacity: dim ? 0.35 : 1 }}
                   >
-                    <div className="p-4 text-[13px] text-slate-200 leading-snug flex items-center">
-                      {isEs ? row.es : row.en}
+                    <div className="text-center">
+                      <div className="text-[12px] font-bold tracking-tight text-slate-300 leading-tight">
+                        {c.name}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                        {c.tagline}
+                      </div>
                     </div>
-                    {/* Quantro cell — tinted background */}
-                    <div
-                      className="p-3 flex items-center justify-center bg-[#00F5FF]/[0.02]"
-                    >
-                      <ComparisonCell
-                        value={row.quantro}
-                        isEs={isEs}
-                        tooltip={quantroTooltip}
-                        live={!!row.quantroLive}
-                        columnKey="quantro"
-                      />
-                    </div>
-                    {/* Others cell */}
-                    <div className="p-3 flex items-center justify-center">
-                      <ComparisonCell
-                        value={othersValue}
-                        isEs={isEs}
-                        tooltip={othersTooltip}
-                        columnKey={rightMeta.key}
-                      />
-                    </div>
-                  </div>
+                  </HeaderCell>
                 );
               })}
+
+              {/* ─── Body rows ─── */}
+              {ROWS.map((row) => (
+                <React.Fragment key={row.key}>
+                  <BodyCell
+                    sticky="left-0"
+                    style={{ background: STICKY_BG, zIndex: 15 }}
+                    testId={`compare-row-${row.key}`}
+                  >
+                    <span className="text-[13px] text-slate-200 leading-snug">
+                      {isEs ? row.es : row.en}
+                    </span>
+                  </BodyCell>
+                  <BodyCell
+                    sticky="left-[240px]"
+                    center
+                    style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
+                  >
+                    <ComparisonCell
+                      value={row.quantro}
+                      isEs={isEs}
+                      tooltip={row.tooltips?.quantro}
+                      live={!!row.quantroLive}
+                      columnKey="quantro"
+                    />
+                  </BodyCell>
+                  {["ninety", "eos", "notion"].map((key) => {
+                    const dim = focusKey && key !== focusKey;
+                    return (
+                      <BodyCell
+                        key={key}
+                        center
+                        style={{ background: STICKY_BG, opacity: dim ? 0.3 : 1 }}
+                      >
+                        <ComparisonCell
+                          value={row[key]}
+                          isEs={isEs}
+                          tooltip={row.tooltips?.[key]}
+                          columnKey={key}
+                        />
+                      </BodyCell>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
             </div>
           </div>
 
-          {/* Mobile hint — only visible on small screens */}
+          {/* Mobile hint */}
           <div
-            className="sm:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
+            className="lg:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
             data-testid="compare-table-mobile-hint"
+            style={{ opacity: scrollState.right ? 0.3 : 0.9, transition: "opacity 0.3s" }}
           >
             <ArrowRight size={11} className="opacity-70" />
-            {isEs ? "Desliza si la tabla no entra" : "Swipe if the table doesn't fit"}
+            {isEs ? "Desliza para comparar" : "Swipe to compare"}
           </div>
 
           {/* Legend */}
@@ -599,6 +633,27 @@ const ComparisonTable = ({ isEs, focusKey }) => {
     </section>
   );
 };
+
+// Small presentational helpers for the compare table — keep row markup tidy.
+const HeaderCell = ({ children, sticky, style, testId }) => (
+  <div
+    data-testid={testId}
+    className={`p-4 border-b border-white/[0.08] flex items-center justify-start ${sticky ? `sticky ${sticky}` : ""}`}
+    style={style}
+  >
+    {children}
+  </div>
+);
+
+const BodyCell = ({ children, sticky, style, center = false, testId }) => (
+  <div
+    data-testid={testId}
+    className={`px-4 py-3 border-b border-white/[0.04] flex items-center ${center ? "justify-center" : "justify-start"} ${sticky ? `sticky ${sticky}` : ""}`}
+    style={style}
+  >
+    {children}
+  </div>
+);
 
 // =========================================================================
 // EvolvingNoteCard — "Quantro evoluciona constantemente"

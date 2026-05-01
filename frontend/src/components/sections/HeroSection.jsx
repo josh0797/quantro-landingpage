@@ -87,9 +87,15 @@ export const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* ─────── Left column — static text ─────── */}
           <div className="order-1">
-            {/* Pre-header */}
+            {/* Pre-header — Apple-level eyebrow. Inter/system font, medium weight,
+                gentle tracking, 65% opacity. No mono/bold. */}
             <p
-              className="text-[11px] sm:text-[12px] font-mono tracking-[0.3em] uppercase text-slate-500 mb-5"
+              className="text-[10.5px] sm:text-[11px] font-medium tracking-[0.2em] uppercase text-slate-400 mb-5"
+              style={{
+                fontFamily:
+                  "-apple-system, 'SF Pro Text', Inter, 'Helvetica Neue', Arial, sans-serif",
+                opacity: 0.65,
+              }}
               data-testid="hero-preheader"
             >
               <span className="inline-flex items-center gap-2">
@@ -124,14 +130,24 @@ export const HeroSection = () => {
               )}
             </h1>
 
-            {/* Subheadline */}
+            {/* Subheadline — short, benefit-focused, 3 rhythmic beats */}
             <p
               className="text-base sm:text-lg lg:text-xl text-slate-400 leading-relaxed mb-6 max-w-xl"
               data-testid="hero-subheadline"
             >
-              {isEs
-                ? "Quantro OS conecta tus datos, detecta oportunidades y te propone acciones claras — y con Quantro Flow, las ejecuta por ti."
-                : "Quantro OS connects your data, detects opportunities and proposes clear actions — and with Quantro Flow, executes them for you."}
+              {isEs ? (
+                <>
+                  Quantro conecta tus datos, detecta oportunidades y te propone acciones claras.
+                  <br />
+                  <span className="text-slate-300">Tú decides. Quantro ejecuta. Quantro Flow automatiza.</span>
+                </>
+              ) : (
+                <>
+                  Quantro connects your data, spots opportunities and proposes clear actions.
+                  <br />
+                  <span className="text-slate-300">You decide. Quantro executes. Quantro Flow automates.</span>
+                </>
+              )}
             </p>
 
             {/* CTAs */}

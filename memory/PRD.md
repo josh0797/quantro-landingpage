@@ -578,7 +578,26 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
 - Refined social proof to Notion-style (5 stars + single quote + tiny
   uppercase tracking company row) — retained.
 
-### May 1, 2026 — Hero Section simplified for performance (P0)
+### May 1, 2026 — Hero copy refinement + 4-col comparison table with sticky (P0)
+- Hero subheadline simplified to 1–2 short lines with rhythm:
+  "Quantro conecta tus datos, detecta oportunidades y te propone acciones
+  claras." + "Tú decides. Quantro ejecuta. Quantro Flow automatiza." (ES/EN).
+- Pre-header typography upgraded to Apple-level eyebrow: SF Pro Text /
+  Inter fallback, medium weight (no bold, no mono), `tracking-[0.2em]`,
+  opacity 65%. Slate-400 instead of slate-500.
+- Comparison table (`/comparacion`) restored to 4 competitor columns
+  (Quantro + Ninety + EOS One + Notion + Excel + CRM) with sticky UX:
+  - Fixed-width grid `grid-cols-[240px_140px_130px_130px_160px]`, total
+    min-width 800px.
+  - **Sticky left columns:** Funcionalidad (sticky `left-0`) and Quantro
+    (sticky `left-[240px]`) keep context during horizontal scroll.
+  - **Fade edges:** right-side gradient overlay fades in/out based on
+    scroll position (tracked via `onScroll` + `onResize` listeners).
+  - Mobile hint "Desliza para comparar" auto-dims when user reaches the
+    end of the scroll.
+  - Solid `#0B1020` backgrounds on sticky cells prevent bleed-through.
+  - Focus variants (`/vs-ninety`, etc.) dim non-focused competitors to
+    30% instead of removing them.
 - Removed: teaser push-notification, signals floating pool, decision-card
   convergence, headline word-by-word cascade, glow pulse on "decisiones
   listas", CTA fade/glow-pulse, subheadline fade and social-proof fade.
