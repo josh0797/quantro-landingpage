@@ -17,6 +17,7 @@ import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
 import ComparisonSummarySection from "@/components/sections/ComparisonSummarySection";
+import SwitchToQuantroSection from "@/components/sections/SwitchToQuantroSection";
 import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
@@ -69,6 +70,9 @@ const LandingShell = () => (
 
     {/* Act 6 — Silent objection: "how is this different from what I already use?" */}
     <ComparisonSummarySection />
+
+    {/* Act 7 — Remove the migration fear: "it's easy to switch" */}
+    <SwitchToQuantroSection />
 
     <PricingSection />
     <FAQSection />

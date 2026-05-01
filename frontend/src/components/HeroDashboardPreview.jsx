@@ -73,6 +73,7 @@ const buildDecisions = (isEs) => [
       ? <>Ajustar precios en <span className="text-white font-medium">"Silla ejecutiva"</span> y <span className="text-white font-medium">"Escritorio Pro"</span>.</>
       : <>Adjust pricing on <span className="text-white font-medium">"Executive Chair"</span> and <span className="text-white font-medium">"Pro Desk"</span>.</>,
     impactLabel: isEs ? "margen" : "margin",
+    analyzing: isEs ? "Analizando pricing" : "Analysing pricing",
     counters: { rev: 847, growth: 12.4, lift: 3.2 },
     impactKey: "lift",
     actions: [
@@ -102,6 +103,7 @@ const buildDecisions = (isEs) => [
       ? <>Pausar <span className="text-white font-medium">2 conjuntos de anuncios</span> y redirigir a Meta Advantage.</>
       : <>Pause <span className="text-white font-medium">2 ad sets</span> and redirect to Meta Advantage.</>,
     impactLabel: "ROI",
+    analyzing: isEs ? "Analizando eficiencia de Ads" : "Analysing Ads efficiency",
     counters: { wasted: 2000, lift: 22 },
     impactKey: "lift",
     actions: [
@@ -129,6 +131,7 @@ const buildDecisions = (isEs) => [
       ? <>Lanzar <span className="text-white font-medium">secuencia de reactivación</span> personalizada por segmento.</>
       : <>Launch a <span className="text-white font-medium">re-engagement sequence</span> tailored by segment.</>,
     impactLabel: isEs ? "potencial" : "potential",
+    analyzing: isEs ? "Analizando comportamiento de clientes" : "Analysing customer behaviour",
     counters: { count: 14, potential: 58 },
     impactKey: "potential",
     impactSuffix: "K",
@@ -141,8 +144,8 @@ const buildDecisions = (isEs) => [
   },
 ];
 
-const ROTATE_FIRST_DELAY = 11000; // first decision stays on-screen longer
-const ROTATE_EVERY = 11000;       // subsequent swaps
+const ROTATE_FIRST_DELAY = 15000; // first decision stays longer (more reading time)
+const ROTATE_EVERY = 15000;       // subsequent swaps
 
 export const HeroDashboardPreview = () => {
   const { language } = useLanguage();
@@ -275,10 +278,10 @@ export const HeroDashboardPreview = () => {
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={active.key}
-                initial={{ opacity: 0, filter: "blur(3px)" }}
-                animate={{ opacity: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, filter: "blur(3px)" }}
-                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, filter: "blur(5px)", y: 4 }}
+                animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+                exit={{ opacity: 0, filter: "blur(5px)", y: -4 }}
+                transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
                 className="p-4"
               >
                 <div className="flex items-center justify-between mb-2.5">
@@ -335,16 +338,16 @@ export const HeroDashboardPreview = () => {
               <p className="text-[9.5px] font-bold tracking-[0.22em] uppercase text-slate-500">
                 {isEs ? "Acciones listas" : "Ready actions"}
               </p>
-              <AnalyzingIndicator isEs={isEs} />
+              <AnalyzingIndicator text={active.analyzing} activeKey={active.key} />
             </div>
 
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`actions-${active.key}`}
-                initial={{ opacity: 0, filter: "blur(2px)" }}
+                initial={{ opacity: 0, filter: "blur(4px)" }}
                 animate={{ opacity: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, filter: "blur(2px)" }}
-                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, filter: "blur(4px)" }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                 className="space-y-1.5"
               >
                 {active.actions.map((a, i) => (
@@ -398,30 +401,64 @@ export const HeroDashboardPreview = () => {
   );
 };
 
-// "Analizando áreas clave…" with a trio of breathing dots so the user always
-// sees Quantro working even when the decision card is static.
-const AnalyzingIndicator = ({ isEs }) => (
-  <span
-    className="inline-flex items-center gap-1.5 text-[9px] font-medium tracking-wider uppercase text-slate-500"
-    data-testid="hero-dash-analyzing"
-  >
-    <span className="flex gap-0.5" aria-hidden>
-      {[0, 1, 2].map((i) => (
-        <motion.span
-          key={i}
-          className="w-[3px] h-[3px] rounded-full bg-[#7FF5FF]"
-          animate={{ opacity: [0.2, 0.9, 0.2] }}
-          transition={{
-            duration: 1.4,
-            ease: "easeInOut",
-            repeat: Infinity,
-            delay: i * 0.25,
-          }}
-        />
-      ))}
+// AnalyzingIndicator — types out the current decision's analyzing-label with
+// a subtle blinking caret, then a trio of breathing dots signals ongoing
+// computation. When the active decision changes, the typing restarts.
+const AnalyzingIndicator = ({ text, activeKey }) => {
+  const [shown, setShown] = React.useState("");
+  React.useEffect(() => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setShown(text);
+      return;
+    }
+    setShown("");
+    const chars = [...text];
+    let i = 0;
+    const id = setInterval(() => {
+      i += 1;
+      setShown(chars.slice(0, i).join(""));
+      if (i >= chars.length) clearInterval(id);
+    }, 34); // ~12 chars/s — feels human, not robotic
+    return () => clearInterval(id);
+  }, [text, activeKey]);
+
+  const typing = shown.length < text.length;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[9px] font-medium tracking-wider uppercase text-slate-500 max-w-[55%]"
+      data-testid="hero-dash-analyzing"
+    >
+      <span className="flex gap-0.5" aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="w-[3px] h-[3px] rounded-full bg-[#7FF5FF]"
+            animate={{ opacity: [0.2, 0.9, 0.2] }}
+            transition={{
+              duration: 1.4,
+              ease: "easeInOut",
+              repeat: Infinity,
+              delay: i * 0.25,
+            }}
+          />
+        ))}
+      </span>
+      <span className="truncate" aria-live="polite">
+        {shown}
+        {typing && (
+          <motion.span
+            aria-hidden
+            className="inline-block w-[1px] h-[9px] align-[-1px] ml-[1px] bg-[#7FF5FF]"
+            animate={{ opacity: [1, 0, 1] }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
+          />
+        )}
+      </span>
     </span>
-    {isEs ? "Analizando áreas clave" : "Analysing key areas"}
-  </span>
-);
+  );
+};
 
 export default HeroDashboardPreview;

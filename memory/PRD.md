@@ -657,6 +657,41 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
     from 0 in 1.4s.
 - Hero microcopy swap logic updated: desktop swaps after 5.5s; mobile
   swaps only when the user scrolls past ~80px (attention-shift trigger).
+
+### May 1, 2026 — Decision rotation refined + Switch to Quantro section (P0)
+- Decision rotation timing relaxed: first card stays 15s (up from 11s),
+  subsequent rotations every 15s. Cross-fade now 750ms with 5px blur (up
+  from 450ms / 3px) — feels significantly more like Apple than carousel.
+  Actions list crossfade aligned at 700ms / 4px blur.
+- `AnalyzingIndicator` upgraded with a real typing effect: characters
+  stream in at ~12/s with a blinking caret. Label is now per-decision
+  and reinforces the narrative:
+    · Pricing → "Analizando pricing"
+    · Ads → "Analizando eficiencia de Ads"
+    · Reactivation → "Analizando comportamiento de clientes"
+- New section `SwitchToQuantroSection.jsx` added after
+  `ComparisonSummarySection`, anchored at `#switch`:
+  - Apple-style onboarding narrative "Cámbiate a Quantro sin empezar
+    desde cero." + subhead on data import + validation.
+  - Left column: 3 numbered glass cards (01 Elige origen / 02 Sube o
+    conecta / 03 Quantro entiende tu negocio). Autoplay advances every
+    5.2s with IntersectionObserver gating; hover / click pauses.
+  - Right column: morphing preview panel with glass chrome ("Quantro ·
+    Migración · En vivo") and per-step slides:
+      · Source — 8 system cards (Excel, Sheets, QuickBooks, Zoho,
+        HubSpot, Monday, Otro, "No sé / necesito ayuda").
+      · Upload — animated dropzone (floating cloud icon), CTAs
+        "Subir archivo" + "Conectar API", auto-detection strip
+        showing file names and row counts.
+      · Understand — accuracy header "Precisión del import 97%"
+        (count-up) with Duplicados/Errores/Equivalencias, plus a 2x3
+        tile grid of detected entities (Clientes 428, Ventas 1,240,
+        Productos 86, Miembros 12, Tareas 312) each counting up from 0.
+  - CTAs: "Comenzar migración" → PlatformAccess, "Hablar con un
+    experto" → `mailto:hello@quantroos.com`. Shield subline:
+    "Migración asistida · sin perder datos · sin detener tu operación."
+- Navbar (desktop + mobile): added "Cámbiate / Switch" link pointing to
+  `#switch`, positioned between "Comparativa" and "Precios".
 - Success Stories — "ownership" story:
   - Primary metric changed from `0 tareas sin responsable` →
     `100% tareas asignadas` (+ EN equivalent).
