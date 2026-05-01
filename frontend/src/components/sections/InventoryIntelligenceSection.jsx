@@ -9,6 +9,7 @@ import {
   MapPin,
   ArrowDown,
   Moon,
+  Sun,
   TrendingDown,
   Sparkles,
   Boxes,
@@ -390,8 +391,84 @@ export const InventoryIntelligenceSection = () => {
           />
 
           <div className="relative px-6 sm:px-12 py-12 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#00F5FF]/[0.08] border border-[#00F5FF]/25 mb-5">
-              <Moon size={22} className="text-[#00F5FF]" />
+            {/* Moon → Sun cross-fade animation.
+                Triggered on viewport entry; repeats on a gentle 7s loop so
+                the "night-to-morning" story reads clearly without being
+                distracting. Respects prefers-reduced-motion via Framer's
+                automatic handling. */}
+            <div
+              className="relative inline-flex items-center justify-center w-14 h-14 mb-5"
+              data-testid="inventory-moon-sun-icon"
+              aria-hidden
+            >
+              {/* Warm sunrise glow (fades in with the sun) */}
+              <motion.span
+                className="absolute inset-0 rounded-full"
+                initial={{ opacity: 0 }}
+                whileInView={{
+                  opacity: [0, 0, 0.75, 0.75, 0],
+                }}
+                viewport={{ once: false, margin: "-40px" }}
+                transition={{
+                  duration: 7,
+                  times: [0, 0.42, 0.58, 0.9, 1],
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatDelay: 1.2,
+                }}
+                style={{
+                  background:
+                    "radial-gradient(circle at 50% 50%, rgba(255, 190, 120, 0.55), rgba(255, 150, 80, 0.0) 65%)",
+                  filter: "blur(6px)",
+                }}
+              />
+
+              {/* Moon layer */}
+              <motion.span
+                className="absolute inset-0 rounded-full bg-[#00F5FF]/[0.08] border border-[#00F5FF]/25 flex items-center justify-center"
+                initial={{ opacity: 1, rotate: 0, scale: 1 }}
+                whileInView={{
+                  opacity: [1, 1, 0, 0, 1],
+                  rotate: [0, 0, -35, -35, 0],
+                  scale: [1, 1, 0.85, 0.85, 1],
+                }}
+                viewport={{ once: false, margin: "-40px" }}
+                transition={{
+                  duration: 7,
+                  times: [0, 0.42, 0.55, 0.9, 1],
+                  ease: [0.22, 1, 0.36, 1],
+                  repeat: Infinity,
+                  repeatDelay: 1.2,
+                }}
+              >
+                <Moon size={22} className="text-[#00F5FF]" />
+              </motion.span>
+
+              {/* Sun layer */}
+              <motion.span
+                className="absolute inset-0 rounded-full flex items-center justify-center"
+                style={{
+                  background: "rgba(255, 176, 102, 0.12)",
+                  border: "1px solid rgba(255, 176, 102, 0.4)",
+                  boxShadow: "0 0 28px rgba(255, 176, 102, 0.35)",
+                }}
+                initial={{ opacity: 0, rotate: 35, scale: 0.85 }}
+                whileInView={{
+                  opacity: [0, 0, 1, 1, 0],
+                  rotate: [35, 35, 0, 0, 35],
+                  scale: [0.85, 0.85, 1, 1, 0.85],
+                }}
+                viewport={{ once: false, margin: "-40px" }}
+                transition={{
+                  duration: 7,
+                  times: [0, 0.45, 0.6, 0.88, 1],
+                  ease: [0.22, 1, 0.36, 1],
+                  repeat: Infinity,
+                  repeatDelay: 1.2,
+                }}
+              >
+                <Sun size={22} className="text-amber-300" />
+              </motion.span>
             </div>
 
             <p className="text-[11px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]/80 mb-3">

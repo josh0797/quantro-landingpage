@@ -498,6 +498,17 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
 ### March 22, 2026 — Initial MVP
 - Full landing page, ES/EN toggle, SEO, Apple/Stripe aesthetic
 
+### May 1, 2026 — Landing + Animation Polish (P0)
+- New `ComparisonSummarySection` added between Differentiation and Pricing
+  with a clean Apple/Stripe two-column layout (Otros sistemas vs Quantro).
+- Primary CTA "Ver comparativa completa" navigates via React Router
+  `<Link to="/comparacion">` (no anchor scroll), scrolls to top on mount.
+- New "Comparativa" link added to desktop + mobile Navbar
+  (`data-testid="nav-comparison"` / `mobile-nav-comparison`).
+- Moon→Sun cross-fade animation added to the "Mientras tú duermes" card
+  inside `InventoryIntelligenceSection` (Framer Motion, 7s gentle loop,
+  warm amber glow on the sun layer).
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

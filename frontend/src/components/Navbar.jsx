@@ -97,6 +97,13 @@ export const Navbar = () => {
             {language === "es" ? "Producto" : "Product"}
           </button>
           <button
+            onClick={() => scrollToSection("comparison-summary")}
+            className="text-slate-400 hover:text-white transition-colors text-sm"
+            data-testid="nav-comparison"
+          >
+            {language === "es" ? "Comparativa" : "Compare"}
+          </button>
+          <button
             onClick={() => scrollToSection("pricing")}
             className="text-slate-400 hover:text-white transition-colors text-sm"
             data-testid="nav-pricing"
@@ -183,6 +190,13 @@ export const Navbar = () => {
                 className="text-slate-400 hover:text-white transition-colors text-left py-2"
               >
                 {language === "es" ? "Producto" : "Product"}
+              </button>
+              <button
+                onClick={() => scrollToSection("comparison-summary")}
+                className="text-slate-400 hover:text-white transition-colors text-left py-2"
+                data-testid="mobile-nav-comparison"
+              >
+                {language === "es" ? "Comparativa" : "Compare"}
               </button>
               <button
                 onClick={() => scrollToSection("pricing")}
