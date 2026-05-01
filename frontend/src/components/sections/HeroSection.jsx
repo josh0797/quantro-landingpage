@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../hooks/useLanguage";
 import { trackCTAClick } from "../../lib/analytics";
-import HeroDashboardPreview from "../HeroDashboardPreview";
+
+// Mobile users get the dashboard as a separate chunk so the first paint is
+// pure text (~< 10KB main). Desktop users preload the chunk on mount so
+// they don't see the Suspense fallback — they still get an instant-looking
+// hero, just with parallel network fetch.
+const HeroDashboardPreview = lazy(() => import("../HeroDashboardPreview"));
+const preloadHeroDashboard = () => import("../HeroDashboardPreview");
 
 /**
- * Hero Section — optimized for performance and conversion clarity.
+ * Hero Section — lightweight static text + lazy-loaded dashboard.
  *
- * Static text (no cascade / fade / glow pulse / teaser / signal layer).
- * Only two live micro-behaviours remain:
- *   1. The dashboard preview keeps its own subtle loop (counters, live dot).
- *   2. A micro-copy above the dashboard crossfades between two lines to
- *      anchor the conversion pitch:
- *        "Esto ya está pasando en tu negocio." → "Solo necesitas aprobar."
+ * Only two live micro-behaviours:
+ *   1. Dashboard preview keeps its own subtle loop (counters, live dot).
+ *   2. A micro-copy above the dashboard crossfades between two lines every
+ *      ~5.5s to anchor the conversion pitch.
  *
  * Primary CTA navigates to `/comparacion` so visitors move from curiosity
  * to self-qualification with one click.
  */
 
-const MICROCOPY_DELAY_MS = 2600; // 2–3 seconds before swap
+const MICROCOPY_DELAY_MS = 5500; // ~5–6 seconds of reading time per state
+const MOBILE_BREAKPOINT = "(max-width: 1023px)"; // Tailwind lg = 1024px
 
 export const HeroSection = () => {
   const { language } = useLanguage();
@@ -29,9 +34,27 @@ export const HeroSection = () => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Microcopy crossfade — starts on state 0, switches to state 1 after a
-  // short pause, and stays there. Only text changes; container height stays
-  // fixed so nothing else reflows.
+  // ── Dashboard chunk strategy ──────────────────────────────────────────
+  // Detect desktop synchronously (if `window` is available) so the very first
+  // render can already decide whether to pre-warm the chunk. matchMedia is
+  // cheap and won't cause hydration mismatch in CRA's CSR-only build.
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return !window.matchMedia(MOBILE_BREAKPOINT).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(MOBILE_BREAKPOINT);
+    const handler = (e) => setIsDesktop(!e.matches);
+    // Desktop preloads the chunk immediately so Suspense never shows the
+    // fallback. Mobile defers the fetch.
+    if (!mq.matches) preloadHeroDashboard();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // ── Microcopy crossfade ───────────────────────────────────────────────
   const [microIndex, setMicroIndex] = useState(0);
   useEffect(() => {
     const t = setTimeout(() => setMicroIndex(1), MICROCOPY_DELAY_MS);
@@ -44,13 +67,19 @@ export const HeroSection = () => {
 
   const comparisonPath = isEs ? "/comparacion" : "/comparison";
 
+  // Paired company names — 2 per line for a quieter row.
+  const companyPairs = [
+    ["Grupo Nexo", "Altura Retail"],
+    ["Nodo Studios", "Grupo OCP"],
+  ];
+
   return (
     <section
       className="relative min-h-screen flex items-center pt-20 pb-16 overflow-hidden"
       style={{ background: "linear-gradient(180deg, #0A0F1C 0%, #030712 100%)" }}
       data-testid="hero-section"
     >
-      {/* Ambient orbs — static, no animation */}
+      {/* Ambient orbs — static */}
       <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#00F5FF]/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-[#A020FF]/5 rounded-full blur-[100px] pointer-events-none" />
 
@@ -58,14 +87,16 @@ export const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* ─────── Left column — static text ─────── */}
           <div className="order-1">
-            {/* Eyebrow */}
+            {/* Pre-header */}
             <p
               className="text-[11px] sm:text-[12px] font-mono tracking-[0.3em] uppercase text-slate-500 mb-5"
               data-testid="hero-preheader"
             >
               <span className="inline-flex items-center gap-2">
                 <span className="w-1 h-1 rounded-full bg-[#00F5FF] shadow-[0_0_6px_rgba(0,245,255,0.9)]" />
-                {isEs ? "Mientras tú dormías…" : "While you were sleeping…"}
+                {isEs
+                  ? "Quantro piensa por ti mientras descansas"
+                  : "Quantro thinks for you while you rest"}
               </span>
             </p>
 
@@ -103,7 +134,7 @@ export const HeroSection = () => {
                 : "Quantro OS connects your data, detects opportunities and proposes clear actions — and with Quantro Flow, executes them for you."}
             </p>
 
-            {/* CTAs — primary now routes to /comparacion */}
+            {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               <Link
                 to={comparisonPath}
@@ -122,9 +153,9 @@ export const HeroSection = () => {
               </button>
             </div>
 
-            {/* Social proof — Notion-style, static */}
-            <div className="space-y-2" data-testid="hero-social-proof">
-              <div className="flex items-center gap-2.5 text-[13px] text-slate-300/90">
+            {/* Social proof — paired rows, low opacity */}
+            <div className="space-y-2 opacity-70" data-testid="hero-social-proof">
+              <div className="flex items-center gap-2.5 text-[13px] text-slate-200">
                 <span className="flex text-[#FACC15]/90" aria-label="5 stars">
                   {[0, 1, 2, 3, 4].map((i) => (
                     <svg key={i} className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -134,25 +165,26 @@ export const HeroSection = () => {
                 </span>
                 <span className="font-normal tracking-tight">
                   {isEs
-                    ? "\u201CDonde se toman decisiones, está Quantro.\u201D"
-                    : "\u201CWhere decisions are made, Quantro is there.\u201D"}
+                    ? "Empresas que deciden mejor, usan Quantro"
+                    : "Companies that decide better, run on Quantro"}
                 </span>
               </div>
 
               <div
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] tracking-[0.22em] uppercase text-slate-500/70"
+                className="text-[10.5px] tracking-[0.22em] uppercase text-slate-400 space-y-0.5"
                 data-testid="hero-social-companies"
               >
-                {["Grupo Nexo", "Altura Retail", "Nodo Studios", "Grupo OCP"].map((c, i, arr) => (
-                  <React.Fragment key={c}>
-                    <span>{c}</span>
-                    {i < arr.length - 1 && <span className="text-slate-600/50" aria-hidden>·</span>}
-                  </React.Fragment>
+                {companyPairs.map((pair, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span>{pair[0]}</span>
+                    <span className="text-slate-500" aria-hidden>·</span>
+                    <span>{pair[1]}</span>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* PDF download — static */}
+            {/* PDF download */}
             <a
               href="/assets/quantro-os-overview.pdf"
               target="_blank"
@@ -172,10 +204,9 @@ export const HeroSection = () => {
             </a>
           </div>
 
-          {/* ─────── Right column — dashboard + crossfading microcopy ─────── */}
+          {/* ─────── Right column — microcopy + dashboard ─────── */}
           <div className="order-2 lg:order-2 relative">
-            {/* Microcopy above dashboard — only animated element on the left-side stack.
-                Fixed-height wrapper so layout doesn't reflow when the text changes. */}
+            {/* Microcopy above dashboard — crossfade only, fixed-height wrapper */}
             <div
               className="mb-3 text-center sm:text-left min-h-[18px]"
               data-testid="hero-microcopy"
@@ -186,7 +217,7 @@ export const HeroSection = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 0.9 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.5 }}
                   className="text-[11.5px] font-medium text-slate-400 leading-tight"
                 >
                   {microcopy[microIndex]}
@@ -194,12 +225,58 @@ export const HeroSection = () => {
               </AnimatePresence>
             </div>
 
-            <HeroDashboardPreview />
+            {/* Dashboard — lazy-loaded chunk.
+                Suspense fallback matches the dashboard's approximate size so
+                there's no layout shift on mobile. Desktop preloads the chunk
+                in useEffect so the fallback is never visible. */}
+            <Suspense fallback={<DashboardSkeleton />}>
+              <HeroDashboardPreview />
+            </Suspense>
+            {/* The desktop-preload effect referenced isDesktop. Reference it
+                here to keep the state alive in fast-refresh environments. */}
+            <span aria-hidden className="sr-only" data-desktop={isDesktop ? "1" : "0"} />
           </div>
         </div>
       </div>
     </section>
   );
 };
+
+// =========================================================================
+// DashboardSkeleton — size-matched placeholder for Suspense. Keeps the hero
+// column from collapsing while the dashboard chunk streams in.
+// =========================================================================
+const DashboardSkeleton = () => (
+  <div
+    className="relative rounded-2xl overflow-hidden"
+    style={{
+      aspectRatio: "1.6 / 1",
+      background:
+        "linear-gradient(180deg, rgba(14, 22, 40, 0.6) 0%, rgba(5, 10, 24, 0.5) 100%)",
+      border: "1px solid rgba(148, 163, 184, 0.08)",
+    }}
+    data-testid="hero-dashboard-skeleton"
+    aria-hidden
+  >
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700/30">
+      <div className="flex gap-1.5">
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-700/60" />
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-700/60" />
+        <div className="w-2.5 h-2.5 rounded-full bg-slate-700/60" />
+      </div>
+    </div>
+    <div className="p-5 space-y-3">
+      <div className="h-20 rounded-lg bg-white/[0.02]" />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="h-16 rounded-lg bg-white/[0.02]" />
+        <div className="h-16 rounded-lg bg-white/[0.02]" />
+      </div>
+      <div className="space-y-1.5 pt-2">
+        <div className="h-3 rounded bg-white/[0.02]" />
+        <div className="h-3 rounded bg-white/[0.02] w-3/4" />
+      </div>
+    </div>
+  </div>
+);
 
 export default HeroSection;

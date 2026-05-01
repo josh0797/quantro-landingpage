@@ -579,23 +579,31 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   uppercase tracking company row) — retained.
 
 ### May 1, 2026 — Hero Section simplified for performance (P0)
-- Removed: teaser push-notification, signals floating pool (+22%, stock,
-  margin, etc.), decision-card convergence, headline word-by-word cascade,
-  glow pulse on "decisiones listas", CTA fade/glow-pulse, subheadline fade
-  and social-proof fade. Hero text is now fully static.
+- Removed: teaser push-notification, signals floating pool, decision-card
+  convergence, headline word-by-word cascade, glow pulse on "decisiones
+  listas", CTA fade/glow-pulse, subheadline fade and social-proof fade.
+  Hero text is now fully static.
 - Primary CTA re-anchored: **"Quantro vs Otros sistemas"** (ES) /
   "Quantro vs other systems" (EN) linking via React Router
-  `<Link to="/comparacion">` (or `/comparison`). Secondary CTA unchanged
-  ("Ver cómo funciona" → `#interactive-demo`).
+  `<Link to="/comparacion">` (or `/comparison`).
+- Copy refinements: pre-header "Quantro piensa por ti mientras descansas"
+  / "Quantro thinks for you while you rest". Social proof quote updated
+  to "Empresas que deciden mejor, usan Quantro" / "Companies that decide
+  better, run on Quantro". Company row reorganised into 2 paired lines
+  (`Grupo Nexo · Altura Retail` / `Nodo Studios · Grupo OCP`) at 70%
+  opacity so it doesn't compete with the headline.
 - Only animations that remain in the hero:
   1. `HeroDashboardPreview`'s own subtle loop (live indicator, counters).
   2. A single `AnimatePresence` crossfade on the micro-copy above the
-     dashboard that swaps "Esto ya está pasando en tu negocio." →
-     "Solo necesitas aprobar." at 2.6s. Fixed-height wrapper so nothing
-     reflows.
-- `useRotatingTeaser` hook + `TEASER_POOL` removed from the hero. If
-  needed later, the localStorage-based rotation logic lives in the git
-  history.
+     dashboard that swaps every **5.5s** (from the original 2.6s) so the
+     reader has more time to digest each state. Fixed-height wrapper so
+     nothing reflows.
+- **Dashboard code-split:** `HeroDashboardPreview` is now loaded via
+  `React.lazy(() => import(...))`. Desktop viewports (lg+) pre-warm the
+  chunk on mount via a `matchMedia` effect so the Suspense fallback never
+  shows. Mobile viewports defer the fetch — first paint ships as
+  text-only, and the dashboard streams in progressively. A size-matched
+  `DashboardSkeleton` prevents layout shift during the Suspense window.
 
 ## Prioritized Backlog
 
