@@ -802,6 +802,33 @@ Validated:
   horizontal scroll (reproduced exactly the IMG_4800 scroll position at
   `scrollLeft=80`).
 
+## 2026-02-01 — "Recomendado" pill on Quantro column + slower Hero microcopy
+
+### Floating pill on the Quantro comparison column
+- Added a small "Recomendado" / "Recommended" pill above the Quantro
+  column header in `pages/ComparisonPage.jsx`. Stripe-pricing inspired —
+  it sits right above "Quantro" with bright cyan gradient
+  (`#00F5FF → #22D3EE`), dark `#031018` text for contrast, an inset cyan
+  ring and an outer glow shadow `0 6px 22px -6px rgba(0, 245, 255, .55)`.
+- Includes a `Sparkles` icon (8px) and uses `motion.span` with a delayed
+  fade-up entrance (`y: -4 → 0`, 0.3s delay, 0.5s ease) so it feels like
+  it floats into place when the table comes into view.
+- `data-testid="compare-quantro-pill"`. Internationalised. Lives inside
+  the existing sticky HeaderCell (no overflow gymnastics) so it scrolls
+  perfectly with the column on mobile.
+
+### Slower Hero microcopy rotation (+2 seconds per step)
+- `MICROCOPY_STEP1_DELAY_MS`: 2800 → **4800 ms**
+- `MICROCOPY_STEP2_DELAY_MS`: 5500 → **7500 ms**
+- Hero now reads each line ≈2 seconds longer before swapping — visitors
+  have time to register the message before the next one fades in.
+- Validated by polling `[data-testid="hero-microcopy"]` every 500ms:
+  initial "Mira a Quantro en acción." holds for ~4.6s, then "Esto ya
+  está pasando en tu negocio." at ~6.4s, then "Solo necesitas aprobar."
+  at ~9.5s — matches the new timers within network latency.
+
+Lint clean on both files. Self-tested via screenshot tool.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

@@ -23,8 +23,8 @@ const preloadHeroDashboard = () => import("../HeroDashboardPreview");
  * to self-qualification with one click.
  */
 
-const MICROCOPY_STEP1_DELAY_MS = 2800; // "Mira a Quantro en acción" → step 1
-const MICROCOPY_STEP2_DELAY_MS = 5500; // step 1 → "Solo necesitas aprobar."
+const MICROCOPY_STEP1_DELAY_MS = 4800; // initial → step 1 (slowed by +2s)
+const MICROCOPY_STEP2_DELAY_MS = 7500; // initial → step 2 (slowed by +2s)
 const MOBILE_BREAKPOINT = "(max-width: 1023px)"; // Tailwind lg = 1024px
 
 export const HeroSection = () => {

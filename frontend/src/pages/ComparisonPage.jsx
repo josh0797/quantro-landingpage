@@ -539,6 +539,26 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                 testId="compare-col-quantro"
               >
                 <div className="w-full text-center">
+                  {/* Floating "Recomendado" pill — sits above the column
+                      name with a bright cyan gradient + elevated glow so it
+                      visually pops out of the table, à la Stripe pricing. */}
+                  <motion.span
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="inline-flex items-center gap-1 mb-2 px-2 py-0.5 rounded-full text-[8.5px] font-bold tracking-[0.18em] uppercase whitespace-nowrap"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #00F5FF 0%, #22D3EE 100%)",
+                      color: "#031018",
+                      boxShadow:
+                        "0 6px 22px -6px rgba(0, 245, 255, 0.55), 0 0 0 1px rgba(0, 245, 255, 0.4) inset",
+                    }}
+                    data-testid="compare-quantro-pill"
+                  >
+                    <Sparkles size={8} strokeWidth={2.6} />
+                    <span>{isEs ? "Recomendado" : "Recommended"}</span>
+                  </motion.span>
                   <div className="text-[13px] font-bold tracking-tight text-white">Quantro</div>
                   <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight break-words">
                     {isEs ? "Potenciado por AOS" : "Powered by AOS"}
