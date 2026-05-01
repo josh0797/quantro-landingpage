@@ -536,6 +536,25 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   the check on Quantro's column for the new row + tooltip-on-hover for all
   cells in that row, explaining the differentiator in plain Spanish/English.
 
+### May 1, 2026 — Favicon + Animated Q + Interactive "Por qué Quantro" (P0)
+- Favicon system rebuilt: generated `favicon.ico` (multi-size 16/32/48),
+  `favicon-32.png`, `favicon-192.png`, `favicon-512.png` via PIL script
+  (`/tmp/gen_favicons.py`). Design matches brand (navy glass tile + teal→cyan
+  Q). `<head>` now lists real PNG/ICO files + SVG fallback; `theme-color`
+  updated to `#0B0F1A`. Verified via curl: all endpoints return 200.
+- New `AnimatedQuantroLogo` component (`src/components/AnimatedQuantroLogo.jsx`)
+  supporting variants `loading | hover | thinking | complete | idle`. Uses
+  Framer Motion `pathLength` draw animation, radial glow pulse, orbiting dot
+  for thinking state, and gentle breathing loop. Respects
+  `prefers-reduced-motion` (falls back to a static mark).
+- `DifferentiationSection` rewritten into an interactive flow: preamble
+  "Esto pasa todos los días. Sin que tengas que pedirlo.", 4 cards with
+  active-state (hover, tap, autoplay every 3.5s with IntersectionObserver
+  gating), flow-indicator dots with animated progress line, live preview
+  panel (Ver → KPIs with count-up, Entender → alerting insights, Actuar →
+  AI recommendations with "Recomendado" badge, Ejecutar → progress bars +
+  checkmarks), final CTA "Empieza con Quantro". Visual language unchanged.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
