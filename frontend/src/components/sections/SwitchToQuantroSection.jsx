@@ -290,6 +290,8 @@ export const SwitchToQuantroSection = () => {
                 ? "Migración asistida · sin perder datos · sin detener tu operación."
                 : "Assisted migration · zero data loss · zero downtime."}
             </p>
+
+            <MigrationTestimonial isEs={isEs} />
           </div>
 
           {/* Right — morphing preview panel */}
@@ -526,3 +528,41 @@ const DetectedTile = ({ d, i, isEs }) => {
 };
 
 export default SwitchToQuantroSection;
+
+// =========================================================================
+// MigrationTestimonial — single-line proof below the CTAs, answers the
+// implicit "how long does this actually take?" objection.
+// =========================================================================
+const MigrationTestimonial = ({ isEs }) => (
+  <motion.figure
+    initial={{ opacity: 0, y: 8 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-40px" }}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    className="mt-5 flex items-center gap-3 rounded-xl px-4 py-3 bg-white/[0.02] border border-white/[0.06]"
+    data-testid="switch-testimonial"
+  >
+    {/* Avatar — monogram in a glass tile, matching brand aesthetic */}
+    <span
+      className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center font-satoshi font-bold text-[11px] tracking-wider"
+      style={{
+        background: "linear-gradient(135deg, rgba(0, 245, 255, 0.18), rgba(14, 22, 40, 0.9))",
+        border: "1px solid rgba(0, 245, 255, 0.32)",
+        color: "#7FF5FF",
+      }}
+      aria-hidden
+    >
+      DL
+    </span>
+    <figcaption className="min-w-0 flex-1">
+      <blockquote className="text-[12.5px] text-white/90 leading-snug font-medium italic">
+        {isEs
+          ? "\u201CMigramos 1 año de Excel en 47 minutos.\u201D"
+          : "\u201CWe migrated 1 year of Excel in 47 minutes.\u201D"}
+      </blockquote>
+      <span className="block text-[10.5px] tracking-[0.18em] uppercase text-slate-500 mt-0.5">
+        — Distriglobal Logistics
+      </span>
+    </figcaption>
+  </motion.figure>
+);

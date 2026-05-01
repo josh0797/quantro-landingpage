@@ -466,10 +466,12 @@ const ComparisonTable = ({ isEs, focusKey }) => {
     };
   }, []);
 
-  // Grid template — wider columns so the longer taglines breathe (previously
-  // 140/130/130/160 caused header text like "Tracker alineado a EOS" to bleed
-  // across cell boundaries).
-  const GRID = "grid-cols-[240px_170px_160px_160px_180px]";
+  // Grid template — responsive. Mobile packs 3 columns into the 390px
+  // viewport (Funcionalidad 140 + Quantro 120 + first competitor 130 = 390
+  // exactly visible; remaining competitors reachable via horizontal scroll).
+  // Desktop gets roomier columns so the taglines breathe.
+  const GRID =
+    "grid-cols-[140px_120px_130px_130px_150px] sm:grid-cols-[180px_150px_150px_150px_170px] lg:grid-cols-[240px_180px_170px_170px_200px]";
   const STICKY_BG = "#0B1020";
   const QUANTRO_STICKY_BG =
     "linear-gradient(180deg, rgba(0, 245, 255, 0.05), rgba(11, 16, 32, 1))";
@@ -514,7 +516,7 @@ const ComparisonTable = ({ isEs, focusKey }) => {
             style={{ WebkitOverflowScrolling: "touch" }}
             data-testid="compare-table-scroll"
           >
-            <div className={`min-w-[910px] ${GRID} grid`}>
+            <div className={`min-w-[670px] sm:min-w-[800px] lg:min-w-[960px] ${GRID} grid`}>
               {/* ─── Header row ─── */}
               <HeaderCell sticky="left-0" align="start" style={{ background: STICKY_BG, zIndex: 15 }}>
                 <span className="text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
@@ -522,7 +524,7 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                 </span>
               </HeaderCell>
               <HeaderCell
-                sticky="left-[240px]"
+                sticky="left-[140px] sm:left-[180px] lg:left-[240px]"
                 style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
                 testId="compare-col-quantro"
               >
@@ -571,7 +573,7 @@ const ComparisonTable = ({ isEs, focusKey }) => {
                     </span>
                   </BodyCell>
                   <BodyCell
-                    sticky="left-[240px]"
+                    sticky="left-[140px] sm:left-[180px] lg:left-[240px]"
                     center
                     style={{ background: QUANTRO_STICKY_BG, zIndex: 14 }}
                   >

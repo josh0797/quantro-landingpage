@@ -23,7 +23,8 @@ const preloadHeroDashboard = () => import("../HeroDashboardPreview");
  * to self-qualification with one click.
  */
 
-const MICROCOPY_DELAY_MS = 5500; // desktop: swap after ~5.5s
+const MICROCOPY_STEP1_DELAY_MS = 2800; // "Mira a Quantro en acción" → step 1
+const MICROCOPY_STEP2_DELAY_MS = 5500; // step 1 → "Solo necesitas aprobar."
 const MOBILE_BREAKPOINT = "(max-width: 1023px)"; // Tailwind lg = 1024px
 
 export const HeroSection = () => {
@@ -55,35 +56,44 @@ export const HeroSection = () => {
   }, []);
 
   // ── Microcopy crossfade ───────────────────────────────────────────────
-  // Desktop: swaps after MICROCOPY_DELAY_MS (user reads at a constant pace).
-  // Mobile: swaps the first time the user scrolls meaningfully — that's the
-  // exact moment attention shifts from headline to decision, so "Solo
-  // necesitas aprobar." lands with context.
+  // Three states now:
+  //   0: "Mira a Quantro en acción." — primer frame (calma, invita).
+  //   1: "Esto ya está pasando en tu negocio."
+  //   2: "Solo necesitas aprobar."
+  // Desktop: auto-advances 0→1 (2.8s) then 1→2 (5.5s).
+  // Mobile: 0→1 when the user starts scrolling past ~80px, 1→2 past ~260px.
   const [microIndex, setMicroIndex] = useState(0);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const isMobile = window.matchMedia(MOBILE_BREAKPOINT).matches;
     if (!isMobile) {
-      const t = setTimeout(() => setMicroIndex(1), MICROCOPY_DELAY_MS);
-      return () => clearTimeout(t);
+      const t1 = setTimeout(() => setMicroIndex(1), MICROCOPY_STEP1_DELAY_MS);
+      const t2 = setTimeout(() => setMicroIndex(2), MICROCOPY_STEP2_DELAY_MS);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
-    // Mobile — listen for the first scroll past ~80px and then detach.
-    let triggered = false;
     const onScroll = () => {
-      if (triggered) return;
-      if (window.scrollY > 80) {
-        triggered = true;
-        setMicroIndex(1);
-        window.removeEventListener("scroll", onScroll);
-      }
+      const y = window.scrollY;
+      if (y > 260) setMicroIndex(2);
+      else if (y > 80) setMicroIndex((i) => (i < 1 ? 1 : i));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const microcopy = isEs
-    ? ["Esto ya está pasando en tu negocio.", "Solo necesitas aprobar."]
-    : ["This is already happening in your business.", "You just need to approve."];
+    ? [
+        "Mira a Quantro en acción.",
+        "Esto ya está pasando en tu negocio.",
+        "Solo necesitas aprobar.",
+      ]
+    : [
+        "Watch Quantro in action.",
+        "This is already happening in your business.",
+        "You just need to approve.",
+      ];
 
   const comparisonPath = isEs ? "/comparacion" : "/comparison";
 
