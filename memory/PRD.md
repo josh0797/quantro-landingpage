@@ -266,6 +266,36 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — Mobile polish: People OS + Success Stories rewrite
+
+**A) People OS — mobile-first fixes (`PeopleOSSection.jsx`)**:
+- Headline: `clamp(28px, 6.2vw, 44px)` + `leading-[1.1]` + `[text-wrap:balance]` replacing the static `text-4xl sm:text-5xl`. Fixes the "Las personas correctas, do…" clipping reported on iPhone viewports.
+- Subheadline: `leading-[1.55]` for improved readability.
+- Section padding: `py-20 sm:py-28 px-5 sm:px-6` + grid gap `gap-10 sm:gap-12 lg:gap-14` — more vertical breathing room, tighter horizontal on small screens.
+- Bullets: icon size reduced to `w-4 h-4` / `Check size={10}` on mobile, vertical spacing `space-y-2 sm:space-y-3`, text `text-[13px] sm:text-[13.5px]`.
+- Mockup body: `minHeight: clamp(280px, 55vw, 420px)` (down from 360/400 fixed) + `mask-image: linear-gradient(180deg, #000 0%, #000 88%, transparent 100%)` fade bottom to soften any cutoff.
+- Verified: horizontal overflow = false, full headline text present (no truncation).
+
+**B) Global mobile safety net (`index.css`)**:
+- Added `overflow-x: hidden` to `<html>` (was only on `<body>`) + `max-width: 100vw` on body for belt-and-suspenders protection against accidental horizontal overflow.
+
+**C) Success Stories — full rewrite (`SuccessStoriesSection.jsx`)**:
+- Replaced the old generic carousel with a premium mobile-first card slider.
+- **5 micro-stories** with full structured data: `{metric, metricLabel, context, title, before, after, quote, attribution}`:
+  1. +40% conversión → "De leads sin seguimiento a crecimiento predecible" (Grupo Nexo)
+  2. -$52K costos → "De gasto disperso a control financiero" (Altura Retail)
+  3. 90% tareas a tiempo → "De tareas olvidadas a ejecución consistente" (Nodo Studios)
+  4. 0 tareas sin responsable → "De desorden operativo a responsabilidad total" (Praga)
+  5. -80% decisiones improvisadas → "De reacción a decisiones inteligentes" (Labora Fintech)
+- **Card structure** (mobile-first): eyebrow + gradient metric `clamp(48px, 13vw, 92px)` + label + context subtext → outcome title `clamp(20px, 4.2vw, 28px)` → Antes/Después mini-cards → Quote + attribution. Max 4 visible blocks for scannability.
+- **iOS-style swipe**: native `touchstart`/`touchend` handlers with 40px threshold, pause autoplay on interaction.
+- **Autoplay**: 9s per card, pauses on hover, focus, or any user action.
+- **Dots**: active dot is `w-6 h-2 rounded-full` with cyan glow (bigger, more visible), inactive `w-2 h-2`.
+- **Desktop side arrows**: `ChevronLeft/Right` circular buttons on larger screens (`hidden sm:flex`).
+- **Proof layer strip**: 5 condensed metric tiles below carousel showing all results at a glance (mobile 2-col, desktop 5-col).
+- Full ES/EN i18n. 16 `data-testid` anchors. Lint clean.
+- Verified: carousel swipe works (`+40%` → `-$52K` on next click), all testids present, no horizontal overflow.
+
 ### Feb 25, 2026 — Comparison Page Polish: OG meta, scroll fixes, why-quantro section
 Follow-up iteration on the comparison page to address 3 user-reported issues plus 1 enhancement:
 - **Fix: double logo** in header (`[icon] Quantro Quantro`). Root cause: default export of `QuantroLogoMark.jsx` file is `QuantroLogo` (full version with built-in wordmark). Fixed by importing the named `{ QuantroLogoMark }` icon-only export + keeping a single explicit wordmark span.

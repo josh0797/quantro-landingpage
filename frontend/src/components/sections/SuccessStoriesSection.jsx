@@ -1,228 +1,445 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
 
-// Animated big number — tweens once when the slide is visible
-const BigMetric = ({ value, label }) => {
-  // Parse numeric portion for tweening (e.g. "+40%" → 40, "4x" → 4, "30%" → 30)
-  const match = value.match(/(\d+(?:\.\d+)?)/);
-  const numeric = match ? parseFloat(match[1]) : null;
-  const prefix = value.substring(0, match?.index || 0);
-  const suffix = match ? value.substring(match.index + match[1].length) : "";
-  const [display, setDisplay] = useState(0);
+/**
+ * Casos de Éxito — Resultados reales, no promesas.
+ *
+ * Mobile-first rewrite:
+ *   - 1 premium glass card on-screen (not a crowded grid)
+ *   - iOS-style swipe (touch handlers), soft scale on inactive slides
+ *   - Autoplay 9s, pauses on any user interaction
+ *   - Proof-layer metric strip below card — full picture in a glance
+ *   - Max 3 content blocks per card for scannability
+ */
 
-  useEffect(() => {
-    if (numeric === null) return;
-    const duration = 1200;
-    const start = performance.now();
-    let frame;
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      // Keep one decimal if source had one
-      const showVal = Number.isInteger(numeric)
-        ? Math.round(eased * numeric)
-        : (eased * numeric).toFixed(1);
-      setDisplay(showVal);
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [numeric]);
+// -------------------------------------------------------------------------
+// Data — micro-stories
+// -------------------------------------------------------------------------
 
-  return (
-    <div className="flex items-baseline gap-2">
-      <span className="font-satoshi font-bold text-5xl sm:text-6xl bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums">
-        {prefix}
-        {numeric !== null ? display : value}
-        {suffix}
-      </span>
-      <span className="text-sm text-slate-500">{label}</span>
-    </div>
-  );
-};
+const STORIES = [
+  {
+    key: "conversion",
+    metric: { es: "+40%", en: "+40%" },
+    metricLabel: { es: "conversión de clientes", en: "customer conversion" },
+    context: {
+      es: "Más leads convertidos sin aumentar equipo.",
+      en: "More leads converted without growing the team.",
+    },
+    title: {
+      es: "De leads sin seguimiento a crecimiento predecible",
+      en: "From lost leads to predictable growth",
+    },
+    before: {
+      es: "El pipeline vivía en hojas de cálculo. Nadie sabía qué estaba frío o caliente.",
+      en: "Pipeline lived in spreadsheets. Nobody knew what was hot or cold.",
+    },
+    after: {
+      es: "Ahora Quantro prioriza, asigna y hace seguimiento automático a cada lead.",
+      en: "Now Quantro prioritizes, assigns and auto-follows every lead.",
+    },
+    quote: {
+      es: "Ahora sabemos qué hacer cada día. Nada se pierde.",
+      en: "We know exactly what to do every day. Nothing slips.",
+    },
+    attribution: { es: "CEO · Grupo Nexo", en: "CEO · Grupo Nexo" },
+  },
+  {
+    key: "costs",
+    metric: { es: "-$52K", en: "-$52K" },
+    metricLabel: { es: "costos innecesarios eliminados", en: "unnecessary costs removed" },
+    context: {
+      es: "Eliminación de herramientas y procesos duplicados.",
+      en: "Duplicate tools and processes eliminated.",
+    },
+    title: {
+      es: "De gasto disperso a control financiero",
+      en: "From scattered spend to financial control",
+    },
+    before: {
+      es: "Seis suscripciones SaaS activas y nadie sabía cuál hacía qué.",
+      en: "Six active SaaS subscriptions and nobody knew which did what.",
+    },
+    after: {
+      es: "Un solo sistema para operar, medir y decidir — con contabilidad integrada.",
+      en: "One single system to run, measure and decide — with accounting built-in.",
+    },
+    quote: {
+      es: "Cortamos lo que no sumaba. Y el equipo ahora ejecuta más rápido.",
+      en: "We cut what wasn't adding up. And the team now executes faster.",
+    },
+    attribution: { es: "CFO · Altura Retail", en: "CFO · Altura Retail" },
+  },
+  {
+    key: "ontime",
+    metric: { es: "90%", en: "90%" },
+    metricLabel: { es: "tareas completadas a tiempo", en: "tasks completed on time" },
+    context: {
+      es: "El equipo ejecuta con seguimiento claro.",
+      en: "The team executes with clear follow-through.",
+    },
+    title: {
+      es: "De tareas olvidadas a ejecución consistente",
+      en: "From forgotten tasks to consistent execution",
+    },
+    before: {
+      es: "Las tareas se escribían en chats y se perdían entre urgencias.",
+      en: "Tasks were dropped in chats and lost among urgencies.",
+    },
+    after: {
+      es: "Cada acción tiene responsable, fecha y notificación — sin fricción.",
+      en: "Every action has an owner, a date and a nudge — frictionless.",
+    },
+    quote: {
+      es: "Lo que entra a Quantro se ejecuta. Punto.",
+      en: "What enters Quantro gets done. Period.",
+    },
+    attribution: { es: "COO · Nodo Studios", en: "COO · Nodo Studios" },
+  },
+  {
+    key: "ownership",
+    metric: { es: "0", en: "0" },
+    metricLabel: { es: "tareas sin responsable", en: "orphan tasks" },
+    context: {
+      es: "Cada acción tiene dueño definido.",
+      en: "Every action has a defined owner.",
+    },
+    title: {
+      es: "De desorden operativo a responsabilidad total",
+      en: "From operational chaos to total ownership",
+    },
+    before: {
+      es: "Las reuniones cerraban con acuerdos que nadie tomaba.",
+      en: "Meetings ended with agreements no one picked up.",
+    },
+    after: {
+      es: "Quantro asigna automáticamente. El equipo sabe exactamente qué mover.",
+      en: "Quantro auto-assigns. The team knows exactly what to move.",
+    },
+    quote: {
+      es: "Ya no hay tareas huérfanas. Eso cambió la cultura.",
+      en: "No more orphan tasks. That changed the culture.",
+    },
+    attribution: { es: "Founder · Praga", en: "Founder · Praga" },
+  },
+  {
+    key: "decisions",
+    metric: { es: "-80%", en: "-80%" },
+    metricLabel: { es: "decisiones improvisadas", en: "improvised decisions" },
+    context: {
+      es: "El negocio opera con claridad, no con urgencias.",
+      en: "The business runs on clarity, not urgency.",
+    },
+    title: {
+      es: "De reacción a decisiones inteligentes",
+      en: "From reaction to intelligent decisions",
+    },
+    before: {
+      es: "El CEO decidía todo por instinto, bajo presión diaria.",
+      en: "The CEO decided everything on instinct, under daily pressure.",
+    },
+    after: {
+      es: "Quantro observa, detecta lo que cambia y propone la decisión correcta.",
+      en: "Quantro watches, catches what changes and proposes the right call.",
+    },
+    quote: {
+      es: "Decidimos con datos, no con adrenalina.",
+      en: "We decide with data, not adrenaline.",
+    },
+    attribution: { es: "CEO · Labora Fintech", en: "CEO · Labora Fintech" },
+  },
+];
+
+const AUTOPLAY_MS = 9000;
+const SWIPE_THRESHOLD = 40;
+
+// -------------------------------------------------------------------------
+// Component
+// -------------------------------------------------------------------------
 
 export const SuccessStoriesSection = () => {
   const { language } = useLanguage();
+  const isEs = language === "es";
   const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef(null);
+  const hostRef = useRef(null);
 
-  const stories = language === "es"
-    ? [
-        {
-          title: "De caos operativo a control total",
-          quote: "Ahora cada lead tiene seguimiento automático y el equipo sabe qué hacer cada día.",
-          author: "CEO · Grupo Nexo",
-          metric: "+40%",
-          metricLabel: "conversión",
-        },
-        {
-          title: "Decisiones más rápidas, sin juntas eternas",
-          quote: "Pasamos de analizar datos manualmente a recibir acciones claras cada mañana. Las reuniones se volvieron de 15 minutos.",
-          author: "COO · AuroMex Alimentos",
-          metric: "4x",
-          metricLabel: "más rápido",
-        },
-        {
-          title: "Su operación sigue, incluso cuando no están",
-          quote: "Por primera vez siento que mi empresa trabaja para mí, no al revés. Identifiqué que el 30% de mis proyectos consumían el 70% del tiempo y no generaban utilidad.",
-          author: "Fundador · TechBuild MX",
-          metric: "30%",
-          metricLabel: "ahorro de tiempo",
-        },
-      ]
-    : [
-        {
-          title: "From operational chaos to total control",
-          quote: "Every lead now has automated follow-up and the team knows what to do each day.",
-          author: "CEO · Grupo Nexo",
-          metric: "+40%",
-          metricLabel: "conversion",
-        },
-        {
-          title: "Faster decisions, no endless meetings",
-          quote: "We went from analyzing data manually to receiving clear actions every morning. Meetings became 15 minutes long.",
-          author: "COO · AuroMex Foods",
-          metric: "4x",
-          metricLabel: "faster",
-        },
-        {
-          title: "Operations keep running, even when they're not",
-          quote: "For the first time I feel my company works for me, not the other way around. I discovered 30% of my projects consumed 70% of the time without generating profit.",
-          author: "Founder · TechBuild MX",
-          metric: "30%",
-          metricLabel: "time saved",
-        },
-      ];
+  const total = STORIES.length;
+  const active = STORIES[index];
 
-  const goTo = useCallback((i) => setIndex((i + stories.length) % stories.length), [stories.length]);
-  const next = useCallback(() => goTo(index + 1), [index, goTo]);
-  const prev = useCallback(() => goTo(index - 1), [index, goTo]);
+  const goNext = useCallback(() => setIndex((i) => (i + 1) % total), [total]);
+  const goPrev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total]);
 
-  // Auto-advance every 7s, paused on hover
+  // Autoplay — respects pause after user interacts
   useEffect(() => {
-    if (isPaused) return;
-    const id = setInterval(() => {
-      setIndex((i) => (i + 1) % stories.length);
-    }, 7000);
-    return () => clearInterval(id);
-  }, [isPaused, stories.length]);
+    if (paused) return undefined;
+    const id = setTimeout(goNext, AUTOPLAY_MS);
+    return () => clearTimeout(id);
+  }, [index, paused, goNext]);
 
-  const current = stories[index];
+  // Pause autoplay on hover / focus
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return undefined;
+    const onEnter = () => setPaused(true);
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("focusin", onEnter);
+    return () => {
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("focusin", onEnter);
+    };
+  }, []);
+
+  // iOS-style swipe
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    setPaused(true);
+  };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current == null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > SWIPE_THRESHOLD) {
+      if (delta < 0) goNext();
+      else goPrev();
+    }
+    touchStartX.current = null;
+  };
+
+  const proofItems = useMemo(
+    () =>
+      STORIES.map((s) => ({
+        key: s.key,
+        value: s.metric[isEs ? "es" : "en"],
+        label: s.metricLabel[isEs ? "es" : "en"],
+      })),
+    [isEs]
+  );
 
   return (
-    <AnimatedSection className="py-24 px-6 bg-gradient-to-b from-[#0A0F1C]/50 to-transparent">
-      <div className="max-w-5xl mx-auto">
-        <motion.div variants={fadeInUp} className="text-center mb-14">
-          <span className="text-xs font-medium tracking-[0.2em] uppercase text-slate-500 mb-4 block">
-            {language === "es" ? "Casos de éxito" : "Success stories"}
+    <AnimatedSection
+      id="success-stories"
+      className="relative py-20 sm:py-28 px-5 sm:px-6 overflow-hidden"
+      data-testid="success-stories-section"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.04) 0%, transparent 55%), #030712",
+      }}
+    >
+      <div className="relative max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div variants={fadeInUp} className="text-center mb-10 sm:mb-14">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F5FF]/30 bg-[#00F5FF]/[0.05] text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF] mb-5">
+            <Quote size={11} />
+            {isEs ? "Casos de éxito" : "Success stories"}
           </span>
-          <h2 className="font-satoshi font-bold text-3xl sm:text-4xl lg:text-5xl text-white">
-            {language === "es"
-              ? "Lo que ya están logrando nuestros clientes"
-              : "What our customers are already achieving"}
+          <h2
+            className="font-satoshi font-bold text-white leading-[1.1] tracking-tight [text-wrap:balance]"
+            style={{ fontSize: "clamp(30px, 6.4vw, 52px)" }}
+            data-testid="stories-headline"
+          >
+            {isEs ? (
+              <>
+                Resultados reales,{" "}
+                <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                  no promesas.
+                </span>
+              </>
+            ) : (
+              <>
+                Real results,{" "}
+                <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
+                  not promises.
+                </span>
+              </>
+            )}
           </h2>
+          <p className="text-[15px] text-slate-400 leading-[1.55] max-w-xl mx-auto mt-4">
+            {isEs
+              ? "Empresas que pasaron de operar con herramientas a operar con Quantro."
+              : "Teams that moved from running on tools to running on Quantro."}
+          </p>
         </motion.div>
 
-        <motion.div
-          variants={fadeInUp}
+        {/* Card slider */}
+        <div
+          ref={hostRef}
           className="relative"
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          data-testid="testimonial-carousel"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          data-testid="stories-carousel"
         >
-          {/* Slide viewport */}
-          <div className="relative bg-gradient-to-br from-[#0F172A]/90 via-[#0A0F1C] to-[#0F172A]/90 border border-slate-800/70 rounded-2xl overflow-hidden min-h-[380px] sm:min-h-[340px]">
-            {/* Soft orbs */}
-            <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#00F5FF]/8 rounded-full blur-[80px] pointer-events-none" />
-            <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#A020FF]/8 rounded-full blur-[80px] pointer-events-none" />
-
-            <div className="relative p-8 sm:p-12">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -40 }}
-                  transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="grid md:grid-cols-[220px_1fr] gap-8 md:gap-10 items-start"
-                  data-testid={`testimonial-slide-${index}`}
-                >
-                  {/* Metric column */}
-                  <div className="flex md:flex-col items-baseline md:items-start gap-2">
-                    <BigMetric value={current.metric} label={current.metricLabel} />
-                  </div>
-
-                  {/* Story column */}
-                  <div>
-                    <Quote className="text-[#00F5FF]/40 mb-4" size={28} />
-                    <h3 className="text-xl sm:text-2xl font-satoshi font-semibold text-white leading-snug mb-4">
-                      {current.title}
-                    </h3>
-                    <p className="text-slate-300 text-base leading-relaxed mb-5">
-                      "{current.quote}"
-                    </p>
-                    <div className="text-sm text-slate-500 font-medium">
-                      — {current.author}
-                    </div>
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Arrow controls (hidden on small screens; dots are enough) */}
-            <button
-              onClick={prev}
-              aria-label="Previous testimonial"
-              className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700/60 items-center justify-center text-slate-300 hover:text-[#00F5FF] hover:border-[#00F5FF]/40 transition-all"
-              data-testid="testimonial-prev"
+          <AnimatePresence mode="wait">
+            <motion.article
+              key={active.key}
+              initial={{ opacity: 0, scale: 0.96, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="relative rounded-3xl overflow-hidden px-6 sm:px-10 py-8 sm:py-10"
+              style={{
+                background:
+                  "linear-gradient(160deg, rgba(14, 22, 40, 0.92) 0%, rgba(5, 10, 24, 0.85) 100%)",
+                border: "1px solid rgba(0, 245, 255, 0.18)",
+                boxShadow:
+                  "0 40px 80px -28px rgba(0, 0, 0, 0.8), 0 0 60px -16px rgba(0, 245, 255, 0.22)",
+                backdropFilter: "blur(18px)",
+              }}
+              data-testid={`story-card-${active.key}`}
             >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              onClick={next}
-              aria-label="Next testimonial"
-              className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-slate-900/80 border border-slate-700/60 items-center justify-center text-slate-300 hover:text-[#00F5FF] hover:border-[#00F5FF]/40 transition-all"
-              data-testid="testimonial-next"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
+              {/* Ambient glow */}
+              <div
+                aria-hidden
+                className="absolute -top-16 left-1/2 -translate-x-1/2 w-[420px] h-[200px] pointer-events-none"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at center, rgba(0, 245, 255, 0.18), transparent 70%)",
+                  filter: "blur(48px)",
+                }}
+              />
 
-          {/* Dots + progress */}
-          <div className="flex items-center justify-center gap-3 mt-6" data-testid="testimonial-dots">
-            {stories.map((_, i) => {
-              const isActive = i === index;
-              return (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                  aria-current={isActive}
-                  className="relative h-1.5 rounded-full bg-slate-700 overflow-hidden transition-all"
-                  style={{ width: isActive ? 40 : 10 }}
-                  data-testid={`testimonial-dot-${i}`}
+              {/* 1. Big metric + context (the hero number) */}
+              <div className="relative">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <span
+                    className="font-satoshi font-bold bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums leading-none tracking-tight"
+                    style={{ fontSize: "clamp(48px, 13vw, 92px)" }}
+                    data-testid="story-metric"
+                  >
+                    {active.metric[isEs ? "es" : "en"]}
+                  </span>
+                  <span className="text-[13px] sm:text-[14px] font-semibold text-white/90 leading-tight">
+                    {active.metricLabel[isEs ? "es" : "en"]}
+                  </span>
+                </div>
+                <p className="text-[12.5px] sm:text-[13px] text-slate-400 leading-relaxed mt-2 max-w-md">
+                  {active.context[isEs ? "es" : "en"]}
+                </p>
+              </div>
+
+              {/* 2. Title — the outcome */}
+              <h3
+                className="relative font-satoshi font-bold text-white leading-[1.2] tracking-tight mt-6 sm:mt-8 [text-wrap:balance]"
+                style={{ fontSize: "clamp(20px, 4.2vw, 28px)" }}
+              >
+                {active.title[isEs ? "es" : "en"]}
+              </h3>
+
+              {/* 3. Before / After — inline, tight */}
+              <div className="relative grid sm:grid-cols-2 gap-3 sm:gap-4 mt-6 sm:mt-7">
+                <div className="rounded-xl px-4 py-3 bg-white/[0.02] border border-white/[0.06]">
+                  <p className="text-[9px] font-bold tracking-[0.22em] uppercase text-slate-500 mb-1.5">
+                    {isEs ? "Antes" : "Before"}
+                  </p>
+                  <p className="text-[12.5px] text-slate-400 leading-snug">
+                    {active.before[isEs ? "es" : "en"]}
+                  </p>
+                </div>
+                <div
+                  className="rounded-xl px-4 py-3 border"
+                  style={{
+                    background: "rgba(0, 245, 255, 0.04)",
+                    borderColor: "rgba(0, 245, 255, 0.22)",
+                  }}
                 >
-                  {isActive && !isPaused && (
-                    <motion.div
-                      key={`${i}-${isPaused}`}
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE]"
-                      initial={{ width: "0%" }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 7, ease: "linear" }}
-                    />
-                  )}
-                  {isActive && isPaused && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#00F5FF] to-[#22D3EE]" />
-                  )}
-                </button>
-              );
-            })}
+                  <p className="text-[9px] font-bold tracking-[0.22em] uppercase text-[#00F5FF] mb-1.5">
+                    {isEs ? "Después" : "After"}
+                  </p>
+                  <p className="text-[12.5px] text-slate-200 leading-snug">
+                    {active.after[isEs ? "es" : "en"]}
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. Quote + attribution */}
+              <figure className="relative mt-7 sm:mt-8 pt-6 border-t border-white/[0.06]">
+                <Quote size={16} className="text-[#00F5FF]/60 mb-2" />
+                <blockquote
+                  className="font-satoshi font-medium text-white leading-snug [text-wrap:balance]"
+                  style={{ fontSize: "clamp(15px, 3.4vw, 18px)" }}
+                >
+                  "{active.quote[isEs ? "es" : "en"]}"
+                </blockquote>
+                <figcaption className="text-[11px] font-semibold tracking-[0.14em] uppercase text-slate-500 mt-3">
+                  — {active.attribution[isEs ? "es" : "en"]}
+                </figcaption>
+              </figure>
+            </motion.article>
+          </AnimatePresence>
+
+          {/* Side arrows (desktop) */}
+          <button
+            type="button"
+            onClick={() => { setPaused(true); goPrev(); }}
+            aria-label={isEs ? "Anterior" : "Previous"}
+            className="hidden sm:flex absolute top-1/2 -translate-y-1/2 -left-5 w-10 h-10 items-center justify-center rounded-full bg-white/[0.04] border border-white/10 text-white/70 hover:text-white hover:bg-white/[0.08] transition-all"
+            data-testid="stories-prev"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            onClick={() => { setPaused(true); goNext(); }}
+            aria-label={isEs ? "Siguiente" : "Next"}
+            className="hidden sm:flex absolute top-1/2 -translate-y-1/2 -right-5 w-10 h-10 items-center justify-center rounded-full bg-white/[0.04] border border-white/10 text-white/70 hover:text-white hover:bg-white/[0.08] transition-all"
+            data-testid="stories-next"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
+
+        {/* Dots — bigger on mobile */}
+        <div className="flex items-center justify-center gap-2.5 mt-6" data-testid="stories-dots">
+          {STORIES.map((s, i) => {
+            const isActive = i === index;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => { setPaused(true); setIndex(i); }}
+                aria-label={`${isEs ? "Ir al caso" : "Go to case"} ${i + 1}`}
+                className={`transition-all duration-300 rounded-full ${
+                  isActive
+                    ? "w-6 h-2 bg-[#00F5FF] shadow-[0_0_8px_rgba(0,245,255,0.6)]"
+                    : "w-2 h-2 bg-white/15 hover:bg-white/30"
+                }`}
+                data-testid={`stories-dot-${i}`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Proof layer — condensed metric strip */}
+        <div
+          className="mt-12 sm:mt-14 pt-8 border-t border-white/[0.06]"
+          data-testid="stories-proof-layer"
+        >
+          <p className="text-center text-[10px] font-bold tracking-[0.22em] uppercase text-slate-500 mb-5">
+            {isEs ? "Resultados acumulados" : "Aggregate results"}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+            {proofItems.map((p) => (
+              <div
+                key={p.key}
+                className="rounded-xl px-3 py-3 sm:px-4 sm:py-4 bg-white/[0.015] border border-white/[0.05] text-center"
+                data-testid={`proof-${p.key}`}
+              >
+                <div
+                  className="font-satoshi font-bold bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums leading-none tracking-tight"
+                  style={{ fontSize: "clamp(18px, 4.5vw, 26px)" }}
+                >
+                  {p.value}
+                </div>
+                <p className="text-[10.5px] text-slate-500 leading-snug mt-1.5">
+                  {p.label}
+                </p>
+              </div>
+            ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </AnimatedSection>
   );

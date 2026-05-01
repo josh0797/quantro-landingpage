@@ -399,7 +399,7 @@ export const PeopleOSSection = () => {
   return (
     <AnimatedSection
       id="people-os"
-      className="relative py-28 px-6 overflow-hidden"
+      className="relative py-20 sm:py-28 px-5 sm:px-6 overflow-hidden"
       data-testid="people-os-section"
       style={{
         background:
@@ -415,7 +415,7 @@ export const PeopleOSSection = () => {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-12 lg:gap-14 items-start">
+      <div className="relative max-w-6xl mx-auto grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-10 sm:gap-12 lg:gap-14 items-start">
         {/* Left — narrative */}
         <motion.div variants={fadeInUp} className="lg:pt-4" data-testid="people-narrative">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F5FF]/30 bg-[#00F5FF]/[0.05] text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF] mb-5">
@@ -424,7 +424,8 @@ export const PeopleOSSection = () => {
           </span>
 
           <h2
-            className="font-satoshi font-bold text-white text-4xl sm:text-5xl leading-[1.05] tracking-tight"
+            className="font-satoshi font-bold text-white leading-[1.1] tracking-tight [text-wrap:balance]"
+            style={{ fontSize: "clamp(28px, 6.2vw, 44px)" }}
             data-testid="people-headline"
           >
             {isEs ? (
@@ -444,20 +445,20 @@ export const PeopleOSSection = () => {
             )}
           </h2>
 
-          <p className="text-[15px] text-slate-400 leading-relaxed mt-5 max-w-lg">
+          <p className="text-[15px] sm:text-[15px] text-slate-400 leading-[1.55] mt-5 max-w-lg">
             {isEs
               ? "Gestiona accesos, roles, onboarding y estructura organizacional sin hojas de cálculo, sin herramientas separadas."
               : "Manage access, roles, onboarding and org structure without spreadsheets or scattered tools."}
           </p>
 
-          <ul className="space-y-3 mt-7" data-testid="people-bullets">
+          <ul className="space-y-2 sm:space-y-3 mt-6 sm:mt-7" data-testid="people-bullets">
             {bullets.map((b, i) => (
               <li
                 key={i}
-                className="flex items-start gap-3 text-[13.5px] text-slate-300 leading-snug"
+                className="flex items-start gap-2.5 sm:gap-3 text-[13px] sm:text-[13.5px] text-slate-300 leading-snug"
               >
-                <span className="mt-1 w-5 h-5 rounded-md bg-[#00F5FF]/10 border border-[#00F5FF]/25 flex items-center justify-center flex-shrink-0">
-                  <Check size={11} className="text-[#00F5FF]" strokeWidth={2.8} />
+                <span className="mt-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-md bg-[#00F5FF]/10 border border-[#00F5FF]/25 flex items-center justify-center flex-shrink-0">
+                  <Check size={10} className="text-[#00F5FF]" strokeWidth={2.8} />
                 </span>
                 {b}
               </li>
@@ -558,8 +559,18 @@ export const PeopleOSSection = () => {
               })}
             </div>
 
-            {/* Body */}
-            <div className="p-5 min-h-[360px] sm:min-h-[400px]" role="tabpanel">
+            {/* Body — shorter on mobile with fade mask to avoid hard cut */}
+            <div
+              className="relative p-4 sm:p-5"
+              role="tabpanel"
+              style={{
+                minHeight: "clamp(280px, 55vw, 420px)",
+                maskImage:
+                  "linear-gradient(180deg, #000 0%, #000 88%, transparent 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(180deg, #000 0%, #000 88%, transparent 100%)",
+              }}
+            >
               <AnimatePresence mode="wait">
                 <motion.div
                   key={tab}
