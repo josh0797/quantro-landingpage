@@ -45,36 +45,79 @@ const COMPETITORS = [
   { key: "notion", name: "Notion + Excel + CRM", tagline: { es: "Stack de herramientas separadas", en: "Stack of separate tools" }, accent: "#94A3B8" },
 ];
 
+// "Otros sistemas" column metadata. We collapse Ninety / EOS / Notion+Excel
+// into a single consolidated column on the main table so the comparison
+// reads at a glance (Quantro vs alternatives). Individual competitor data is
+// preserved per-row for the focusKey variant pages (/vs-ninety etc.).
+const OTHERS_META = {
+  es: {
+    name: "Otros sistemas",
+    tagline: "Ninety · EOS · Notion · Excel",
+  },
+  en: {
+    name: "Other systems",
+    tagline: "Ninety · EOS · Notion · Excel",
+  },
+};
+
 const ROWS = [
   { key: "dashboard", es: "Dashboard en tiempo real", en: "Real-time dashboard",
-    quantro: "full", ninety: "partial", eos: "partial", notion: "none" },
+    quantro: "full", ninety: "partial", eos: "partial", notion: "none", others: "partial" },
   { key: "scorecard", es: "Scorecard semanal", en: "Weekly scorecard",
-    quantro: "full", ninety: "full", eos: "full", notion: "partial" },
+    quantro: "full", ninety: "full", eos: "full", notion: "partial", others: "partial" },
   { key: "rocks", es: "Gestión de objetivos (Rocks)", en: "Rocks / objectives",
-    quantro: "full", ninety: "full", eos: "full", notion: "partial" },
+    quantro: "full", ninety: "full", eos: "full", notion: "partial", others: "partial" },
   { key: "issues", es: "Gestión de issues", en: "Issues tracking",
-    quantro: "full", ninety: "full", eos: "full", notion: "partial" },
+    quantro: "full", ninety: "full", eos: "full", notion: "partial", others: "partial" },
   { key: "todos", es: "To-Dos operativos", en: "Operational to-dos",
-    quantro: "full", ninety: "full", eos: "full", notion: "partial" },
+    quantro: "full", ninety: "full", eos: "full", notion: "partial", others: "partial" },
   { key: "people", es: "Estructura organizacional (People OS)", en: "Org structure (People OS)",
-    quantro: "full", ninety: "partial", eos: "partial", notion: "none" },
+    quantro: "full", ninety: "partial", eos: "partial", notion: "none", others: "partial" },
   { key: "ai-detect", es: "IA que detecta problemas automáticamente", en: "AI that detects problems automatically",
-    quantro: "full", ninety: "none", eos: "none", notion: "none" },
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none" },
   { key: "ai-decisions", es: "Generación automática de decisiones", en: "Automatic decision generation",
-    quantro: "full", ninety: "none", eos: "none", notion: "none" },
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none" },
   { key: "recommendations", es: "Recomendaciones accionables", en: "Actionable recommendations",
-    quantro: "full", ninety: "none", eos: "none", notion: "none" },
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none" },
   { key: "one-system", es: "Integración completa en un solo sistema", en: "Full integration in one system",
-    quantro: "full", ninety: "partial", eos: "partial", notion: "none" },
+    quantro: "full", ninety: "partial", eos: "partial", notion: "none", others: "partial" },
   { key: "flow", es: "Automatización de ejecución (Flow)", en: "Execution automation (Flow)",
-    quantro: "full", ninety: "none", eos: "none", notion: "none" },
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none" },
   { key: "revenue", es: "Inteligencia financiera / Revenue", en: "Financial intelligence / Revenue",
-    quantro: "full", ninety: "none", eos: "none", notion: "none" },
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none" },
+  // NEW — inventory intelligence differentiator
+  { key: "inventario-inteligente",
+    es: "Inventario Inteligente",
+    en: "Smart Inventory",
+    quantro: "full", ninety: "none", eos: "none", notion: "none", others: "none",
+    tooltips: {
+      quantro: {
+        es: "Detecta exceso y faltantes automáticamente y ofrece decisiones de compra o promociones listas para implementar.",
+        en: "Automatically detects excess and shortages and delivers purchase or promo decisions ready to execute.",
+      },
+      ninety: {
+        es: "No contempla inventario operativo.",
+        en: "Doesn't cover operational inventory.",
+      },
+      eos: {
+        es: "No contempla inventario operativo.",
+        en: "Doesn't cover operational inventory.",
+      },
+      notion: {
+        es: "Requiere hojas de cálculo y revisión manual constante.",
+        en: "Requires spreadsheets and constant manual review.",
+      },
+      others: {
+        es: "Ninguno conecta datos de inventario con decisiones automáticas.",
+        en: "None connect inventory data with automatic decisions.",
+      },
+    },
+  },
   // Differentiator row — execution visibility with per-cell tooltips and a Live badge for Quantro.
   { key: "execution-visibility",
     es: "Visibilidad de ejecución en tiempo real",
     en: "Real-time execution visibility",
-    quantro: "full", ninety: "partial", eos: "partial", notion: "none",
+    quantro: "full", ninety: "partial", eos: "partial", notion: "none", others: "partial",
     quantroLive: true,
     tooltips: {
       quantro: {
@@ -92,6 +135,10 @@ const ROWS = [
       notion: {
         es: "Requiere procesos manuales y disciplina del equipo.",
         en: "Requires manual processes and team discipline.",
+      },
+      others: {
+        es: "Enfocados en seguimiento, no en ejecución. O dependen de procesos manuales.",
+        en: "Focused on tracking, not execution. Or rely on manual processes.",
       },
     },
   },
@@ -387,126 +434,171 @@ const ComparisonCell = ({ value, isEs, tooltip, live, columnKey }) => {
   );
 };
 
-const ComparisonTable = ({ isEs, focusKey }) => (
-  <section className="relative py-20 px-6" data-testid="compare-table">
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-10">
-        <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]/80 mb-3">
-          {isEs ? "Capacidades lado a lado" : "Capabilities side-by-side"}
-        </p>
-        <h2 className="font-satoshi font-bold text-white text-3xl sm:text-4xl leading-tight tracking-tight">
-          {isEs ? "Todo lo que Quantro hace" : "Everything Quantro does"}
-        </h2>
-      </div>
+const ComparisonTable = ({ isEs, focusKey }) => {
+  // On focused variants (/vs-ninety, /vs-eos, /vs-notion) show that specific
+  // competitor as the right column. On the general page, collapse the 3
+  // alternatives into a single "Otros sistemas" column so the comparison
+  // reads clearly at a glance.
+  const rightCompetitor = focusKey
+    ? COMPETITORS.find((c) => c.key === focusKey)
+    : null;
+  const rightMeta = rightCompetitor
+    ? {
+        key: rightCompetitor.key,
+        name: rightCompetitor.name,
+        tagline: rightCompetitor.tagline[isEs ? "es" : "en"],
+      }
+    : {
+        key: "others",
+        name: OTHERS_META[isEs ? "es" : "en"].name,
+        tagline: OTHERS_META[isEs ? "es" : "en"].tagline,
+      };
 
-      <div
-        className="rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01]"
-        style={{ backdropFilter: "blur(12px)" }}
-      >
-        {/* Mobile-friendly horizontal scroll wrapper.
-            Page scroll stays vertical; the TABLE itself gets horizontal scroll
-            on small viewports while staying readable on desktop. */}
+  return (
+    <section className="relative py-20 px-6" data-testid="compare-table">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]/80 mb-3">
+            {isEs ? "Capacidades lado a lado" : "Capabilities side-by-side"}
+          </p>
+          <h2 className="font-satoshi font-bold text-white text-3xl sm:text-4xl leading-tight tracking-tight">
+            {isEs ? "Todo lo que Quantro hace" : "Everything Quantro does"}
+          </h2>
+          <p className="text-[13px] text-slate-400 mt-3 max-w-xl mx-auto">
+            {isEs
+              ? "Comparativa directa. Fila por fila. Sin marketing vacío."
+              : "A direct, row-by-row comparison. No empty marketing."}
+          </p>
+        </div>
+
         <div
-          className="overflow-x-auto no-scrollbar"
-          style={{ WebkitOverflowScrolling: "touch" }}
-          data-testid="compare-table-scroll"
+          className="rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01]"
+          style={{ backdropFilter: "blur(12px)" }}
         >
-          <div className="min-w-[760px]">
-            {/* Header row */}
-            <div className="grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.08]">
-              <div className="p-4 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
-                {isEs ? "Funcionalidad" : "Capability"}
+          {/* Mobile-friendly horizontal scroll wrapper.
+              Page scroll stays vertical; the TABLE itself gets horizontal scroll
+              on small viewports while staying readable on desktop. */}
+          <div
+            className="overflow-x-auto no-scrollbar"
+            style={{ WebkitOverflowScrolling: "touch" }}
+            data-testid="compare-table-scroll"
+          >
+            <div className="min-w-[560px]">
+              {/* Header row — 3 cols: Funcionalidad | Quantro (highlighted) | Otros */}
+              <div className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-white/[0.08]">
+                <div className="p-4 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
+                  {isEs ? "Funcionalidad" : "Capability"}
+                </div>
+                {/* Quantro column — highlighted */}
+                <div
+                  className="p-4 text-center relative"
+                  data-column="quantro"
+                  data-testid="compare-col-quantro"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgba(0, 245, 255, 0.06), rgba(0, 245, 255, 0.015))",
+                  }}
+                >
+                  <div className="text-[13px] font-bold tracking-tight text-white">
+                    Quantro
+                  </div>
+                  <div className="text-[10px] text-[#7FF5FF]/80 mt-0.5 leading-tight">
+                    {isEs ? "Sistema operativo AOS" : "AOS Operating System"}
+                  </div>
+                  <span className="inline-block mt-1.5 w-10 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] shadow-[0_0_8px_rgba(0,245,255,0.6)]" />
+                </div>
+                {/* Others column — neutral */}
+                <div
+                  className="p-4 text-center"
+                  data-column={rightMeta.key}
+                  data-testid={`compare-col-${rightMeta.key}`}
+                >
+                  <div className="text-[13px] font-bold tracking-tight text-slate-300">
+                    {rightMeta.name}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                    {rightMeta.tagline}
+                  </div>
+                </div>
               </div>
-              {COMPETITORS.map((c) => {
-                const dim = focusKey && !c.isQuantro && c.key !== focusKey;
+
+              {/* Body rows */}
+              {ROWS.map((row) => {
+                const othersValue = focusKey ? row[focusKey] : row.others;
+                const quantroTooltip = row.tooltips ? row.tooltips.quantro : undefined;
+                const othersTooltip = row.tooltips
+                  ? focusKey
+                    ? row.tooltips[focusKey]
+                    : row.tooltips.others
+                  : undefined;
                 return (
                   <div
-                    key={c.key}
-                    className={`p-4 text-center ${dim ? "opacity-35" : ""}`}
-                    data-column={c.key}
-                    data-testid={`compare-col-${c.key}`}
+                    key={row.key}
+                    className="grid grid-cols-[1.6fr_1fr_1fr] border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
+                    data-testid={`compare-row-${row.key}`}
                   >
+                    <div className="p-4 text-[13px] text-slate-200 leading-snug flex items-center">
+                      {isEs ? row.es : row.en}
+                    </div>
+                    {/* Quantro cell — tinted background */}
                     <div
-                      className={`text-[12px] font-bold tracking-tight ${c.isQuantro ? "text-white" : "text-slate-300"}`}
+                      className="p-3 flex items-center justify-center bg-[#00F5FF]/[0.02]"
                     >
-                      {c.name}
+                      <ComparisonCell
+                        value={row.quantro}
+                        isEs={isEs}
+                        tooltip={quantroTooltip}
+                        live={!!row.quantroLive}
+                        columnKey="quantro"
+                      />
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                      {c.tagline[isEs ? "es" : "en"]}
+                    {/* Others cell */}
+                    <div className="p-3 flex items-center justify-center">
+                      <ComparisonCell
+                        value={othersValue}
+                        isEs={isEs}
+                        tooltip={othersTooltip}
+                        columnKey={rightMeta.key}
+                      />
                     </div>
-                    {c.isQuantro && (
-                      <span className="inline-block mt-1.5 w-8 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE]" />
-                    )}
                   </div>
                 );
               })}
             </div>
+          </div>
 
-            {/* Body rows */}
-            {ROWS.map((row, i) => (
-              <div
-                key={row.key}
-                className={`grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors`}
-                data-testid={`compare-row-${row.key}`}
-              >
-                <div className="p-4 text-[13px] text-slate-200 leading-snug flex items-center">
-                  {isEs ? row.es : row.en}
-                </div>
-                {COMPETITORS.map((c) => {
-                  const dim = focusKey && !c.isQuantro && c.key !== focusKey;
-                  const tooltipForCell = row.tooltips ? row.tooltips[c.key] : undefined;
-                  const liveForCell = c.isQuantro && row.quantroLive;
-                  return (
-                    <div
-                      key={c.key}
-                      className={`p-3 flex items-center justify-center ${dim ? "opacity-30" : ""} ${c.isQuantro ? "bg-[#00F5FF]/[0.015]" : ""}`}
-                    >
-                      <ComparisonCell
-                        value={row[c.key]}
-                        isEs={isEs}
-                        tooltip={tooltipForCell}
-                        live={liveForCell}
-                        columnKey={c.key}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+          {/* Mobile hint — only visible on small screens */}
+          <div
+            className="sm:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
+            data-testid="compare-table-mobile-hint"
+          >
+            <ArrowRight size={11} className="opacity-70" />
+            {isEs ? "Desliza si la tabla no entra" : "Swipe if the table doesn't fit"}
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap items-center justify-center gap-5 px-4 py-4 text-[11px] text-slate-400">
+            <span className="inline-flex items-center gap-1.5">
+              <ComparisonCell value="full" isEs={isEs} />
+              {isEs ? "Disponible" : "Available"}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ComparisonCell value="partial" isEs={isEs} />
+              {isEs ? "Parcial" : "Partial"}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <ComparisonCell value="none" isEs={isEs} />
+              {isEs ? "No disponible" : "Not available"}
+            </span>
           </div>
         </div>
 
-        {/* Mobile hint — only visible on small screens */}
-        <div
-          className="sm:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
-          data-testid="compare-table-mobile-hint"
-        >
-          <ArrowRight size={11} className="opacity-70" />
-          {isEs ? "Desliza para ver más columnas" : "Swipe to see more columns"}
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-wrap items-center justify-center gap-5 px-4 py-4 text-[11px] text-slate-400">
-          <span className="inline-flex items-center gap-1.5">
-            <ComparisonCell value="full" isEs={isEs} />
-            {isEs ? "Disponible" : "Available"}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <ComparisonCell value="partial" isEs={isEs} />
-            {isEs ? "Parcial" : "Partial"}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <ComparisonCell value="none" isEs={isEs} />
-            {isEs ? "No disponible" : "Not available"}
-          </span>
-        </div>
+        {/* Constant-evolution glass card — sits between the table and the rest of the page */}
+        <EvolvingNoteCard isEs={isEs} />
       </div>
-
-      {/* Constant-evolution glass card — sits between the table and the rest of the page */}
-      <EvolvingNoteCard isEs={isEs} />
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // =========================================================================
 // EvolvingNoteCard — "Quantro evoluciona constantemente"

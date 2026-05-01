@@ -555,6 +555,22 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   AI recommendations with "Recomendado" badge, Ejecutar → progress bars +
   checkmarks), final CTA "Empieza con Quantro". Visual language unchanged.
 
+### May 1, 2026 — Manifest.json + 3-col comparison table (P0)
+- `public/manifest.json` added with `name`, `short_name`, `description`,
+  `start_url`, `display: standalone`, `background_color`, `theme_color` and
+  icons 192/512 (maskable). Linked from `index.html` via
+  `<link rel="manifest">`. Ready for Google favicon indexing and PWA install.
+- Comparison table (`/comparacion`) reduced from 5 columns to 3:
+  `Funcionalidad | Quantro | Otros sistemas`. Quantro column is visually
+  highlighted (cyan-tinted background + gradient underline glow); "Otros"
+  collapses Ninety, EOS, Notion+Excel behind a single consolidated column
+  while per-competitor data is preserved in `ROWS[...]` for `/vs-ninety`,
+  `/vs-eos`, `/vs-notion` (those pages now show the focused competitor as
+  the right column instead of "Otros sistemas").
+- New row added: **"Inventario Inteligente / Smart Inventory"** with
+  per-cell tooltips explaining the differentiator ("Detecta exceso y
+  faltantes y ofrece decisiones de compra o promociones…").
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
