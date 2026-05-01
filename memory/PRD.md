@@ -525,6 +525,17 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   table: badge "Actualizaciones constantes", headline "Quantro evoluciona
   cada semana." with cyan/violet ambient gradient and Zap icon.
 
+### May 1, 2026 — Mini-changelog + execution-visibility row (P0)
+- Mini-changelog integrated INSIDE `EvolvingNoteCard` (3 latest releases,
+  date · name · badge · 1-line copy). Badges color-coded: Nuevo (cyan),
+  Potenciado (violet), Beta (amber). Hairline dividers, no heavy timeline.
+- New comparison-table row "Visibilidad de ejecución en tiempo real /
+  Real-time execution visibility" added with per-cell tooltips
+  (Radix Tooltip wrapped page in `TooltipProvider`).
+- `ComparisonCell` extended to render an optional `Live` cyan pill alongside
+  the check on Quantro's column for the new row + tooltip-on-hover for all
+  cells in that row, explaining the differentiator in plain Spanish/English.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

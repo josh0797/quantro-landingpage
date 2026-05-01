@@ -19,6 +19,7 @@ import {
   Play,
 } from "lucide-react";
 import { QuantroLogoMark } from "../components/QuantroLogoMark";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 import { useLanguage } from "../hooks/useLanguage";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
 import { trackCTAClick } from "../lib/analytics";
@@ -69,6 +70,31 @@ const ROWS = [
     quantro: "full", ninety: "none", eos: "none", notion: "none" },
   { key: "revenue", es: "Inteligencia financiera / Revenue", en: "Financial intelligence / Revenue",
     quantro: "full", ninety: "none", eos: "none", notion: "none" },
+  // Differentiator row — execution visibility with per-cell tooltips and a Live badge for Quantro.
+  { key: "execution-visibility",
+    es: "Visibilidad de ejecución en tiempo real",
+    en: "Real-time execution visibility",
+    quantro: "full", ninety: "partial", eos: "partial", notion: "none",
+    quantroLive: true,
+    tooltips: {
+      quantro: {
+        es: "No solo sabes qué se debe hacer. Sabes en qué se está trabajando, cuánto tiempo toma y dónde se está perdiendo.",
+        en: "You don't just know what should be done. You know what's being worked on, how long it takes and where it's slipping.",
+      },
+      ninety: {
+        es: "Enfocados en seguimiento de metas, no en ejecución diaria.",
+        en: "Focused on goal tracking, not daily execution.",
+      },
+      eos: {
+        es: "Enfocados en seguimiento de metas, no en ejecución diaria.",
+        en: "Focused on goal tracking, not daily execution.",
+      },
+      notion: {
+        es: "Requiere procesos manuales y disciplina del equipo.",
+        en: "Requires manual processes and team discipline.",
+      },
+    },
+  },
 ];
 
 const CELL_ICON = {
@@ -294,15 +320,70 @@ const ProblemSection = ({ isEs }) => {
   );
 };
 
-const ComparisonCell = ({ value, isEs }) => {
+const ComparisonCell = ({ value, isEs, tooltip, live, columnKey }) => {
   const { Icon, cls, ariaEs, ariaEn } = CELL_ICON[value] || CELL_ICON.none;
-  return (
+  const aria = isEs ? ariaEs : ariaEn;
+
+  const cellInner = (
     <span
       className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-white/[0.02] border border-white/[0.06] ${cls}`}
-      aria-label={isEs ? ariaEs : ariaEn}
+      aria-label={aria}
     >
       <Icon size={14} strokeWidth={2.5} />
     </span>
+  );
+
+  // Quantro "Live" pill — sits next to the check on the differentiator row.
+  const livePill = live ? (
+    <span
+      className="ml-1.5 hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-[0.12em] uppercase leading-none"
+      style={{
+        background: "rgba(0, 245, 255, 0.10)",
+        border: "1px solid rgba(0, 245, 255, 0.35)",
+        color: "#7FF5FF",
+        boxShadow: "0 0 10px rgba(0, 245, 255, 0.18)",
+      }}
+      data-testid={`compare-live-badge-${columnKey || ""}`}
+    >
+      <span
+        className="w-1 h-1 rounded-full bg-[#00F5FF]"
+        style={{ boxShadow: "0 0 6px rgba(0, 245, 255, 0.9)" }}
+      />
+      {isEs ? "Real-time" : "Real-time"}
+    </span>
+  ) : null;
+
+  if (!tooltip) {
+    return (
+      <span className="inline-flex items-center">
+        {cellInner}
+        {livePill}
+      </span>
+    );
+  }
+
+  // With tooltip — uses Radix tooltip; trigger is the same cell + (optional) live pill.
+  return (
+    <Tooltip delayDuration={150}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center cursor-help focus:outline-none focus:ring-1 focus:ring-[#00F5FF]/40 rounded-full"
+          aria-label={`${aria}. ${tooltip[isEs ? "es" : "en"]}`}
+          data-testid={`compare-cell-tooltip-${columnKey || ""}`}
+        >
+          {cellInner}
+          {livePill}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={6}
+        className="max-w-[260px] text-[12px] leading-snug font-normal text-slate-100 bg-[#0A0F1C] border border-white/10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)]"
+      >
+        {tooltip[isEs ? "es" : "en"]}
+      </TooltipContent>
+    </Tooltip>
   );
 };
 
@@ -373,12 +454,20 @@ const ComparisonTable = ({ isEs, focusKey }) => (
                 </div>
                 {COMPETITORS.map((c) => {
                   const dim = focusKey && !c.isQuantro && c.key !== focusKey;
+                  const tooltipForCell = row.tooltips ? row.tooltips[c.key] : undefined;
+                  const liveForCell = c.isQuantro && row.quantroLive;
                   return (
                     <div
                       key={c.key}
                       className={`p-3 flex items-center justify-center ${dim ? "opacity-30" : ""} ${c.isQuantro ? "bg-[#00F5FF]/[0.015]" : ""}`}
                     >
-                      <ComparisonCell value={row[c.key]} isEs={isEs} />
+                      <ComparisonCell
+                        value={row[c.key]}
+                        isEs={isEs}
+                        tooltip={tooltipForCell}
+                        live={liveForCell}
+                        columnKey={c.key}
+                      />
                     </div>
                   );
                 })}
@@ -422,7 +511,107 @@ const ComparisonTable = ({ isEs, focusKey }) => (
 // =========================================================================
 // EvolvingNoteCard — "Quantro evoluciona constantemente"
 // Sits right under the comparison table. Glass card, premium feel, not banner-y.
+// Includes an integrated mini-changelog (last 3 launches) — feels like
+// "fine print of progress", not a technical changelog.
 // =========================================================================
+
+const CHANGELOG_BADGES = {
+  nuevo: {
+    es: "Nuevo",
+    en: "New",
+    color: "#7FF5FF",
+    bg: "rgba(0, 245, 255, 0.10)",
+    border: "rgba(0, 245, 255, 0.32)",
+  },
+  potenciado: {
+    es: "Potenciado",
+    en: "Upgraded",
+    color: "#C084FC",
+    bg: "rgba(160, 32, 255, 0.12)",
+    border: "rgba(160, 32, 255, 0.35)",
+  },
+  beta: {
+    es: "Beta",
+    en: "Beta",
+    color: "#FCD34D",
+    bg: "rgba(250, 204, 21, 0.10)",
+    border: "rgba(250, 204, 21, 0.32)",
+  },
+};
+
+const CHANGELOG_ITEMS = [
+  {
+    key: "revenue-v2",
+    date: { es: "Mar 2026", en: "Mar 2026" },
+    name: "Quantro Revenue v2",
+    badge: "potenciado",
+    copy: {
+      es: "Decision Engine con flujo de aprobación y conexión al Dashboard.",
+      en: "Decision Engine with approval flow and Dashboard connection.",
+    },
+  },
+  {
+    key: "time",
+    date: { es: "Mar 2026", en: "Mar 2026" },
+    name: "Quantro Time",
+    badge: "nuevo",
+    copy: {
+      es: "Visibilidad real de cómo se invierte el tiempo y dónde se ejecuta.",
+      en: "Real visibility into how time is spent and where execution happens.",
+    },
+  },
+  {
+    key: "chat-intelligence",
+    date: { es: "Jun 2026", en: "Jun 2026" },
+    name: "Chat Intelligence",
+    badge: "beta",
+    copy: {
+      es: "Respuestas, acciones y seguimiento desde un solo lugar.",
+      en: "Answers, actions and follow-up from a single place.",
+    },
+  },
+];
+
+const ChangelogRow = ({ item, isEs, isLast }) => {
+  const badge = CHANGELOG_BADGES[item.badge];
+  return (
+    <li
+      className={`flex flex-col sm:flex-row sm:items-baseline gap-1.5 sm:gap-4 py-3.5 ${
+        isLast ? "" : "border-b border-white/[0.05]"
+      }`}
+      data-testid={`changelog-item-${item.key}`}
+    >
+      {/* Date */}
+      <span className="font-mono text-[10.5px] tracking-wider uppercase text-slate-500 sm:w-[68px] flex-shrink-0">
+        {item.date[isEs ? "es" : "en"]}
+      </span>
+
+      {/* Name + badge */}
+      <div className="flex items-center gap-2 flex-shrink-0 sm:w-[260px]">
+        <span className="text-[13.5px] font-medium text-white tracking-tight whitespace-nowrap">
+          {item.name}
+        </span>
+        <span
+          className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-semibold tracking-wider uppercase leading-none"
+          style={{
+            color: badge.color,
+            background: badge.bg,
+            border: `1px solid ${badge.border}`,
+          }}
+          data-testid={`changelog-badge-${item.key}`}
+        >
+          {badge[isEs ? "es" : "en"]}
+        </span>
+      </div>
+
+      {/* Copy */}
+      <p className="text-[12.5px] text-slate-400 leading-snug min-w-0 flex-1">
+        {item.copy[isEs ? "es" : "en"]}
+      </p>
+    </li>
+  );
+};
+
 const EvolvingNoteCard = ({ isEs }) => (
   <motion.div
     initial={{ opacity: 0, y: 12 }}
@@ -450,42 +639,61 @@ const EvolvingNoteCard = ({ isEs }) => (
       }}
     />
 
-    <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6 px-5 sm:px-7 py-6 sm:py-7">
-      {/* Icon */}
-      <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(0, 245, 255, 0.16), rgba(0, 245, 255, 0.04))",
-          border: "1px solid rgba(0, 245, 255, 0.35)",
-          boxShadow: "0 0 24px rgba(0, 245, 255, 0.2)",
-        }}
-      >
-        <Zap size={20} className="text-[#7FF5FF]" strokeWidth={2.2} />
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold tracking-[0.2em] uppercase"
+    <div className="relative px-5 sm:px-7 py-6 sm:py-7">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{
-            background: "rgba(0, 245, 255, 0.08)",
-            border: "1px solid rgba(0, 245, 255, 0.25)",
-            color: "#7FF5FF",
+            background:
+              "linear-gradient(135deg, rgba(0, 245, 255, 0.16), rgba(0, 245, 255, 0.04))",
+            border: "1px solid rgba(0, 245, 255, 0.35)",
+            boxShadow: "0 0 24px rgba(0, 245, 255, 0.2)",
           }}
         >
-          <Sparkles size={9} />
-          {isEs ? "Actualizaciones constantes" : "Constant updates"}
-        </span>
+          <Zap size={20} className="text-[#7FF5FF]" strokeWidth={2.2} />
+        </div>
 
-        <h3 className="font-satoshi font-bold text-white text-xl sm:text-2xl leading-tight tracking-tight mt-3">
-          {isEs ? "Quantro evoluciona cada semana." : "Quantro evolves every week."}
-        </h3>
+        <div className="min-w-0 flex-1">
+          <span
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold tracking-[0.2em] uppercase"
+            style={{
+              background: "rgba(0, 245, 255, 0.08)",
+              border: "1px solid rgba(0, 245, 255, 0.25)",
+              color: "#7FF5FF",
+            }}
+          >
+            <Sparkles size={9} />
+            {isEs ? "Actualizaciones constantes" : "Constant updates"}
+          </span>
 
-        <p className="text-[13px] sm:text-[13.5px] text-slate-400 leading-relaxed mt-2 max-w-xl">
-          {isEs
-            ? "Estamos agregando constantemente nuevas funciones, agentes e integraciones para que tu negocio opere con más claridad, menos herramientas y más inteligencia."
-            : "We're constantly adding new features, agents and integrations so your business runs with more clarity, fewer tools and more intelligence."}
+          <h3 className="font-satoshi font-bold text-white text-xl sm:text-2xl leading-tight tracking-tight mt-3">
+            {isEs ? "Quantro evoluciona cada semana." : "Quantro evolves every week."}
+          </h3>
+
+          <p className="text-[13px] sm:text-[13.5px] text-slate-400 leading-relaxed mt-2 max-w-xl">
+            {isEs
+              ? "Estamos agregando constantemente nuevas funciones, agentes e integraciones para que tu negocio opere con más claridad, menos herramientas y más inteligencia."
+              : "We're constantly adding new features, agents and integrations so your business runs with more clarity, fewer tools and more intelligence."}
+          </p>
+        </div>
+      </div>
+
+      {/* Mini changelog — integrated, not a separate section */}
+      <div className="mt-6 sm:mt-7 pt-5 border-t border-white/[0.06]" data-testid="evolving-changelog">
+        <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-slate-500 mb-1.5">
+          {isEs ? "Lanzamientos recientes" : "Recent releases"}
         </p>
+        <ul className="divide-y-0">
+          {CHANGELOG_ITEMS.map((item, i) => (
+            <ChangelogRow
+              key={item.key}
+              item={item}
+              isEs={isEs}
+              isLast={i === CHANGELOG_ITEMS.length - 1}
+            />
+          ))}
+        </ul>
       </div>
     </div>
   </motion.div>
@@ -966,6 +1174,7 @@ export const ComparisonPage = ({ focusKey = null }) => {
   };
 
   return (
+    <TooltipProvider delayDuration={150} skipDelayDuration={300}>
     <div
       className="min-h-screen text-white"
       style={{ background: "#030712" }}
@@ -1029,6 +1238,7 @@ export const ComparisonPage = ({ focusKey = null }) => {
         </div>
       </footer>
     </div>
+    </TooltipProvider>
   );
 };
 
