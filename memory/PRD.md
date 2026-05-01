@@ -266,6 +266,21 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — People OS section (interactive tabbed mockup)
+- **New section** `/app/frontend/src/components/sections/PeopleOSSection.jsx` registered in `App.js` right after `InventoryIntelligenceSection`, anchor `#people-os`.
+- **Layout**: 2-column grid (`lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]`). Left: narrative. Right: interactive app mockup.
+- **Narrative (left)**: eyebrow `PEOPLE OS` → headline `"Las personas correctas, donde generan impacto."` with cyan gradient → subheadline → 5 bullets → closing subtle line `"Antes, tu equipo vivía en múltiples herramientas. Ahora vive dentro de Quantro."`
+- **Interactive mockup (right)**: app chrome (3 macOS dots + `QUANTRO OS · PEOPLE` + live pulse), 5 clickable pill tabs with icons:
+  1. **Directorio** — search input + "Departamentos" and "Personas" empty states
+  2. **Accesos** — CTA "Invitar persona", filter chips (Todos / Roles / Departamentos / Ubicación), 4 role cards (Owner/Leader/Member/Viewer) with distinct accent colors (amber/cyan/light-cyan/slate)
+  3. **Onboarding** — 4 metric tiles (Activos / Pendientes / Sin acceso / % Onboarding) + empty state
+  4. **Permisos** (badge `Próximo`) — purple teaser card with 4 bullets + disabled "Próximamente" CTA
+  5. **Auditoría** — live pulse badge + 4 sample activity rows with timestamps
+- `AnimatePresence` crossfade (0.25s) between tabs; no carousel.
+- Full ES/EN i18n via `useLanguage`.
+- 13 `data-testid` anchors: `people-os-section`, `people-narrative`, `people-headline`, `people-bullets`, `people-mockup`, `people-tabs`, `people-tab-btn-[directorio|accesos|onboarding|permisos|auditoria]`, `people-permisos-badge`, `people-tab-[name]` body wrappers, `people-invite-btn`, `people-role-[owner|leader|member|viewer]`, `people-permisos-cta`.
+- Verified end-to-end: all 5 tabs click-switch correctly; all role cards render; "Próximo" badge visible on Permisos tab; lint clean.
+
 ### Feb 25, 2026 — Inventory Motion Loop + PlatformAccessScreen Refactor
 
 **A) Motion loop visualizando el ciclo de recomendación** (`/app/frontend/src/components/sections/InventoryMotionLoop.jsx`):

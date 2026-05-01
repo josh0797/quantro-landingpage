@@ -12,6 +12,7 @@ import CinematicTransitionSection from "@/components/sections/CinematicTransitio
 import AmanecerSection from "@/components/sections/AmanecerSection";
 import IntelligenceSection from "@/components/sections/IntelligenceSection";
 import InventoryIntelligenceSection from "@/components/sections/InventoryIntelligenceSection";
+import PeopleOSSection from "@/components/sections/PeopleOSSection";
 import SuccessStoriesSection from "@/components/sections/SuccessStoriesSection";
 import StarFeaturesSection from "@/components/sections/StarFeaturesSection";
 import DifferentiationSection from "@/components/sections/DifferentiationSection";
@@ -68,6 +69,9 @@ const LandingShell = () => (
 
     {/* Act 5.5 — New capability: Inventory Intelligence keynote */}
     <InventoryIntelligenceSection />
+
+    {/* Act 5.6 — New capability: People OS */}
+    <PeopleOSSection />
 
     {/* Proof + Offer */}
     <SuccessStoriesSection />
