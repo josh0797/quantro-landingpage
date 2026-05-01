@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote, ArrowUpRight } from "lucide-react";
 import AnimatedSection from "../AnimatedSection";
 import { fadeInUp } from "../../lib/animations";
 import { useLanguage } from "../../hooks/useLanguage";
+import { usePlatformAccess } from "../../hooks/usePlatformAccess";
+import { trackCTAClick } from "../../lib/analytics";
+import CaseStudyModal from "./CaseStudyModal";
 
 /**
  * Casos de Éxito — Resultados reales, no promesas.
@@ -46,6 +49,32 @@ const STORIES = [
       en: "We know exactly what to do every day. Nothing slips.",
     },
     attribution: { es: "CEO · Grupo Nexo", en: "CEO · Grupo Nexo" },
+    chips: {
+      es: ["SaaS B2B", "12 empleados", "90 días"],
+      en: ["B2B SaaS", "12 employees", "90 days"],
+    },
+    modalBefore: {
+      es: ["Leads sin seguimiento", "Hojas de cálculo dispersas", "Decisiones reactivas"],
+      en: ["Unfollowed leads", "Scattered spreadsheets", "Reactive decisions"],
+    },
+    modalAfter: {
+      es: ["Seguimiento automático", "Pipeline priorizado", "Acciones asignadas con dueño"],
+      en: ["Automatic follow-up", "Prioritized pipeline", "Actions with clear owners"],
+    },
+    secondaryMetrics: {
+      es: [
+        { value: "+40%", label: "conversión" },
+        { value: "-30%", label: "tiempo operativo" },
+        { value: "0", label: "leads sin dueño" },
+        { value: "-80%", label: "decisiones improvisadas" },
+      ],
+      en: [
+        { value: "+40%", label: "conversion" },
+        { value: "-30%", label: "ops time" },
+        { value: "0", label: "orphan leads" },
+        { value: "-80%", label: "improvised calls" },
+      ],
+    },
   },
   {
     key: "costs",
@@ -72,6 +101,32 @@ const STORIES = [
       en: "We cut what wasn't adding up. And the team now executes faster.",
     },
     attribution: { es: "CFO · Altura Retail", en: "CFO · Altura Retail" },
+    chips: {
+      es: ["Retail", "45 empleados", "6 meses"],
+      en: ["Retail", "45 employees", "6 months"],
+    },
+    modalBefore: {
+      es: ["6 suscripciones SaaS activas", "Gasto sin trazabilidad", "Reportes manuales en Excel"],
+      en: ["6 active SaaS subscriptions", "Untraceable spending", "Manual Excel reports"],
+    },
+    modalAfter: {
+      es: ["Un solo sistema operativo", "Contabilidad integrada", "Reportes en tiempo real"],
+      en: ["Single operating system", "Built-in accounting", "Real-time reporting"],
+    },
+    secondaryMetrics: {
+      es: [
+        { value: "-$52K", label: "costos/año" },
+        { value: "-6", label: "herramientas" },
+        { value: "+3x", label: "velocidad de reportes" },
+        { value: "100%", label: "trazabilidad" },
+      ],
+      en: [
+        { value: "-$52K", label: "cost/year" },
+        { value: "-6", label: "tools" },
+        { value: "+3x", label: "reporting speed" },
+        { value: "100%", label: "traceability" },
+      ],
+    },
   },
   {
     key: "ontime",
@@ -98,6 +153,32 @@ const STORIES = [
       en: "What enters Quantro gets done. Period.",
     },
     attribution: { es: "COO · Nodo Studios", en: "COO · Nodo Studios" },
+    chips: {
+      es: ["Agencia", "28 empleados", "4 meses"],
+      en: ["Agency", "28 employees", "4 months"],
+    },
+    modalBefore: {
+      es: ["Tareas en chats dispersos", "Sin fechas ni responsables", "Urgencias constantes"],
+      en: ["Tasks in scattered chats", "No dates or owners", "Constant urgencies"],
+    },
+    modalAfter: {
+      es: ["Todo en un sistema con dueño", "Fechas y prioridades claras", "Ejecución sin recordatorios"],
+      en: ["Everything owned in one place", "Clear dates and priorities", "Execution without reminders"],
+    },
+    secondaryMetrics: {
+      es: [
+        { value: "90%", label: "a tiempo" },
+        { value: "+2.4x", label: "throughput" },
+        { value: "-60%", label: "reuniones" },
+        { value: "0", label: "tareas perdidas" },
+      ],
+      en: [
+        { value: "90%", label: "on time" },
+        { value: "+2.4x", label: "throughput" },
+        { value: "-60%", label: "meetings" },
+        { value: "0", label: "lost tasks" },
+      ],
+    },
   },
   {
     key: "ownership",
@@ -124,6 +205,32 @@ const STORIES = [
       en: "No more orphan tasks. That changed the culture.",
     },
     attribution: { es: "Founder · Praga", en: "Founder · Praga" },
+    chips: {
+      es: ["Consultoría", "18 empleados", "60 días"],
+      en: ["Consulting", "18 employees", "60 days"],
+    },
+    modalBefore: {
+      es: ["Acuerdos sin dueño", "Prioridades difusas", "Reuniones repetitivas"],
+      en: ["Ownerless agreements", "Fuzzy priorities", "Repetitive meetings"],
+    },
+    modalAfter: {
+      es: ["Asignación automática", "Prioridad visible al equipo", "Reuniones enfocadas"],
+      en: ["Automatic assignment", "Priority visible to all", "Focused meetings"],
+    },
+    secondaryMetrics: {
+      es: [
+        { value: "0", label: "huérfanas" },
+        { value: "100%", label: "claridad" },
+        { value: "-50%", label: "reuniones" },
+        { value: "+35%", label: "velocidad" },
+      ],
+      en: [
+        { value: "0", label: "orphans" },
+        { value: "100%", label: "clarity" },
+        { value: "-50%", label: "meetings" },
+        { value: "+35%", label: "speed" },
+      ],
+    },
   },
   {
     key: "decisions",
@@ -150,6 +257,32 @@ const STORIES = [
       en: "We decide with data, not adrenaline.",
     },
     attribution: { es: "CEO · Labora Fintech", en: "CEO · Labora Fintech" },
+    chips: {
+      es: ["Fintech", "35 empleados", "120 días"],
+      en: ["Fintech", "35 employees", "120 days"],
+    },
+    modalBefore: {
+      es: ["Decisiones por instinto", "Datos dispersos", "CEO como cuello de botella"],
+      en: ["Gut-based calls", "Scattered data", "CEO as bottleneck"],
+    },
+    modalAfter: {
+      es: ["Recomendaciones con contexto", "Datos en tiempo real", "Equipo decidiendo con claridad"],
+      en: ["Context-rich recommendations", "Real-time data", "Team deciding with clarity"],
+    },
+    secondaryMetrics: {
+      es: [
+        { value: "-80%", label: "improvisación" },
+        { value: "+5x", label: "visibilidad" },
+        { value: "-45%", label: "carga CEO" },
+        { value: "+2.1x", label: "velocidad de decisión" },
+      ],
+      en: [
+        { value: "-80%", label: "improvising" },
+        { value: "+5x", label: "visibility" },
+        { value: "-45%", label: "CEO load" },
+        { value: "+2.1x", label: "decision speed" },
+      ],
+    },
   },
 ];
 
@@ -165,8 +298,11 @@ export const SuccessStoriesSection = () => {
   const isEs = language === "es";
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const touchStartX = useRef(null);
+  const touchMoved = useRef(false);
   const hostRef = useRef(null);
+  const { open: openPlatformAccess } = usePlatformAccess();
 
   const total = STORIES.length;
   const active = STORIES[index];
@@ -197,7 +333,14 @@ export const SuccessStoriesSection = () => {
   // iOS-style swipe
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
+    touchMoved.current = false;
     setPaused(true);
+  };
+  const handleTouchMove = (e) => {
+    if (touchStartX.current == null) return;
+    if (Math.abs(e.touches[0].clientX - touchStartX.current) > 8) {
+      touchMoved.current = true;
+    }
   };
   const handleTouchEnd = (e) => {
     if (touchStartX.current == null) return;
@@ -207,6 +350,22 @@ export const SuccessStoriesSection = () => {
       else goPrev();
     }
     touchStartX.current = null;
+  };
+
+  const handleCardClick = () => {
+    // Don't open modal if the user was swiping
+    if (touchMoved.current) {
+      touchMoved.current = false;
+      return;
+    }
+    trackCTAClick(`story_card_open_${active.key}`);
+    setPaused(true);
+    setModalOpen(true);
+  };
+
+  const handleModalPrimary = () => {
+    trackCTAClick(`story_modal_cta_${active.key}`);
+    openPlatformAccess();
   };
 
   const proofItems = useMemo(
@@ -269,17 +428,27 @@ export const SuccessStoriesSection = () => {
           ref={hostRef}
           className="relative"
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           data-testid="stories-carousel"
         >
           <AnimatePresence mode="wait">
             <motion.article
               key={active.key}
+              role="button"
+              tabIndex={0}
+              onClick={handleCardClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleCardClick();
+                }
+              }}
               initial={{ opacity: 0, scale: 0.96, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: -8 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="relative rounded-3xl overflow-hidden px-6 sm:px-10 py-8 sm:py-10"
+              className="group relative rounded-3xl overflow-hidden px-6 sm:px-10 py-8 sm:py-10 cursor-pointer hover:border-[#00F5FF]/35 transition-colors focus:outline-none focus:ring-2 focus:ring-[#00F5FF]/50"
               style={{
                 background:
                   "linear-gradient(160deg, rgba(14, 22, 40, 0.92) 0%, rgba(5, 10, 24, 0.85) 100%)",
@@ -367,6 +536,12 @@ export const SuccessStoriesSection = () => {
                   — {active.attribution[isEs ? "es" : "en"]}
                 </figcaption>
               </figure>
+
+              {/* "Ver caso completo" hint */}
+              <div className="relative mt-5 flex items-center justify-end gap-1.5 text-[11px] font-semibold text-[#7FF5FF] opacity-80 group-hover:opacity-100 transition-opacity">
+                {isEs ? "Ver caso completo" : "See full case"}
+                <ArrowUpRight size={12} />
+              </div>
             </motion.article>
           </AnimatePresence>
 
@@ -441,6 +616,17 @@ export const SuccessStoriesSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Lazy-rendered modal — only mounts when opened */}
+      {modalOpen && (
+        <CaseStudyModal
+          story={active}
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onPrimary={handleModalPrimary}
+          isEs={isEs}
+        />
+      )}
     </AnimatedSection>
   );
 };

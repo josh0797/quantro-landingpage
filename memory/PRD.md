@@ -266,6 +266,38 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — Case Study Modal + People OS mobile fix round 2
+
+**A) People OS mobile round 2 fixes (`PeopleOSSection.jsx`)**:
+- **Grid breakpoint moved from `lg:` (1024px) to `xl:` (1280px)**. On iPad portrait (~810px) and narrow laptops the 2-column layout was being forced too early, squeezing the narrative text. Now both columns stack until 1280px, giving the headline full-width space.
+- **Headline clamp loosened**: `clamp(26px, 5.4vw, 44px)` + `break-words` — avoids "do…" clipping on narrow viewports.
+- **Narrative column gets `min-w-0`** to prevent flex/grid min-content overflow.
+- **Removed mask-image fade** from the mockup body — it was hiding content on iPhone viewports.
+
+**B) CaseStudyModal — Linear/Stripe-style mini case study (new file `sections/CaseStudyModal.jsx`)**:
+- **Responsive layout**: bottom-sheet on mobile (<640px) sliding up from bottom with drag handle, centered modal on desktop (max-w-720px, scale 0.95→1 spring entry).
+- **Overlay**: `rgba(0,0,0,0.6)` + `backdrop-filter: blur(12px)`. Click-outside closes. ESC closes (desktop).
+- **Body scroll lock**: `document.body.style.overflow = "hidden"` on mount, restored on unmount.
+- **Lazy render**: modal only mounts when `modalOpen === true` (performance win for landing weight).
+- **6-section content**:
+  1. Header — huge gradient metric `clamp(36px, 9vw, 56px)` + title + 3 meta chips (industry · team size · timeframe)
+  2. Before/After — stacked on mobile, 2-col on desktop. Before list uses red ✖ icons; After list uses cyan ✓ icons.
+  3. Secondary metrics — 2×2 grid of 4 supporting numbers with gradient
+  4. Mini-chart — 8-point SVG sparkline, red descending (before) → cyan ascending with glow (after), dashed divider at midpoint, end-dot. Labels: Antes · Evolución en 90 días · Después.
+  5. Italic quote + attribution (same as card)
+  6. CTA row — primary "Ver cómo funciona esto en Quantro" (opens PlatformAccessScreen) + secondary "Cerrar"
+
+**C) Story data enriched** (`SuccessStoriesSection.jsx`):
+- Each of the 5 stories now carries `chips`, `modalBefore` (3 items), `modalAfter` (3 items) and `secondaryMetrics` (4 mini-cards) — structured per language.
+- Card is now fully clickable: `role="button"` + `onClick` + `onKeyDown` (Enter/Space). Touch-move detection prevents accidental modal open during swipe (`touchMoved` ref, 8px threshold).
+- New "Ver caso completo ↗" hint with hover opacity transition shown inside each card.
+- Modal opens with active story passed in. Primary CTA calls `openPlatformAccess()`.
+- GA4 events: `story_card_open_[key]`, `story_modal_cta_[key]`.
+
+**Verification**:
+- Lint clean on all touched files.
+- E2E Playwright: click on `story-card-conversion` → modal opens with correct testids (10/10), metric `+40%` rendered, `document.body.style.overflow === "hidden"`, ESC key closes modal and restores body overflow to `""`.
+
 ### Feb 25, 2026 — Mobile polish: People OS + Success Stories rewrite
 
 **A) People OS — mobile-first fixes (`PeopleOSSection.jsx`)**:

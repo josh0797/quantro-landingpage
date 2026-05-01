@@ -415,17 +415,17 @@ export const PeopleOSSection = () => {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-10 sm:gap-12 lg:gap-14 items-start">
+      <div className="relative max-w-6xl mx-auto grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-10 sm:gap-12 xl:gap-14 items-start">
         {/* Left — narrative */}
-        <motion.div variants={fadeInUp} className="lg:pt-4" data-testid="people-narrative">
+        <motion.div variants={fadeInUp} className="xl:pt-4 min-w-0" data-testid="people-narrative">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F5FF]/30 bg-[#00F5FF]/[0.05] text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF] mb-5">
             <Users size={11} />
             {isEs ? "People OS" : "People OS"}
           </span>
 
           <h2
-            className="font-satoshi font-bold text-white leading-[1.1] tracking-tight [text-wrap:balance]"
-            style={{ fontSize: "clamp(28px, 6.2vw, 44px)" }}
+            className="font-satoshi font-bold text-white leading-[1.1] tracking-tight [text-wrap:balance] break-words"
+            style={{ fontSize: "clamp(26px, 5.4vw, 44px)" }}
             data-testid="people-headline"
           >
             {isEs ? (
@@ -559,18 +559,8 @@ export const PeopleOSSection = () => {
               })}
             </div>
 
-            {/* Body — shorter on mobile with fade mask to avoid hard cut */}
-            <div
-              className="relative p-4 sm:p-5"
-              role="tabpanel"
-              style={{
-                minHeight: "clamp(280px, 55vw, 420px)",
-                maskImage:
-                  "linear-gradient(180deg, #000 0%, #000 88%, transparent 100%)",
-                WebkitMaskImage:
-                  "linear-gradient(180deg, #000 0%, #000 88%, transparent 100%)",
-              }}
-            >
+            {/* Body — auto-sized, no heavy mask to avoid clipping content */}
+            <div className="relative p-4 sm:p-5" role="tabpanel">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={tab}
