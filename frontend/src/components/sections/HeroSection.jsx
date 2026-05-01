@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useLanguage } from "../../hooks/useLanguage";
 import { trackCTAClick } from "../../lib/analytics";
@@ -21,6 +21,60 @@ import HeroDashboardPreview from "../HeroDashboardPreview";
 // Respects prefers-reduced-motion by collapsing the narrative to a
 // static end-state snapshot.
 // ==========================================================================
+
+// Pool of teaser notifications — rotates deterministically each page load
+// via a localStorage counter. That way the hero feels "alive" (it found
+// something different tonight) without being random/unpredictable.
+const TEASER_POOL = [
+  {
+    id: "revenue",
+    title: { es: "Detecté +22% de revenue posible.", en: "I detected +22% possible revenue." },
+    sub: { es: "Hay 3 acciones listas para aprobar.", en: "3 actions ready for you to approve." },
+  },
+  {
+    id: "stock",
+    title: { es: "Stock crítico en 3 SKUs.", en: "Critical stock on 3 SKUs." },
+    sub: { es: "Sugerí reabasto automático esta noche.", en: "I suggested auto-replenishment tonight." },
+  },
+  {
+    id: "meta",
+    title: { es: "Campaña Meta pausada.", en: "Meta campaign paused." },
+    sub: { es: "ROI bajo el umbral que definiste.", en: "ROI below the threshold you set." },
+  },
+  {
+    id: "margin",
+    title: { es: "+18% de margen detectado.", en: "+18% margin detected." },
+    sub: { es: "Segmento Pro listo para una promo.", en: "Pro segment ready for a promo." },
+  },
+  {
+    id: "leads",
+    title: { es: "Lead score disparado en 5 cuentas.", en: "Lead score spiked on 5 accounts." },
+    sub: { es: "Ventas puede cerrar hoy.", en: "Sales can close today." },
+  },
+];
+
+const TEASER_STORAGE_KEY = "quantro_hero_teaser_seen";
+
+const useRotatingTeaser = () => {
+  const [index, setIndex] = useState(0);
+  const didRunRef = useRef(false);
+  useEffect(() => {
+    // Guard against React StrictMode's double-invoke in development so the
+    // counter doesn't advance twice per page load.
+    if (didRunRef.current) return;
+    didRunRef.current = true;
+    try {
+      const raw = window.localStorage.getItem(TEASER_STORAGE_KEY);
+      const prev = raw ? parseInt(raw, 10) || 0 : 0;
+      const next = (prev + 1) % TEASER_POOL.length;
+      setIndex(prev % TEASER_POOL.length);
+      window.localStorage.setItem(TEASER_STORAGE_KEY, String(next));
+    } catch {
+      setIndex(0);
+    }
+  }, []);
+  return TEASER_POOL[index];
+};
 
 // Timings (seconds) — keep short delays early, give the dashboard room later.
 // The "teaser" push notification opens the story: while the pre-header says
@@ -491,6 +545,7 @@ const SignalsLayer = ({ signals, showStart, showEnd, loopEvery }) => {
 // you went to bed, Quantro found +22% revenue opportunity, it just notified.
 // =========================================================================
 const HeroTeaserNotification = ({ isEs }) => {
+  const teaser = useRotatingTeaser();
   const visibleDuration = T.teaserOut - T.teaserIn; // ~1.4s on-screen
   return (
     <motion.div
@@ -563,15 +618,11 @@ const HeroTeaserNotification = ({ isEs }) => {
               {isEs ? "ahora" : "now"}
             </span>
           </div>
-          <p className="text-[12.5px] font-medium text-white leading-snug mt-0.5 truncate">
-            {isEs
-              ? "Detecté +22% de revenue posible."
-              : "I detected +22% possible revenue."}
+          <p className="text-[12.5px] font-medium text-white leading-snug mt-0.5 truncate" data-testid="hero-teaser-title">
+            {teaser.title[isEs ? "es" : "en"]}
           </p>
-          <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">
-            {isEs
-              ? "Hay 3 acciones listas para aprobar."
-              : "3 actions ready for you to approve."}
+          <p className="text-[10.5px] text-slate-400 mt-0.5 truncate" data-testid="hero-teaser-sub">
+            {teaser.sub[isEs ? "es" : "en"]}
           </p>
         </div>
       </div>

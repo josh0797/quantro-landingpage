@@ -575,8 +575,7 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
 - `HeroSection` rewritten as an 8–12s keynote-style narrative (respects
   `prefers-reduced-motion` by falling back to a static end-state):
   pre-header "Mientras tú dormías…" → **teaser push-notification** slides in
-  from the top-right of the stage ("Detecté +22% de revenue posible. / Hay
-  3 acciones listas para aprobar."), hovers ~1.4s, dismisses →
+  from the top-right of the stage, hovers ~1.4s, dismisses →
   headline cascades word-by-word ("Despierta con" → "decisiones listas"
   with repeating glow → "para actuar.") → subheadline fades in →
   `SignalsLayer` drifts 5 floating pills into view → signals converge
@@ -585,6 +584,11 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   dashboard rotates from "Esto ya está pasando en tu negocio." to
   "Solo necesitas aprobar." → CTAs slide up AFTER the wow moment →
   signals subtly re-loop every ~11s so the hero feels alive.
+- Teaser rotates deterministically across 5 notifications using a
+  `localStorage` counter (`quantro_hero_teaser_seen`): +22% revenue →
+  stock crítico → Meta pausada → +18% margen → lead score, then wraps.
+  `useRef` guard protects against React StrictMode's double-fire in
+  development so the counter advances exactly once per page load.
 - CTA primary relabeled to "Ver mi negocio con Quantro" (ES) /
   "See my business with Quantro" (EN).
 - Social proof refined to Notion-style (5 stars + single quote + tiny
