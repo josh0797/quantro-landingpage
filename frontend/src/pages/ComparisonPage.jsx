@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -18,10 +18,11 @@ import {
   CheckCircle2,
   Play,
 } from "lucide-react";
-import QuantroLogoMark from "../components/QuantroLogoMark";
+import { QuantroLogoMark } from "../components/QuantroLogoMark";
 import { useLanguage } from "../hooks/useLanguage";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
 import { trackCTAClick } from "../lib/analytics";
+import { applyPageMeta } from "../lib/pageMeta";
 
 /**
  * Quantro vs competitors comparison page.
@@ -80,6 +81,70 @@ const FOCUS_META = {
   ninety:  { displayName: "Ninety", key: "ninety" },
   eos:     { displayName: "EOS One", key: "eos" },
   notion:  { displayName: "Notion + Excel + CRM", key: "notion" },
+};
+
+// =========================================================================
+// Open Graph config per variant
+// =========================================================================
+
+const BASE_URL = "https://quantro.io";
+
+const META_CONFIG = {
+  general: {
+    path: { es: "/comparacion", en: "/comparison" },
+    title: { es: "Comparación | Quantro", en: "Comparison | Quantro" },
+    description: {
+      es: "Compara Quantro con Ninety, EOS One y herramientas tradicionales. Ve por qué es un sistema operativo, no otra app.",
+      en: "Compare Quantro with Ninety, EOS One and traditional tools. See why it's an operating system, not another app.",
+    },
+    ogTitle: { es: "Quantro vs otros sistemas", en: "Quantro vs other systems" },
+    ogDescription: {
+      es: "No todas las plataformas están diseñadas para operar tu negocio.",
+      en: "Not every platform is designed to run your business.",
+    },
+  },
+  ninety: {
+    path: { es: "/vs-ninety", en: "/vs-ninety" },
+    title: { es: "Quantro vs Ninety | Quantro", en: "Quantro vs Ninety | Quantro" },
+    description: {
+      es: "Ve cómo Quantro va más allá del tracking EOS que ofrece Ninety.",
+      en: "See how Quantro goes beyond the EOS tracking Ninety offers.",
+    },
+    ogTitle: { es: "Quantro vs Ninety", en: "Quantro vs Ninety" },
+    ogDescription: {
+      es: "Ve cómo Quantro va más allá del tracking EOS.",
+      en: "See how Quantro goes beyond EOS tracking.",
+    },
+  },
+  eos: {
+    path: { es: "/vs-eos", en: "/vs-eos" },
+    title: { es: "Quantro vs EOS One | Quantro", en: "Quantro vs EOS One | Quantro" },
+    description: {
+      es: "Compara cómo Quantro conecta estrategia, decisiones y ejecución en un solo sistema.",
+      en: "See how Quantro connects strategy, decisions and execution in a single system.",
+    },
+    ogTitle: { es: "Quantro vs EOS One", en: "Quantro vs EOS One" },
+    ogDescription: {
+      es: "Compara cómo Quantro conecta estrategia, decisiones y ejecución en un solo sistema.",
+      en: "See how Quantro connects strategy, decisions and execution in one system.",
+    },
+  },
+  notion: {
+    path: { es: "/vs-notion", en: "/vs-notion" },
+    title: {
+      es: "Quantro vs Notion + Excel + CRM | Quantro",
+      en: "Quantro vs Notion + Excel + CRM | Quantro",
+    },
+    description: {
+      es: "Descubre por qué Quantro no solo organiza información, sino que opera tu negocio.",
+      en: "Discover why Quantro doesn't just organize information — it runs your business.",
+    },
+    ogTitle: { es: "Quantro vs Notion", en: "Quantro vs Notion" },
+    ogDescription: {
+      es: "Descubre por qué Quantro no solo organiza información, sino que opera tu negocio.",
+      en: "Discover why Quantro doesn't just organize — it runs your business.",
+    },
+  },
 };
 
 // =========================================================================
@@ -629,26 +694,41 @@ const AudienceSection = ({ isEs }) => {
   );
 };
 
-const FinalCTASection = ({ isEs, onPrimaryCTA }) => (
-  <section className="relative py-24 px-6" data-testid="compare-final-cta">
-    <div
-      className="max-w-4xl mx-auto rounded-3xl px-6 sm:px-12 py-14 text-center relative overflow-hidden"
-      style={{
-        background: "linear-gradient(160deg, rgba(14, 22, 40, 0.9) 0%, rgba(5, 10, 24, 0.8) 100%)",
-        border: "1px solid rgba(0, 245, 255, 0.18)",
-        boxShadow: "0 40px 80px -30px rgba(0, 245, 255, 0.3)",
-      }}
+const WhyQuantroSection = ({ isEs, onPrimaryCTA }) => {
+  const pillars = [
+    {
+      Icon: Brain,
+      es: { title: "Inteligencia", copy: "Observa tu negocio en tiempo real y detecta lo que pocos ven." },
+      en: { title: "Intelligence", copy: "Watches your business in real time and catches what few see." },
+    },
+    {
+      Icon: Lightbulb,
+      es: { title: "Decisión", copy: "Convierte datos en acciones claras, no en dashboards pasivos." },
+      en: { title: "Decision", copy: "Turns data into clear actions, not passive dashboards." },
+    },
+    {
+      Icon: Workflow,
+      es: { title: "Ejecución", copy: "Asigna, automatiza y hace seguimiento hasta que el trabajo está hecho." },
+      en: { title: "Execution", copy: "Assigns, automates and tracks until the work is done." },
+    },
+  ];
+
+  return (
+    <section
+      id="why-quantro"
+      className="relative py-24 px-6 scroll-mt-24"
+      data-testid="compare-why-quantro"
     >
-      <div
-        aria-hidden
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.14), transparent 60%)",
-        }}
-      />
-      <div className="relative">
-        <h2 className="font-satoshi font-bold text-white text-3xl sm:text-4xl lg:text-5xl leading-tight tracking-tight max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
+        {/* Eyebrow */}
+        <div className="text-center mb-3">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F5FF]/30 bg-[#00F5FF]/[0.05] text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF]">
+            <Sparkles size={11} />
+            {isEs ? "Por qué Quantro" : "Why Quantro"}
+          </span>
+        </div>
+
+        <h2 className="font-satoshi font-bold text-white text-3xl sm:text-4xl lg:text-5xl text-center leading-tight tracking-tight max-w-3xl mx-auto">
           {isEs ? (
             <>
               Deja de usar herramientas que solo organizan.{" "}
@@ -665,19 +745,85 @@ const FinalCTASection = ({ isEs, onPrimaryCTA }) => (
             </>
           )}
         </h2>
-        <button
-          type="button"
-          onClick={onPrimaryCTA}
-          className="inline-flex items-center gap-2 mt-9 px-7 py-3.5 rounded-lg bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] text-[14px] font-semibold hover:shadow-lg hover:shadow-[#00F5FF]/30 transition-all"
-          data-testid="compare-final-cta-btn"
+
+        <p className="text-center text-[15px] text-slate-400 leading-relaxed mt-5 max-w-2xl mx-auto">
+          {isEs
+            ? "Quantro no es un competidor más en la lista. Es la siguiente capa: inteligencia, decisión y ejecución integradas en un solo sistema operativo de negocio."
+            : "Quantro isn't one more competitor on the list. It's the next layer: intelligence, decisions and execution fused into a single business operating system."}
+        </p>
+
+        {/* 3-pillar diferentiator cards */}
+        <div className="grid sm:grid-cols-3 gap-4 mt-12" data-testid="compare-why-pillars">
+          {pillars.map(({ Icon, es, en }, i) => {
+            const { title, copy } = isEs ? es : en;
+            return (
+              <motion.div
+                key={title}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="rounded-2xl p-6 bg-white/[0.015] border border-white/[0.06] hover:border-[#00F5FF]/25 transition-colors"
+                data-testid={`compare-why-pillar-${i}`}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(0,245,255,0.22), rgba(0,245,255,0.04))",
+                    border: "1px solid rgba(0,245,255,0.35)",
+                  }}
+                >
+                  <Icon size={16} className="text-[#00F5FF]" />
+                </div>
+                <h3 className="font-satoshi font-semibold text-white text-[16px] leading-tight tracking-tight mb-1.5">
+                  {title}
+                </h3>
+                <p className="text-[12.5px] text-slate-400 leading-snug">{copy}</p>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Bottom CTA card */}
+        <div
+          className="mt-10 rounded-3xl px-6 sm:px-12 py-12 text-center relative overflow-hidden"
+          style={{
+            background: "linear-gradient(160deg, rgba(14, 22, 40, 0.9) 0%, rgba(5, 10, 24, 0.8) 100%)",
+            border: "1px solid rgba(0, 245, 255, 0.2)",
+            boxShadow: "0 40px 80px -30px rgba(0, 245, 255, 0.3)",
+          }}
+          data-testid="compare-why-cta-card"
         >
-          {isEs ? "Empieza con Quantro" : "Get started with Quantro"}
-          <ArrowRight size={15} />
-        </button>
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.14), transparent 60%)",
+            }}
+          />
+          <div className="relative">
+            <p className="font-satoshi font-semibold text-white text-xl sm:text-2xl leading-tight max-w-2xl mx-auto">
+              {isEs
+                ? "Inteligencia + decisión + ejecución en un solo sistema."
+                : "Intelligence + decision + execution in a single system."}
+            </p>
+            <button
+              type="button"
+              onClick={onPrimaryCTA}
+              className="inline-flex items-center gap-2 mt-7 px-7 py-3.5 rounded-lg bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] text-[14px] font-semibold hover:shadow-lg hover:shadow-[#00F5FF]/30 transition-all"
+              data-testid="compare-final-cta-btn"
+            >
+              {isEs ? "Empieza con Quantro" : "Get started with Quantro"}
+              <ArrowRight size={15} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 // =========================================================================
 // Page
@@ -686,22 +832,27 @@ const FinalCTASection = ({ isEs, onPrimaryCTA }) => (
 export const ComparisonPage = ({ focusKey = null }) => {
   const { language } = useLanguage();
   const isEs = language === "es";
-  const navigate = useNavigate();
   const location = useLocation();
   const { open: openPlatformAccess } = usePlatformAccess();
 
-  // SEO — dynamic title per variant
+  // Scroll to top on route change — SPA navigation otherwise preserves scroll
   useEffect(() => {
-    const base = isEs ? "Quantro" : "Quantro";
-    const variant = FOCUS_META[focusKey]?.displayName;
-    document.title = variant
-      ? `${base} vs ${variant} | Quantro`
-      : isEs
-      ? "Comparación | Quantro"
-      : "Comparison | Quantro";
-    return () => {
-      document.title = "Quantro — Inteligencia autónoma para tu negocio";
-    };
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  // SEO + Open Graph — dynamic per variant
+  useEffect(() => {
+    const key = focusKey || "general";
+    const cfg = META_CONFIG[key] || META_CONFIG.general;
+    const path = cfg.path[isEs ? "es" : "en"] || cfg.path.es;
+    const cleanup = applyPageMeta({
+      title: cfg.title[isEs ? "es" : "en"],
+      description: cfg.description[isEs ? "es" : "en"],
+      url: `${BASE_URL}${path}`,
+      ogTitle: cfg.ogTitle[isEs ? "es" : "en"],
+      ogDescription: cfg.ogDescription[isEs ? "es" : "en"],
+    });
+    return cleanup;
   }, [focusKey, isEs]);
 
   const handlePrimaryCTA = () => {
@@ -711,11 +862,10 @@ export const ComparisonPage = ({ focusKey = null }) => {
 
   const handleSecondaryCTA = () => {
     trackCTAClick(`comparison_page_secondary${focusKey ? "_" + focusKey : ""}`);
-    navigate("/");
-    // After navigation to root, scroll to intelligence section
-    setTimeout(() => {
-      document.getElementById("intelligence")?.scrollIntoView({ behavior: "smooth" });
-    }, 120);
+    const target = document.getElementById("why-quantro");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   return (
@@ -727,12 +877,19 @@ export const ComparisonPage = ({ focusKey = null }) => {
     >
       <div className="noise-overlay" />
 
-      {/* Minimal top bar */}
+      {/* Minimal top bar — uses mark-only icon + single wordmark */}
       <header className="sticky top-0 z-40 border-b border-slate-800/60 backdrop-blur-md bg-[#030712]/80">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group" data-testid="compare-back-home">
-            <QuantroLogoMark size={28} glow={false} transparent />
-            <span className="text-[15px] font-medium text-white tracking-tight">Quantro</span>
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 group"
+            data-testid="compare-back-home"
+            aria-label="Quantro — ir al inicio"
+          >
+            <QuantroLogoMark size={28} />
+            <span className="font-satoshi font-semibold text-white tracking-tight text-[17px] leading-none">
+              Quantro
+            </span>
           </Link>
           <button
             type="button"
@@ -758,7 +915,7 @@ export const ComparisonPage = ({ focusKey = null }) => {
         <BeforeAfterSection isEs={isEs} focusKey={focusKey} />
         <RealExampleSection isEs={isEs} />
         <AudienceSection isEs={isEs} />
-        <FinalCTASection isEs={isEs} onPrimaryCTA={handlePrimaryCTA} />
+        <WhyQuantroSection isEs={isEs} onPrimaryCTA={handlePrimaryCTA} />
       </main>
 
       <footer className="border-t border-slate-800/60 mt-12">

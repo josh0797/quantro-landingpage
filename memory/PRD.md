@@ -266,6 +266,21 @@ Full narrative restructure into a continuous story (Problem → System → Value
 - **Cleanup**: Toda referencia a "Investor Deck" eliminada del backlog del PRD
 - Testing: 100% frontend (iteration_7.json), 0 issues
 
+### Feb 25, 2026 — Comparison Page Polish: OG meta, scroll fixes, why-quantro section
+Follow-up iteration on the comparison page to address 3 user-reported issues plus 1 enhancement:
+- **Fix: double logo** in header (`[icon] Quantro Quantro`). Root cause: default export of `QuantroLogoMark.jsx` file is `QuantroLogo` (full version with built-in wordmark). Fixed by importing the named `{ QuantroLogoMark }` icon-only export + keeping a single explicit wordmark span.
+- **Fix: scroll jumping to bottom** on route entry. React Router preserves scroll position across SPA transitions; added `useEffect(() => window.scrollTo(0,0), [location.pathname])` inside `ComparisonPage`. Verified `scrollY === 0` on `/vs-eos` mount.
+- **New: `WhyQuantroSection` replacing `FinalCTASection`** (rewritten, 1.7× richer): eyebrow "Por qué Quantro" / "Why Quantro" → same 2-line closing headline → descriptive paragraph → **3-pillar differentiator cards** (Inteligencia/Brain, Decisión/Lightbulb, Ejecución/Workflow) with fade-in stagger → bottom spotlight CTA card "Inteligencia + decisión + ejecución en un solo sistema" + primary button. Section gets `id="why-quantro"` + `scroll-mt-24` (compensates sticky header).
+- **Secondary CTA repurposed**: "Ver cómo funciona Quantro" used to `navigate("/")` + scroll to `#intelligence` (wrong page). Now does `document.getElementById("why-quantro").scrollIntoView({ behavior: "smooth", block: "start" })`. Verified scroll diff ≤ 100px.
+- **Dynamic Open Graph meta** via new helper `/app/frontend/src/lib/pageMeta.js` (`applyPageMeta({ title, description, url, ogTitle, ogDescription, twitterCard })`). Creates/updates: `title`, `meta[name=description]`, `link[rel=canonical]`, `og:title`, `og:description`, `og:url`, `og:type=website`, `og:image` (optional), `twitter:title`, `twitter:description`, `twitter:card=summary_large_image`, `twitter:image` (optional). Returns a cleanup function that restores the previous state so unmounting doesn't leak meta to the next route.
+- **Per-variant OG config** (`META_CONFIG` in `ComparisonPage.jsx`):
+  - `/vs-ninety` — og:title `Quantro vs Ninety` / og:desc `Ve cómo Quantro va más allá del tracking EOS.`
+  - `/vs-eos` — og:title `Quantro vs EOS One` / og:desc `Compara cómo Quantro conecta estrategia, decisiones y ejecución en un solo sistema.`
+  - `/vs-notion` — og:title `Quantro vs Notion` / og:desc `Descubre por qué Quantro no solo organiza información, sino que opera tu negocio.`
+  - `/comparacion` + `/comparison` — general variants with bilingual copy.
+- Canonical URLs use `https://quantro.io` as base (update when production domain is finalized).
+- Lint clean on both files.
+
 ### Feb 25, 2026 — Comparison Page (`/comparacion` + 3 focused variants)
 - **New page** `/app/frontend/src/pages/ComparisonPage.jsx` with optional `focusKey` prop for variant routing.
 - **5 routes** registered in `index.js`:
