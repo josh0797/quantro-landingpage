@@ -9,6 +9,51 @@ import { trackCTAClick } from "../../lib/analytics";
 import CaseStudyModal from "./CaseStudyModal";
 
 /**
+ * AnimatedMetric — count-up animation for story metrics.
+ * Parses a prefix (+/-/$), digits, and a suffix (% / K / M) out of the string
+ * and animates the numeric part from 0 to target in ~1.3s with easeOut.
+ * Falls back to the raw string if parsing fails or if the user prefers
+ * reduced motion. Re-runs whenever `activeKey` changes so the number
+ * restarts when the active story swaps.
+ */
+const AnimatedMetric = ({ value, activeKey }) => {
+  const match = /^([+\-$]*)(\d+(?:\.\d+)?)(.*)$/.exec(String(value || "").trim());
+  const [display, setDisplay] = React.useState(value);
+
+  React.useEffect(() => {
+    if (!match) {
+      setDisplay(value);
+      return;
+    }
+    const prefix = match[1] || "";
+    const target = parseFloat(match[2]);
+    const suffix = match[3] || "";
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      setDisplay(value);
+      return;
+    }
+    const duration = 1300;
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      const v = target * eased;
+      const isInt = Number.isInteger(target);
+      setDisplay(`${prefix}${isInt ? Math.round(v) : v.toFixed(1)}${suffix}`);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, activeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return <>{display}</>;
+};
+
+/**
  * Casos de Éxito — Resultados reales, no promesas.
  *
  * Mobile-first rewrite:
@@ -182,11 +227,19 @@ const STORIES = [
   },
   {
     key: "ownership",
-    metric: { es: "0", en: "0" },
-    metricLabel: { es: "tareas sin responsable", en: "orphan tasks" },
+    metric: { es: "100%", en: "100%" },
+    metricLabel: { es: "tareas asignadas", en: "tasks assigned" },
+    metricSecondary: {
+      value: { es: "+35%", en: "+35%" },
+      label: { es: "velocidad operativa", en: "operational speed" },
+      sub: {
+        es: "El equipo ejecuta más rápido con claridad en prioridades.",
+        en: "The team executes faster with clarity on priorities.",
+      },
+    },
     context: {
-      es: "Cada acción tiene dueño definido.",
-      en: "Every action has a defined owner.",
+      es: "Cada tarea tiene un responsable claro y visible para todo el equipo.",
+      en: "Every task has a clear owner visible to the whole team.",
     },
     title: {
       es: "De desorden operativo a responsabilidad total",
@@ -219,14 +272,14 @@ const STORIES = [
     },
     secondaryMetrics: {
       es: [
-        { value: "0", label: "huérfanas" },
-        { value: "100%", label: "claridad" },
-        { value: "-50%", label: "reuniones" },
+        { value: "100%", label: "asignadas" },
         { value: "+35%", label: "velocidad" },
+        { value: "-50%", label: "reuniones" },
+        { value: "100%", label: "claridad" },
       ],
       en: [
-        { value: "0", label: "orphans" },
-        { value: "100%", label: "clarity" },
+        { value: "100%", label: "assigned" },
+        { value: "+35%", label: "speed" },
         { value: "-50%", label: "meetings" },
         { value: "+35%", label: "speed" },
       ],
@@ -478,7 +531,7 @@ export const SuccessStoriesSection = () => {
                     style={{ fontSize: "clamp(48px, 13vw, 92px)" }}
                     data-testid="story-metric"
                   >
-                    {active.metric[isEs ? "es" : "en"]}
+                    <AnimatedMetric value={active.metric[isEs ? "es" : "en"]} activeKey={active.key} />
                   </span>
                   <span className="text-[13px] sm:text-[14px] font-semibold text-white/90 leading-tight">
                     {active.metricLabel[isEs ? "es" : "en"]}
@@ -487,6 +540,32 @@ export const SuccessStoriesSection = () => {
                 <p className="text-[12.5px] sm:text-[13px] text-slate-400 leading-relaxed mt-2 max-w-md">
                   {active.context[isEs ? "es" : "en"]}
                 </p>
+
+                {/* Optional secondary metric — shows "+35% velocidad operativa" style add-ons. */}
+                {active.metricSecondary && (
+                  <div
+                    className="mt-5 flex items-start gap-3 rounded-xl px-4 py-3 bg-white/[0.02] border border-white/[0.06] max-w-md"
+                    data-testid="story-metric-secondary"
+                  >
+                    <span
+                      className="font-satoshi font-bold bg-gradient-to-br from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums leading-none tracking-tight flex-shrink-0"
+                      style={{ fontSize: "clamp(22px, 5vw, 32px)" }}
+                    >
+                      <AnimatedMetric
+                        value={active.metricSecondary.value[isEs ? "es" : "en"]}
+                        activeKey={`${active.key}-sec`}
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] sm:text-[13px] font-semibold text-white leading-tight">
+                        {active.metricSecondary.label[isEs ? "es" : "en"]}
+                      </p>
+                      <p className="text-[11.5px] sm:text-[12px] text-slate-400 leading-snug mt-0.5">
+                        {active.metricSecondary.sub[isEs ? "es" : "en"]}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* 2. Title — the outcome */}

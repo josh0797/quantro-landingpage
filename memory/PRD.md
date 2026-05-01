@@ -633,6 +633,40 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   text-only, and the dashboard streams in progressively. A size-matched
   `DashboardSkeleton` prevents layout shift during the Suspense window.
 
+### May 1, 2026 — HeroDashboardPreview as Decision Engine + ownership metric (P0)
+- `HeroDashboardPreview` rebuilt from a classic metrics+checklist panel
+  into a **decision narrative**:
+  - System status chip: "Quantro Intelligence · 3 decisiones · 2
+    ejecutándose · 1 pendiente" with color-coded pulse dots.
+  - Decision Engine card (priority recommendation): title + narrative
+    insight with metrics inline (`$847K +12.4%`) + suggested action
+    (specific product names) + impact pill ("+3.2% margen") + "Aprobar"
+    button. Tagged "Recomendado por Quantro Intelligence".
+  - Executable actions replace generic checklist: "Ajustar precio (+5%)
+    en 2 productos", "Reasignar presupuesto Ads (−$2,000 desperdiciados)",
+    "Reactivar 14 clientes inactivos (últimos 30 días)" — each with
+    running/pending state icons.
+  - Soft counters (0→847 revenue, 0→12.4% growth, 0→3.2% margin lift)
+    ease in over 1.6s so the card feels alive from the first frame.
+- Hero microcopy swap logic updated: desktop continues to swap after
+  5.5s; **mobile now swaps only when the user scrolls past ~80px**
+  (attention-shift trigger). One-shot scroll listener auto-detaches
+  after first fire.
+- Success Stories — "ownership" story:
+  - Primary metric changed from `0 tareas sin responsable` →
+    `100% tareas asignadas` (+ EN equivalent).
+  - Context subtext: "Cada tarea tiene un responsable claro y visible
+    para todo el equipo." / "Every task has a clear owner visible to
+    the whole team."
+  - New `metricSecondary` field renders a secondary glass card below
+    the primary: `+35% velocidad operativa` / `+35% operational speed`
+    with subtext about execution clarity.
+  - Added `AnimatedMetric` helper that parses prefix (+/-/$), digit,
+    suffix (%/K/M) and count-ups from 0 to target in 1.3s easeOutCubic.
+    Reruns whenever `activeKey` changes so numbers restart per story.
+  - Proof strip reordered: `100% asignadas`, `+35% velocidad`,
+    `-50% reuniones`, `100% claridad`.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

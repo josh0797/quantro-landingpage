@@ -23,7 +23,7 @@ const preloadHeroDashboard = () => import("../HeroDashboardPreview");
  * to self-qualification with one click.
  */
 
-const MICROCOPY_DELAY_MS = 5500; // ~5–6 seconds of reading time per state
+const MICROCOPY_DELAY_MS = 5500; // desktop: swap after ~5.5s
 const MOBILE_BREAKPOINT = "(max-width: 1023px)"; // Tailwind lg = 1024px
 
 export const HeroSection = () => {
@@ -55,10 +55,30 @@ export const HeroSection = () => {
   }, []);
 
   // ── Microcopy crossfade ───────────────────────────────────────────────
+  // Desktop: swaps after MICROCOPY_DELAY_MS (user reads at a constant pace).
+  // Mobile: swaps the first time the user scrolls meaningfully — that's the
+  // exact moment attention shifts from headline to decision, so "Solo
+  // necesitas aprobar." lands with context.
   const [microIndex, setMicroIndex] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setMicroIndex(1), MICROCOPY_DELAY_MS);
-    return () => clearTimeout(t);
+    if (typeof window === "undefined") return;
+    const isMobile = window.matchMedia(MOBILE_BREAKPOINT).matches;
+    if (!isMobile) {
+      const t = setTimeout(() => setMicroIndex(1), MICROCOPY_DELAY_MS);
+      return () => clearTimeout(t);
+    }
+    // Mobile — listen for the first scroll past ~80px and then detach.
+    let triggered = false;
+    const onScroll = () => {
+      if (triggered) return;
+      if (window.scrollY > 80) {
+        triggered = true;
+        setMicroIndex(1);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   const microcopy = isEs
