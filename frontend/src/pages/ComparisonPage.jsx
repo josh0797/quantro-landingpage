@@ -322,59 +322,79 @@ const ComparisonTable = ({ isEs, focusKey }) => (
         className="rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.01]"
         style={{ backdropFilter: "blur(12px)" }}
       >
-        {/* Header row */}
-        <div className="grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.08]">
-          <div className="p-4 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
-            {isEs ? "Funcionalidad" : "Capability"}
-          </div>
-          {COMPETITORS.map((c) => {
-            const dim = focusKey && !c.isQuantro && c.key !== focusKey;
-            return (
-              <div
-                key={c.key}
-                className={`p-4 text-center ${dim ? "opacity-35" : ""}`}
-                data-column={c.key}
-                data-testid={`compare-col-${c.key}`}
-              >
-                <div
-                  className={`text-[12px] font-bold tracking-tight ${c.isQuantro ? "text-white" : "text-slate-300"}`}
-                >
-                  {c.name}
-                </div>
-                <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
-                  {c.tagline[isEs ? "es" : "en"]}
-                </div>
-                {c.isQuantro && (
-                  <span className="inline-block mt-1.5 w-8 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE]" />
-                )}
+        {/* Mobile-friendly horizontal scroll wrapper.
+            Page scroll stays vertical; the TABLE itself gets horizontal scroll
+            on small viewports while staying readable on desktop. */}
+        <div
+          className="overflow-x-auto no-scrollbar"
+          style={{ WebkitOverflowScrolling: "touch" }}
+          data-testid="compare-table-scroll"
+        >
+          <div className="min-w-[760px]">
+            {/* Header row */}
+            <div className="grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.08]">
+              <div className="p-4 text-[10px] font-bold tracking-[0.18em] uppercase text-slate-500">
+                {isEs ? "Funcionalidad" : "Capability"}
               </div>
-            );
-          })}
+              {COMPETITORS.map((c) => {
+                const dim = focusKey && !c.isQuantro && c.key !== focusKey;
+                return (
+                  <div
+                    key={c.key}
+                    className={`p-4 text-center ${dim ? "opacity-35" : ""}`}
+                    data-column={c.key}
+                    data-testid={`compare-col-${c.key}`}
+                  >
+                    <div
+                      className={`text-[12px] font-bold tracking-tight ${c.isQuantro ? "text-white" : "text-slate-300"}`}
+                    >
+                      {c.name}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">
+                      {c.tagline[isEs ? "es" : "en"]}
+                    </div>
+                    {c.isQuantro && (
+                      <span className="inline-block mt-1.5 w-8 h-0.5 rounded-full bg-gradient-to-r from-[#00F5FF] to-[#22D3EE]" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Body rows */}
+            {ROWS.map((row, i) => (
+              <div
+                key={row.key}
+                className={`grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors`}
+                data-testid={`compare-row-${row.key}`}
+              >
+                <div className="p-4 text-[13px] text-slate-200 leading-snug flex items-center">
+                  {isEs ? row.es : row.en}
+                </div>
+                {COMPETITORS.map((c) => {
+                  const dim = focusKey && !c.isQuantro && c.key !== focusKey;
+                  return (
+                    <div
+                      key={c.key}
+                      className={`p-3 flex items-center justify-center ${dim ? "opacity-30" : ""} ${c.isQuantro ? "bg-[#00F5FF]/[0.015]" : ""}`}
+                    >
+                      <ComparisonCell value={row[c.key]} isEs={isEs} />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Body rows */}
-        {ROWS.map((row, i) => (
-          <div
-            key={row.key}
-            className={`grid grid-cols-[1.8fr_repeat(4,1fr)] sm:grid-cols-[2fr_repeat(4,1fr)] border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors`}
-            data-testid={`compare-row-${row.key}`}
-          >
-            <div className="p-4 text-[13px] text-slate-200 leading-snug flex items-center">
-              {isEs ? row.es : row.en}
-            </div>
-            {COMPETITORS.map((c) => {
-              const dim = focusKey && !c.isQuantro && c.key !== focusKey;
-              return (
-                <div
-                  key={c.key}
-                  className={`p-3 flex items-center justify-center ${dim ? "opacity-30" : ""} ${c.isQuantro ? "bg-[#00F5FF]/[0.015]" : ""}`}
-                >
-                  <ComparisonCell value={row[c.key]} isEs={isEs} />
-                </div>
-              );
-            })}
-          </div>
-        ))}
+        {/* Mobile hint — only visible on small screens */}
+        <div
+          className="sm:hidden flex items-center justify-center gap-1.5 px-4 pt-3 pb-1 text-[10.5px] text-slate-500"
+          data-testid="compare-table-mobile-hint"
+        >
+          <ArrowRight size={11} className="opacity-70" />
+          {isEs ? "Desliza para ver más columnas" : "Swipe to see more columns"}
+        </div>
 
         {/* Legend */}
         <div className="flex flex-wrap items-center justify-center gap-5 px-4 py-4 text-[11px] text-slate-400">
@@ -392,9 +412,86 @@ const ComparisonTable = ({ isEs, focusKey }) => (
           </span>
         </div>
       </div>
+
+      {/* Constant-evolution glass card — sits between the table and the rest of the page */}
+      <EvolvingNoteCard isEs={isEs} />
     </div>
   </section>
 );
+
+// =========================================================================
+// EvolvingNoteCard — "Quantro evoluciona constantemente"
+// Sits right under the comparison table. Glass card, premium feel, not banner-y.
+// =========================================================================
+const EvolvingNoteCard = ({ isEs }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 12 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: "-60px" }}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    className="mt-8 sm:mt-10 relative rounded-2xl overflow-hidden"
+    style={{
+      background:
+        "linear-gradient(135deg, rgba(0, 245, 255, 0.05) 0%, rgba(14, 22, 40, 0.85) 60%, rgba(160, 32, 255, 0.05) 100%)",
+      border: "1px solid rgba(0, 245, 255, 0.18)",
+      backdropFilter: "blur(14px)",
+      WebkitBackdropFilter: "blur(14px)",
+      boxShadow: "0 30px 80px -30px rgba(0, 245, 255, 0.18)",
+    }}
+    data-testid="evolving-note-card"
+  >
+    {/* ambient glow */}
+    <div
+      aria-hidden
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        background:
+          "radial-gradient(ellipse at 0% 0%, rgba(0,245,255,0.08), transparent 50%), radial-gradient(ellipse at 100% 100%, rgba(160,32,255,0.06), transparent 55%)",
+      }}
+    />
+
+    <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6 px-5 sm:px-7 py-6 sm:py-7">
+      {/* Icon */}
+      <div
+        className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(0, 245, 255, 0.16), rgba(0, 245, 255, 0.04))",
+          border: "1px solid rgba(0, 245, 255, 0.35)",
+          boxShadow: "0 0 24px rgba(0, 245, 255, 0.2)",
+        }}
+      >
+        <Zap size={20} className="text-[#7FF5FF]" strokeWidth={2.2} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9.5px] font-bold tracking-[0.2em] uppercase"
+          style={{
+            background: "rgba(0, 245, 255, 0.08)",
+            border: "1px solid rgba(0, 245, 255, 0.25)",
+            color: "#7FF5FF",
+          }}
+        >
+          <Sparkles size={9} />
+          {isEs ? "Actualizaciones constantes" : "Constant updates"}
+        </span>
+
+        <h3 className="font-satoshi font-bold text-white text-xl sm:text-2xl leading-tight tracking-tight mt-3">
+          {isEs ? "Quantro evoluciona cada semana." : "Quantro evolves every week."}
+        </h3>
+
+        <p className="text-[13px] sm:text-[13.5px] text-slate-400 leading-relaxed mt-2 max-w-xl">
+          {isEs
+            ? "Estamos agregando constantemente nuevas funciones, agentes e integraciones para que tu negocio opere con más claridad, menos herramientas y más inteligencia."
+            : "We're constantly adding new features, agents and integrations so your business runs with more clarity, fewer tools and more intelligence."}
+        </p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+
 
 const KeyDifferenceSection = ({ isEs }) => (
   <section className="relative py-24 px-6" data-testid="compare-key-difference">

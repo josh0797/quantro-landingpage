@@ -151,7 +151,7 @@ const TabAccesos = ({ isEs }) => (
     </div>
 
     {/* Filter chips */}
-    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1" style={{ WebkitOverflowScrolling: "touch" }}>
       <Filter size={11} className="text-slate-500 flex-shrink-0" />
       {[
         { es: "Todos", en: "All", active: true },
@@ -415,17 +415,17 @@ export const PeopleOSSection = () => {
         }}
       />
 
-      <div className="relative max-w-6xl mx-auto grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-10 sm:gap-12 xl:gap-14 items-start">
+      <div className="relative w-full max-w-6xl mx-auto grid xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-10 sm:gap-12 xl:gap-14 items-start">
         {/* Left — narrative */}
-        <motion.div variants={fadeInUp} className="xl:pt-4 min-w-0" data-testid="people-narrative">
+        <motion.div variants={fadeInUp} className="xl:pt-4 min-w-0 w-full max-w-full" data-testid="people-narrative">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#00F5FF]/30 bg-[#00F5FF]/[0.05] text-[10px] font-bold tracking-[0.22em] uppercase text-[#00F5FF] mb-5">
             <Users size={11} />
             {isEs ? "People OS" : "People OS"}
           </span>
 
           <h2
-            className="font-satoshi font-bold text-white leading-[1.1] tracking-tight [text-wrap:balance] break-words"
-            style={{ fontSize: "clamp(26px, 5.4vw, 44px)" }}
+            className="font-satoshi font-bold text-white leading-[1.05] tracking-tight [text-wrap:balance] break-words [overflow-wrap:anywhere] max-w-full"
+            style={{ fontSize: "clamp(28px, 8.5vw, 48px)" }}
             data-testid="people-headline"
           >
             {isEs ? (
@@ -491,11 +491,11 @@ export const PeopleOSSection = () => {
         {/* Right — app mockup */}
         <motion.div
           variants={fadeInUp}
-          className="relative"
+          className="relative min-w-0 w-full max-w-full"
           data-testid="people-mockup"
         >
           <div
-            className="relative rounded-2xl overflow-hidden"
+            className="relative rounded-2xl overflow-hidden w-full max-w-full"
             style={{
               background:
                 "linear-gradient(180deg, rgba(14, 22, 40, 0.92) 0%, rgba(5, 10, 24, 0.88) 100%)",
@@ -522,7 +522,8 @@ export const PeopleOSSection = () => {
 
             {/* Tabs */}
             <div
-              className="flex items-center gap-1.5 px-3 py-3 border-b border-white/[0.05] overflow-x-auto"
+              className="flex items-center gap-1.5 px-3 py-3 border-b border-white/[0.05] overflow-x-auto no-scrollbar"
+              style={{ WebkitOverflowScrolling: "touch" }}
               role="tablist"
               data-testid="people-tabs"
             >

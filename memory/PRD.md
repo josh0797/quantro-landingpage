@@ -509,6 +509,22 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
   inside `InventoryIntelligenceSection` (Framer Motion, 7s gentle loop,
   warm amber glow on the sun layer).
 
+### May 1, 2026 — Mobile responsive + comparison page polish (P0)
+- People OS section made fully mobile-safe: headline uses
+  `clamp(28px, 8.5vw, 48px)` with `overflow-wrap:anywhere` and `max-w-full`;
+  both grid items and the mockup container now carry `min-w-0 w-full max-w-full`.
+  Verified at 390px viewport: `bodyScrollW === bodyClientW`, no horizontal
+  overflow, headline 33px, mockup 350px wide.
+- `no-scrollbar` utility added to `index.css` and applied to People OS tabs +
+  filter chips so the horizontal scroll feels premium (no visible bar).
+- Comparison page table now wraps in `data-testid="compare-table-scroll"`
+  with `overflow-x:auto`, `-webkit-overflow-scrolling:touch` and an inner
+  `min-w-[760px]`. Page vertical scroll preserved. Mobile hint text appears
+  under the table on small viewports.
+- New `EvolvingNoteCard` glass component added directly under the comparison
+  table: badge "Actualizaciones constantes", headline "Quantro evoluciona
+  cada semana." with cyan/violet ambient gradient and Zap icon.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
