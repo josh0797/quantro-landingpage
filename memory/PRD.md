@@ -635,23 +635,28 @@ Follow-up iteration on the comparison page to address 3 user-reported issues plu
 
 ### May 1, 2026 — HeroDashboardPreview as Decision Engine + ownership metric (P0)
 - `HeroDashboardPreview` rebuilt from a classic metrics+checklist panel
-  into a **decision narrative**:
-  - System status chip: "Quantro Intelligence · 3 decisiones · 2
+  into an **intelligent rotating decision narrative**:
+  - System status chip: "Quantro Intelligence · 3 oportunidades hoy · 2
     ejecutándose · 1 pendiente" with color-coded pulse dots.
-  - Decision Engine card (priority recommendation): title + narrative
-    insight with metrics inline (`$847K +12.4%`) + suggested action
-    (specific product names) + impact pill ("+3.2% margen") + "Aprobar"
-    button. Tagged "Recomendado por Quantro Intelligence".
-  - Executable actions replace generic checklist: "Ajustar precio (+5%)
-    en 2 productos", "Reasignar presupuesto Ads (−$2,000 desperdiciados)",
-    "Reactivar 14 clientes inactivos (últimos 30 días)" — each with
-    running/pending state icons.
-  - Soft counters (0→847 revenue, 0→12.4% growth, 0→3.2% margin lift)
-    ease in over 1.6s so the card feels alive from the first frame.
-- Hero microcopy swap logic updated: desktop continues to swap after
-  5.5s; **mobile now swaps only when the user scrolls past ~80px**
-  (attention-shift trigger). One-shot scroll listener auto-detaches
-  after first fire.
+  - **3-decision rotation:** pricing (margin) → ads (efficiency) →
+    reactivation (revenue). First decision stays **11s** so readers
+    absorb it; subsequent rotations every 11s. Hover / tap pauses the
+    rotation — resumes on leave.
+  - Cross-fade + 3px blur transition (420ms, easeOutCubic) — no
+    carousel, no dots, no slide indicators. Reads as "intelligence",
+    not "marketing UI".
+  - Both the decision card AND the actions list transition together so
+    the story stays coherent (action list adapts to the active decision:
+    pricing → 5% uplift actions, ads → pause campaigns, reactivation →
+    email sequence).
+  - `AnalyzingIndicator` — "Analizando áreas clave" with a trio of
+    breathing dots beside the actions heading keeps Quantro visibly
+    "thinking" between rotations.
+  - Soft counters reset and re-run on every rotation so each narrative's
+    numbers (revenue, wasted ads, customer count, potential) ease in
+    from 0 in 1.4s.
+- Hero microcopy swap logic updated: desktop swaps after 5.5s; mobile
+  swaps only when the user scrolls past ~80px (attention-shift trigger).
 - Success Stories — "ownership" story:
   - Primary metric changed from `0 tareas sin responsable` →
     `100% tareas asignadas` (+ EN equivalent).

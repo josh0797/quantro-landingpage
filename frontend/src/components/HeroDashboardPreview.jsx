@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, ArrowRight, TrendingUp, Zap, Check, Clock } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 
 /**
- * HeroDashboardPreview — redesigned from a classic dashboard into a
- * "decision narrative":
+ * HeroDashboardPreview — Decision narrative with intelligent rotation.
  *
- *   1. System status chip — shows "Quantro Intelligence" is alive and
- *      reasoning ("3 decisiones generadas hoy · 2 ejecutándose · 1
- *      pendiente de aprobación").
- *   2. Decision Engine card — the hero insight: title → context → action →
- *      impact. Metrics appear inline inside the narrative, not as
- *      standalone tiles.
- *   3. Executable actions — specific, data-backed items (not generic
- *      "Send proposals / Optimize costs" checklists).
+ *   1. System status chip — "Quantro Intelligence" is alive ("3 nuevas
+ *      oportunidades detectadas hoy · 2 ejecutándose · 1 pendiente").
+ *   2. Decision Engine card — rotates through 3 decisions (pricing → ads →
+ *      reactivation). First decision waits ~11s before the first swap so
+ *      the reader fully absorbs it; subsequent swaps every ~11s.
+ *      Cross-fade + 3px blur transition (420ms) — no carousel, no dots.
+ *   3. Executable actions — specific, data-backed items adjacent to the
+ *      current decision.
  *
- * The whole card reads in ~3 seconds and conveys: "Quantro already
- * thought about this. You just need to approve."
+ * Hover or tap on the decision card pauses the rotation (blur/fade stop,
+ * timer resets on resume). Respects prefers-reduced-motion.
  */
 
-const useSoftCounter = (target, duration = 1600) => {
+// ── Soft counters (animated number ticker)
+const useSoftCounter = (target, duration = 1400, deps = []) => {
   const [v, setV] = useState(0);
   useEffect(() => {
     const reduce =
@@ -30,6 +30,7 @@ const useSoftCounter = (target, duration = 1600) => {
       setV(target);
       return;
     }
+    setV(0);
     const start = performance.now();
     let raf;
     const tick = (now) => {
@@ -40,18 +41,150 @@ const useSoftCounter = (target, duration = 1600) => {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, duration, ...deps]);
   return v;
 };
+
+// ── Decision data ──────────────────────────────────────────────────────
+// Three decisions Quantro rotates through. Each is a single narrative with
+// inline metrics so the card reads like a sentence, not a dashboard.
+const buildDecisions = (isEs) => [
+  {
+    key: "pricing",
+    kicker: isEs ? "Pricing · margen" : "Pricing · margin",
+    render: ({ rev, growth, lift }) =>
+      isEs ? (
+        <>
+          Tus ingresos subieron a{" "}
+          <span className="font-mono tabular-nums text-[#7FF5FF]">${Math.round(rev)}K</span>{" "}
+          <span className="text-emerald-300 tabular-nums">(+{growth.toFixed(1)}%)</span>, pero
+          estás perdiendo margen en 2 productos clave.
+        </>
+      ) : (
+        <>
+          Revenue grew to{" "}
+          <span className="font-mono tabular-nums text-[#7FF5FF]">${Math.round(rev)}K</span>{" "}
+          <span className="text-emerald-300 tabular-nums">(+{growth.toFixed(1)}%)</span>, but
+          margin is slipping on 2 key products.
+        </>
+      ),
+    action: isEs
+      ? <>Ajustar precios en <span className="text-white font-medium">"Silla ejecutiva"</span> y <span className="text-white font-medium">"Escritorio Pro"</span>.</>
+      : <>Adjust pricing on <span className="text-white font-medium">"Executive Chair"</span> and <span className="text-white font-medium">"Pro Desk"</span>.</>,
+    impactLabel: isEs ? "margen" : "margin",
+    counters: { rev: 847, growth: 12.4, lift: 3.2 },
+    impactKey: "lift",
+    actions: [
+      { state: "running", es: <>Ajustar precio <span className="text-white">(+5%)</span> en 2 productos</>, en: <>Adjust price <span className="text-white">(+5%)</span> on 2 products</> },
+      { state: "running", es: <>Notificar al equipo comercial</>, en: <>Notify sales team</> },
+      { state: "pending", es: <>Actualizar catálogo público</>, en: <>Publish updated catalog</> },
+    ],
+  },
+  {
+    key: "ads",
+    kicker: isEs ? "Ads · eficiencia" : "Ads · efficiency",
+    render: ({ wasted, lift }) =>
+      isEs ? (
+        <>
+          Estás perdiendo{" "}
+          <span className="font-mono tabular-nums text-rose-300">${Math.round(wasted).toLocaleString()}</span>{" "}
+          al mes en campañas ineficientes. Reasignar presupuesto mejoraría tu ROI.
+        </>
+      ) : (
+        <>
+          You're burning{" "}
+          <span className="font-mono tabular-nums text-rose-300">${Math.round(wasted).toLocaleString()}</span>{" "}
+          a month on underperforming campaigns. Reallocating would lift ROI.
+        </>
+      ),
+    action: isEs
+      ? <>Pausar <span className="text-white font-medium">2 conjuntos de anuncios</span> y redirigir a Meta Advantage.</>
+      : <>Pause <span className="text-white font-medium">2 ad sets</span> and redirect to Meta Advantage.</>,
+    impactLabel: "ROI",
+    counters: { wasted: 2000, lift: 22 },
+    impactKey: "lift",
+    actions: [
+      { state: "running", es: <>Pausar 2 conjuntos de Meta Ads</>, en: <>Pause 2 Meta ad sets</> },
+      { state: "running", es: <>Reasignar <span className="text-white">$2,000</span> a campañas top</>, en: <>Reallocate <span className="text-white">$2,000</span> to top campaigns</> },
+      { state: "pending", es: <>Revisar creatividades antes de relanzar</>, en: <>Review creatives before relaunch</> },
+    ],
+  },
+  {
+    key: "reactivation",
+    kicker: isEs ? "Clientes · ingresos" : "Customers · revenue",
+    render: ({ count, potential }) =>
+      isEs ? (
+        <>
+          <span className="font-mono tabular-nums text-[#7FF5FF]">{Math.round(count)}</span> clientes inactivos pueden reactivarse con seguimiento automático. Potencial:{" "}
+          <span className="text-emerald-300 tabular-nums">+${Math.round(potential)}K</span>.
+        </>
+      ) : (
+        <>
+          <span className="font-mono tabular-nums text-[#7FF5FF]">{Math.round(count)}</span> inactive customers can be re-engaged with automated follow-up. Potential:{" "}
+          <span className="text-emerald-300 tabular-nums">+${Math.round(potential)}K</span>.
+        </>
+      ),
+    action: isEs
+      ? <>Lanzar <span className="text-white font-medium">secuencia de reactivación</span> personalizada por segmento.</>
+      : <>Launch a <span className="text-white font-medium">re-engagement sequence</span> tailored by segment.</>,
+    impactLabel: isEs ? "potencial" : "potential",
+    counters: { count: 14, potential: 58 },
+    impactKey: "potential",
+    impactSuffix: "K",
+    impactPrefix: "+$",
+    actions: [
+      { state: "running", es: <>Segmentar por última compra</>, en: <>Segment by last purchase</> },
+      { state: "pending", es: <>Revisar plantilla de email</>, en: <>Review email template</> },
+      { state: "pending", es: <>Aprobar envío a <span className="text-white">14 clientes</span></>, en: <>Approve send to <span className="text-white">14 customers</span></> },
+    ],
+  },
+];
+
+const ROTATE_FIRST_DELAY = 11000; // first decision stays on-screen longer
+const ROTATE_EVERY = 11000;       // subsequent swaps
 
 export const HeroDashboardPreview = () => {
   const { language } = useLanguage();
   const isEs = language === "es";
 
-  // Soft counters for the narrative numbers
-  const revenue = useSoftCounter(847);
-  const growth = useSoftCounter(12.4);
-  const marginLift = useSoftCounter(3.2);
+  const decisions = React.useMemo(() => buildDecisions(isEs), [isEs]);
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  // Intelligent rotation — first card waits longer, user-interaction pauses.
+  useEffect(() => {
+    const reduce =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || paused) return;
+    const delay = idx === 0 ? ROTATE_FIRST_DELAY : ROTATE_EVERY;
+    const t = setTimeout(() => {
+      setIdx((i) => (i + 1) % decisions.length);
+    }, delay);
+    return () => clearTimeout(t);
+  }, [idx, paused, decisions.length]);
+
+  const active = decisions[idx];
+  // Soft counters that reset and re-animate each time the decision changes.
+  // We read from `active.counters` and expose a map the render() can consume.
+  const c = active.counters;
+  const c1 = useSoftCounter(c.rev ?? 0, 1400, [idx]);
+  const c2 = useSoftCounter(c.growth ?? 0, 1400, [idx]);
+  const c3 = useSoftCounter(c.lift ?? 0, 1400, [idx]);
+  const c4 = useSoftCounter(c.wasted ?? 0, 1400, [idx]);
+  const c5 = useSoftCounter(c.count ?? 0, 1400, [idx]);
+  const c6 = useSoftCounter(c.potential ?? 0, 1400, [idx]);
+  const counterMap = {
+    rev: c1, growth: c2, lift: c3, wasted: c4, count: c5, potential: c6,
+  };
+  const impactVal = counterMap[active.impactKey];
+  const impactStr = `${active.impactPrefix || "+"}${
+    active.impactKey === "count" ? Math.round(impactVal) : impactVal.toFixed(1)
+  }${active.impactSuffix || (active.impactLabel === "ROI" ? "%" : "%")}`;
+
+  const pause = () => setPaused(true);
+  const resume = () => setPaused(false);
 
   return (
     <motion.div
@@ -93,9 +226,8 @@ export const HeroDashboardPreview = () => {
           </div>
         </div>
 
-        {/* ── Body ───────────────────────────────────────────────── */}
         <div className="p-4 sm:p-5 space-y-4">
-          {/* System status — "Quantro is alive" */}
+          {/* System status — reinforces that Quantro is constantly analysing */}
           <div
             className="flex items-center justify-between gap-2 text-[10.5px]"
             data-testid="hero-dash-status"
@@ -109,7 +241,7 @@ export const HeroDashboardPreview = () => {
             <div className="flex items-center gap-2.5 text-[9.5px] text-slate-500">
               <span className="inline-flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-[#00F5FF] shadow-[0_0_4px_rgba(0,245,255,0.9)]" />
-                {isEs ? "3 decisiones" : "3 decisions"}
+                {isEs ? "3 oportunidades hoy" : "3 opportunities today"}
               </span>
               <span className="inline-flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.9)]" />
@@ -122,132 +254,130 @@ export const HeroDashboardPreview = () => {
             </div>
           </div>
 
-          {/* Decision Engine — primary insight */}
+          {/* Decision Engine — rotates through 3 decisions with cross-fade+blur.
+              Min-height keeps layout stable during the transition. */}
           <div
-            className="relative rounded-xl p-4 overflow-hidden"
+            className="relative rounded-xl overflow-hidden"
             style={{
               background:
                 "linear-gradient(160deg, rgba(0, 245, 255, 0.06), rgba(14, 22, 40, 0.85))",
               border: "1px solid rgba(0, 245, 255, 0.22)",
               boxShadow: "0 18px 50px -20px rgba(0, 245, 255, 0.28)",
+              minHeight: "168px",
             }}
+            onMouseEnter={pause}
+            onMouseLeave={resume}
+            onTouchStart={pause}
+            onTouchEnd={resume}
             data-testid="hero-dash-decision"
+            data-decision-key={active.key}
           >
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold tracking-[0.2em] uppercase text-[#7FF5FF]">
-                <TrendingUp size={10} />
-                {isEs ? "Recomendación prioritaria" : "Priority recommendation"}
-              </span>
-              <span className="text-[9px] font-medium tracking-wider uppercase text-slate-500">
-                {isEs ? "Recomendado por Quantro Intelligence" : "By Quantro Intelligence"}
-              </span>
-            </div>
-
-            {/* Narrative block — metrics live INSIDE the sentence */}
-            <p className="text-[13px] sm:text-[13.5px] text-white leading-snug font-medium">
-              {isEs ? (
-                <>
-                  Tus ingresos subieron a{" "}
-                  <span className="font-mono tabular-nums text-[#7FF5FF]">
-                    ${Math.round(revenue)}K
-                  </span>{" "}
-                  <span className="text-emerald-300 tabular-nums">(+{growth.toFixed(1)}%)</span>, pero estás perdiendo margen en 2 productos clave.
-                </>
-              ) : (
-                <>
-                  Revenue grew to{" "}
-                  <span className="font-mono tabular-nums text-[#7FF5FF]">
-                    ${Math.round(revenue)}K
-                  </span>{" "}
-                  <span className="text-emerald-300 tabular-nums">(+{growth.toFixed(1)}%)</span>, but margin is slipping on 2 key products.
-                </>
-              )}
-            </p>
-
-            {/* Suggested action */}
-            <div className="mt-3 flex items-start gap-2 text-[12px] text-slate-300 leading-snug">
-              <ArrowRight size={12} className="text-[#7FF5FF] mt-0.5 flex-shrink-0" />
-              <span>
-                {isEs
-                  ? <>Ajustar precios en <span className="text-white font-medium">"Silla ejecutiva"</span> y <span className="text-white font-medium">"Escritorio Pro"</span>.</>
-                  : <>Adjust pricing on <span className="text-white font-medium">"Executive Chair"</span> and <span className="text-white font-medium">"Pro Desk"</span>.</>}
-              </span>
-            </div>
-
-            {/* Expected impact pill */}
-            <div className="mt-3 flex items-center justify-between">
-              <span
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold"
-                style={{
-                  background: "rgba(52, 211, 153, 0.12)",
-                  border: "1px solid rgba(52, 211, 153, 0.3)",
-                  color: "#6EE7B7",
-                }}
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={active.key}
+                initial={{ opacity: 0, filter: "blur(3px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(3px)" }}
+                transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                className="p-4"
               >
-                <Sparkles size={9} />
-                {isEs ? "Impacto estimado:" : "Estimated impact:"}{" "}
-                <span className="tabular-nums">+{marginLift.toFixed(1)}%</span>{" "}
-                {isEs ? "margen" : "margin"}
-              </span>
-              <button
-                type="button"
-                className="text-[10.5px] font-semibold text-[#0A0F1C] px-3 py-1.5 rounded-md bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] hover:shadow-[0_0_16px_rgba(0,245,255,0.3)] transition-shadow"
-                data-testid="hero-dash-approve"
-              >
-                {isEs ? "Aprobar" : "Approve"}
-              </button>
-            </div>
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold tracking-[0.2em] uppercase text-[#7FF5FF]">
+                    <TrendingUp size={10} />
+                    {isEs ? "Recomendación prioritaria" : "Priority recommendation"}
+                  </span>
+                  <span className="text-[9px] font-medium tracking-wider uppercase text-slate-500">
+                    {active.kicker}
+                  </span>
+                </div>
+
+                {/* Narrative with inline metrics */}
+                <p className="text-[13px] sm:text-[13.5px] text-white leading-snug font-medium">
+                  {active.render(counterMap)}
+                </p>
+
+                {/* Suggested action */}
+                <div className="mt-3 flex items-start gap-2 text-[12px] text-slate-300 leading-snug">
+                  <ArrowRight size={12} className="text-[#7FF5FF] mt-0.5 flex-shrink-0" />
+                  <span>{active.action}</span>
+                </div>
+
+                {/* Impact pill + approve */}
+                <div className="mt-3 flex items-center justify-between">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-semibold"
+                    style={{
+                      background: "rgba(52, 211, 153, 0.12)",
+                      border: "1px solid rgba(52, 211, 153, 0.3)",
+                      color: "#6EE7B7",
+                    }}
+                  >
+                    <Sparkles size={9} />
+                    {isEs ? "Impacto estimado:" : "Estimated impact:"}{" "}
+                    <span className="tabular-nums">{impactStr}</span>{" "}
+                    {active.impactLabel}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-[10.5px] font-semibold text-[#0A0F1C] px-3 py-1.5 rounded-md bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] hover:shadow-[0_0_16px_rgba(0,245,255,0.3)] transition-shadow"
+                    data-testid="hero-dash-approve"
+                  >
+                    {isEs ? "Aprobar" : "Approve"}
+                  </button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          {/* Executable actions — specific, data-backed */}
+          {/* Executable actions — also cross-fade with the decision. */}
           <div className="space-y-1.5" data-testid="hero-dash-actions">
-            <p className="text-[9.5px] font-bold tracking-[0.22em] uppercase text-slate-500">
-              {isEs ? "Acciones listas" : "Ready actions"}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-[9.5px] font-bold tracking-[0.22em] uppercase text-slate-500">
+                {isEs ? "Acciones listas" : "Ready actions"}
+              </p>
+              <AnalyzingIndicator isEs={isEs} />
+            </div>
 
-            {[
-              {
-                state: "running",
-                es: <>Ajustar precio <span className="text-white">(+5%)</span> en 2 productos</>,
-                en: <>Adjust price <span className="text-white">(+5%)</span> on 2 products</>,
-              },
-              {
-                state: "running",
-                es: <>Reasignar presupuesto Ads <span className="text-white">(−$2,000 desperdiciados)</span></>,
-                en: <>Reallocate Ads budget <span className="text-white">(−$2,000 wasted)</span></>,
-              },
-              {
-                state: "pending",
-                es: <>Reactivar <span className="text-white">14 clientes inactivos</span> (últimos 30 días)</>,
-                en: <>Reactivate <span className="text-white">14 inactive customers</span> (last 30 days)</>,
-              },
-            ].map((a, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-white/[0.015] border border-white/[0.04]"
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`actions-${active.key}`}
+                initial={{ opacity: 0, filter: "blur(2px)" }}
+                animate={{ opacity: 1, filter: "blur(0px)" }}
+                exit={{ opacity: 0, filter: "blur(2px)" }}
+                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                className="space-y-1.5"
               >
-                <span
-                  className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background:
-                      a.state === "running" ? "rgba(52, 211, 153, 0.14)" : "rgba(251, 191, 36, 0.14)",
-                    border:
-                      a.state === "running"
-                        ? "1px solid rgba(52, 211, 153, 0.35)"
-                        : "1px solid rgba(251, 191, 36, 0.35)",
-                  }}
-                >
-                  {a.state === "running" ? (
-                    <Check size={9} className="text-emerald-300" strokeWidth={3} />
-                  ) : (
-                    <Clock size={9} className="text-amber-300" />
-                  )}
-                </span>
-                <span className="text-[11.5px] text-slate-300 leading-snug">
-                  {isEs ? a.es : a.en}
-                </span>
-              </div>
-            ))}
+                {active.actions.map((a, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-white/[0.015] border border-white/[0.04]"
+                  >
+                    <span
+                      className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background:
+                          a.state === "running"
+                            ? "rgba(52, 211, 153, 0.14)"
+                            : "rgba(251, 191, 36, 0.14)",
+                        border:
+                          a.state === "running"
+                            ? "1px solid rgba(52, 211, 153, 0.35)"
+                            : "1px solid rgba(251, 191, 36, 0.35)",
+                      }}
+                    >
+                      {a.state === "running" ? (
+                        <Check size={9} className="text-emerald-300" strokeWidth={3} />
+                      ) : (
+                        <Clock size={9} className="text-amber-300" />
+                      )}
+                    </span>
+                    <span className="text-[11.5px] text-slate-300 leading-snug">
+                      {isEs ? a.es : a.en}
+                    </span>
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -267,5 +397,31 @@ export const HeroDashboardPreview = () => {
     </motion.div>
   );
 };
+
+// "Analizando áreas clave…" with a trio of breathing dots so the user always
+// sees Quantro working even when the decision card is static.
+const AnalyzingIndicator = ({ isEs }) => (
+  <span
+    className="inline-flex items-center gap-1.5 text-[9px] font-medium tracking-wider uppercase text-slate-500"
+    data-testid="hero-dash-analyzing"
+  >
+    <span className="flex gap-0.5" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          className="w-[3px] h-[3px] rounded-full bg-[#7FF5FF]"
+          animate={{ opacity: [0.2, 0.9, 0.2] }}
+          transition={{
+            duration: 1.4,
+            ease: "easeInOut",
+            repeat: Infinity,
+            delay: i * 0.25,
+          }}
+        />
+      ))}
+    </span>
+    {isEs ? "Analizando áreas clave" : "Analysing key areas"}
+  </span>
+);
 
 export default HeroDashboardPreview;
