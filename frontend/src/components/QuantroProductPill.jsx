@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useLanguage } from "../hooks/useLanguage";
 import { usePlatformAccess } from "../hooks/usePlatformAccess";
@@ -97,6 +97,17 @@ export const QuantroProductPill = () => {
       document.removeEventListener("keydown", onKey);
     };
   }, [exploreOpen]);
+
+  // ── Document-wide scroll progress (Apple-keynote feel) ───────────────
+  // Drives the thin cyan bar at the bottom of the pill: 0% on the hero,
+  // 100% when the visitor reaches the footer. Spring-smoothed so the
+  // line glides instead of jittering.
+  const { scrollYProgress } = useScroll();
+  const progressX = useSpring(scrollYProgress, {
+    stiffness: 140,
+    damping: 28,
+    mass: 0.4,
+  });
 
   const items = [
     { id: "interactive-demo", labelEs: "Cómo funciona", labelEn: "How it works" },
@@ -199,6 +210,28 @@ export const QuantroProductPill = () => {
                 >
                   {isEs ? "Comenzar" : "Get started"}
                 </button>
+              </div>
+
+              {/* ── Apple keynote progress bar ──
+                  Ultra-thin cyan line glued to the pill's bottom edge.
+                  `scaleX` is driven by the document scroll spring so it
+                  feels like a story unfolding, not a raw scroll meter. */}
+              <div
+                aria-hidden
+                className="absolute left-3 right-3 bottom-[3px] h-[2px] rounded-full overflow-hidden"
+                style={{ background: "rgba(255, 255, 255, 0.06)" }}
+                data-testid="pill-progress-track"
+              >
+                <motion.div
+                  data-testid="pill-progress-fill"
+                  className="h-full origin-left rounded-full"
+                  style={{
+                    scaleX: progressX,
+                    background:
+                      "linear-gradient(90deg, rgba(0,245,255,0.85) 0%, #00F5FF 60%, #22D3EE 100%)",
+                    boxShadow: "0 0 8px rgba(0, 245, 255, 0.55)",
+                  }}
+                />
               </div>
             </div>
 

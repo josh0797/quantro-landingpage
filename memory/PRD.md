@@ -1089,6 +1089,37 @@ single contextual entry point to every key section, and routes the
   neutral — matching the spec screenshot 1:1.
 - Lint clean on both files.
 
+## 2026-02-02 — Pill scroll-progress bar (Apple keynote story line)
+
+Added a thin cyan progress line glued to the bottom edge of the
+floating product pill. Fills 0% → 100% as the visitor scrolls the
+document, giving the same "I'm making progress through a story" feel
+Apple uses on long-form product pages.
+
+### Implementation (`QuantroProductPill.jsx`)
+- `useScroll()` (Framer Motion) returns `scrollYProgress` for the whole
+  document. A `useSpring` (stiffness 140, damping 28, mass 0.4)
+  smooths out the raw progress so the line glides instead of jittering.
+- Track: 2px tall, `rounded-full`, `rgba(255,255,255,0.06)` background,
+  positioned `absolute left-3 right-3 bottom-[3px]` inside the pill.
+- Fill: gradient `rgba(0,245,255,0.85) → #00F5FF → #22D3EE` with a
+  subtle outer glow `0 0 8px rgba(0, 245, 255, 0.55)`. Driven by
+  `scaleX: progressX` with `origin-left` so it grows from the left edge.
+- `aria-hidden="true"` because the dropdown already announces section
+  changes; the bar is decorative.
+
+### Validated live
+- `pill-progress-fill` exists once the pill becomes visible.
+- `scaleX` measured at multiple scroll positions:
+  - scrollY=800 (~4% of doc) → `matrix(0.0409, 0, 0, 1, 0, 0)`
+  - scrollY=50% → `matrix(0.513, 0, 0, 1, 0, 0)`
+  - scrollY=95% → `matrix(0.983, 0, 0, 1, 0, 0)`
+  Spring-smoothing visible (slight overshoot/lag matches the easing
+  curve as expected).
+- Visual confirmation at 50% scroll: the line fills exactly to the
+  midpoint of the pill with the cyan glow.
+- Lint clean.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
