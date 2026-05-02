@@ -161,11 +161,17 @@ export const SwitchToQuantroSection = () => {
       id="switch"
       className="relative py-28 px-6 overflow-hidden"
       data-testid="switch-to-quantro-section"
+      data-section="switch-quantro"
+      aria-label={isEs ? "Cámbiate a Quantro — migración asistida desde tu sistema actual" : "Switch to Quantro — assisted migration from your current system"}
       style={{
         background:
           "radial-gradient(ellipse at 50% 0%, rgba(0, 245, 255, 0.04) 0%, transparent 60%), #030712",
       }}
     >
+      {/* ES-friendly anchor alias for direct deep-linking / SEO */}
+      <span id="switch-quantro" className="absolute -top-24" aria-hidden />
+      {/* ES slug alias used by some external links */}
+      <span id="cambiate-a-quantro" className="absolute -top-24" aria-hidden />
       <div ref={sectionRef} className="relative max-w-6xl mx-auto">
         {/* Eyebrow */}
         <motion.div variants={fadeInUp} className="flex justify-center mb-5">

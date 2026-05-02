@@ -1467,6 +1467,8 @@ export const InteractiveDemoSection = () => {
       id="interactive-demo"
       className="py-28 px-4 sm:px-6 relative overflow-hidden"
       data-testid="interactive-demo-section"
+      data-section="interactive-demo"
+      aria-label={isEs ? "Demo interactivo — explora Quantro OS como si fuera tu cuenta" : "Interactive demo — explore Quantro OS as if it were your account"}
       style={{
         background:
           "radial-gradient(ellipse at center, rgba(0, 245, 255, 0.04) 0%, transparent 55%), #030712",

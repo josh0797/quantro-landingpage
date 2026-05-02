@@ -125,11 +125,15 @@ export const ComparisonSummarySection = () => {
       id="comparison-summary"
       className="relative py-28 px-6 overflow-hidden"
       data-testid="comparison-summary-section"
+      data-section="comparacion"
+      aria-label={isEs ? "Quantro frente a otros sistemas — comparativa resumida" : "Quantro vs other systems — at-a-glance comparison"}
       style={{
         background:
           "radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.05) 0%, transparent 55%), #030712",
       }}
     >
+      {/* ES-friendly anchor alias for direct deep-linking / SEO */}
+      <span id="comparacion" className="absolute -top-24" aria-hidden />
       {/* Ambient glow */}
       <div
         aria-hidden

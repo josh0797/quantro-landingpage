@@ -829,6 +829,65 @@ Validated:
 
 Lint clean on both files. Self-tested via screenshot tool.
 
+## 2026-02-02 — UI cleanup + SEO anchors + PDF swap + scroll-gated microcopy
+
+### 1. Removed "Recomendado" pill
+- Fully deleted the `motion.span` pill from the Quantro comparison
+  HeaderCell in `pages/ComparisonPage.jsx`. No placeholder, no hidden
+  markup — pill is out of the DOM. Column spacing restored to the
+  original clean hierarchy (Quantro / Potenciado por AOS / underline).
+
+### 2. SEO-by-section improvements
+- Hero (`HeroSection.jsx`) now has `id="hero"`, `data-section="hero"`
+  and a localised `aria-label`.
+- Each landing section carries a `data-section` attribute for GA/GTM
+  tracking plus a descriptive `aria-label`:
+  - `ComparisonSummarySection` → `data-section="comparacion"`
+  - `SwitchToQuantroSection` → `data-section="switch-quantro"`
+  - `SuccessStoriesSection` → `data-section="casos-de-exito"`
+  - `PricingSection` → `data-section="pricing"`
+  - `InteractiveDemoSection` → `data-section="interactive-demo"`
+- Spanish-friendly anchor aliases injected as invisible `<span>` nodes
+  positioned with `-top-24` for scroll offset:
+  - `#comparacion` inside ComparisonSummarySection
+  - `#switch-quantro` + `#cambiate-a-quantro` inside SwitchToQuantroSection
+  - `#casos-de-exito` inside SuccessStoriesSection
+  - `#precios` inside PricingSection
+  These live alongside existing English/kebab IDs so all Navbar
+  scroll-links keep working. Verified via DOM query — all 6 anchors
+  resolve.
+- Existing `h2` hierarchy preserved (no jumped levels) — every target
+  section already headlines with `<h2>` or `<motion.h2>`.
+
+### 3. Scroll-gated microcopy (Hero)
+- Replaced the auto-advance timers with a scroll-aware state machine
+  in `HeroSection.jsx`:
+  - State 0 "Mira a Quantro en acción." fades in on load
+    (`MICROCOPY_ENTRY_FADE_MS = 2750` ms easeOut).
+  - State 1 "Esto ya está pasando en tu negocio." appears
+    `MICROCOPY_STEP1_DELAY_MS = 4800` ms AFTER the first scroll past 40px.
+  - State 2 "Solo necesitas aprobar." appears
+    `MICROCOPY_STEP2_DELTA_MS = 5500` ms after state 1.
+- Both desktop and mobile share this behaviour now. Confirmed by
+  telemetry: with no scroll the text held at state 0 for 6s; after
+  `window.scrollTo(0, 120)` the transitions landed at 5.8s / 11.0s
+  (within animation latency of the 4.8s / 10.3s targets).
+- Layout untouched — crossfade only, `min-h-[18px]` wrapper stable.
+
+### 4. PDF swap: Quantro OS Pitch v3
+- New 165 KB PDF generated server-side from the uploaded
+  `quantro-os-pitch-v3.pptx` via headless LibreOffice
+  (`impress_pdf_Export`). Output stored at
+  `/app/frontend/public/assets/quantro-os-pitch.pdf`.
+- Hero CTA updated:
+  - `href` → `/assets/quantro-os-pitch.pdf`
+  - copy → **"Descarga el Quantro OS Pitch (PDF)"** / **"Download the Quantro OS Pitch (PDF)"**
+  - analytics event renamed `hero_pdf_overview` → `hero_pdf_pitch`.
+- `curl -I` against the preview URL returns `HTTP/2 200`,
+  `content-type: application/pdf`, `content-length: 164903`. No broken
+  links; the old `quantro-os-overview.pdf` is left in place as a legacy
+  redirect target.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

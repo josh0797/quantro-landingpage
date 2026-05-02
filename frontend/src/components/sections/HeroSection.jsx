@@ -23,8 +23,9 @@ const preloadHeroDashboard = () => import("../HeroDashboardPreview");
  * to self-qualification with one click.
  */
 
-const MICROCOPY_STEP1_DELAY_MS = 4800; // initial → step 1 (slowed by +2s)
-const MICROCOPY_STEP2_DELAY_MS = 7500; // initial → step 2 (slowed by +2s)
+const MICROCOPY_ENTRY_FADE_MS = 2750; // state 0 fade-in (entry calm)
+const MICROCOPY_STEP1_DELAY_MS = 4800; // scroll detected → step 1
+const MICROCOPY_STEP2_DELTA_MS = 5500; // step 1 → step 2 (additional delay)
 const MOBILE_BREAKPOINT = "(max-width: 1023px)"; // Tailwind lg = 1024px
 
 export const HeroSection = () => {
@@ -55,32 +56,41 @@ export const HeroSection = () => {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // ── Microcopy crossfade ───────────────────────────────────────────────
-  // Three states now:
-  //   0: "Mira a Quantro en acción." — primer frame (calma, invita).
-  //   1: "Esto ya está pasando en tu negocio."
-  //   2: "Solo necesitas aprobar."
-  // Desktop: auto-advances 0→1 (2.8s) then 1→2 (5.5s).
-  // Mobile: 0→1 when the user starts scrolling past ~80px, 1→2 past ~260px.
+  // ── Microcopy crossfade — scroll-gated ────────────────────────────────
+  // Three states, exposed in this order:
+  //   0: "Mira a Quantro en acción." — entry frame, holds until the user
+  //      begins to scroll. Subtle 2.75s fade-in so it doesn't feel abrupt.
+  //   1: "Esto ya está pasando en tu negocio." — appears 4.8s AFTER the
+  //      first scroll gesture.
+  //   2: "Solo necesitas aprobar." — appears 5.5s after step 1.
+  // Both desktop and mobile share the same scroll-gated behaviour so the
+  // narrative only advances when the reader is actively engaging.
   const [microIndex, setMicroIndex] = useState(0);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const isMobile = window.matchMedia(MOBILE_BREAKPOINT).matches;
-    if (!isMobile) {
-      const t1 = setTimeout(() => setMicroIndex(1), MICROCOPY_STEP1_DELAY_MS);
-      const t2 = setTimeout(() => setMicroIndex(2), MICROCOPY_STEP2_DELAY_MS);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y > 260) setMicroIndex(2);
-      else if (y > 80) setMicroIndex((i) => (i < 1 ? 1 : i));
+    let started = false;
+    let t1 = null;
+    let t2 = null;
+    const start = () => {
+      if (started) return;
+      started = true;
+      t1 = setTimeout(() => setMicroIndex(1), MICROCOPY_STEP1_DELAY_MS);
+      t2 = setTimeout(
+        () => setMicroIndex(2),
+        MICROCOPY_STEP1_DELAY_MS + MICROCOPY_STEP2_DELTA_MS
+      );
     };
+    const onScroll = () => {
+      if (window.scrollY > 40) start();
+    };
+    // If the page loads already scrolled (back-nav, deep link), honour it.
+    if (window.scrollY > 40) start();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (t1) clearTimeout(t1);
+      if (t2) clearTimeout(t2);
+    };
   }, []);
 
   const microcopy = isEs
@@ -105,9 +115,12 @@ export const HeroSection = () => {
 
   return (
     <section
+      id="hero"
       className="relative min-h-screen flex items-center pt-20 pb-16 overflow-hidden"
       style={{ background: "linear-gradient(180deg, #0A0F1C 0%, #030712 100%)" }}
       data-testid="hero-section"
+      data-section="hero"
+      aria-label={isEs ? "Quantro — despierta con decisiones listas para actuar" : "Quantro — wake up with ready decisions"}
     >
       {/* Ambient orbs — static */}
       <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#00F5FF]/5 rounded-full blur-[120px] pointer-events-none" />
@@ -232,10 +245,10 @@ export const HeroSection = () => {
 
             {/* PDF download */}
             <a
-              href="/assets/quantro-os-overview.pdf"
+              href="/assets/quantro-os-pitch.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackCTAClick("hero_pdf_overview")}
+              onClick={() => trackCTAClick("hero_pdf_pitch")}
               className="mt-4 inline-flex items-center gap-2 text-xs text-slate-400 hover:text-[#00F5FF] transition-colors group"
               data-testid="hero-pdf-link"
             >
@@ -245,15 +258,23 @@ export const HeroSection = () => {
                 <line x1="12" y1="18" x2="12" y2="12" />
                 <polyline points="9 15 12 12 15 15" />
               </svg>
-              <span>{isEs ? "Descarga el Quantro OS Overview (PDF)" : "Download the Quantro OS Overview (PDF)"}</span>
+              <span>{isEs ? "Descarga el Quantro OS Pitch (PDF)" : "Download the Quantro OS Pitch (PDF)"}</span>
               <span className="transition-transform group-hover:translate-x-0.5">→</span>
             </a>
           </div>
 
           {/* ─────── Right column — microcopy + dashboard ─────── */}
           <div className="order-2 lg:order-2 relative">
-            {/* Microcopy above dashboard — crossfade only, fixed-height wrapper */}
-            <div
+            {/* Microcopy above dashboard — 2.75s entry fade-in, then
+                crossfades between states as the user scrolls.
+                Fixed-height wrapper keeps layout stable. */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: MICROCOPY_ENTRY_FADE_MS / 1000,
+                ease: "easeOut",
+              }}
               className="mb-3 text-center sm:text-left min-h-[18px]"
               data-testid="hero-microcopy"
             >
@@ -269,7 +290,7 @@ export const HeroSection = () => {
                   {microcopy[microIndex]}
                 </motion.p>
               </AnimatePresence>
-            </div>
+            </motion.div>
 
             {/* Dashboard — lazy-loaded chunk.
                 Suspense fallback matches the dashboard's approximate size so

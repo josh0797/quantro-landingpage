@@ -197,11 +197,15 @@ export const PricingSection = () => {
       id="pricing"
       className="py-28 px-6"
       data-testid="pricing-section"
+      data-section="pricing"
+      aria-label={isEs ? "Planes y precios de Quantro" : "Quantro plans and pricing"}
       style={{
         background:
           "radial-gradient(ellipse at top, rgba(0,245,255,0.04) 0%, transparent 50%), #030712",
       }}
     >
+      {/* ES-friendly anchor alias for direct deep-linking / SEO */}
+      <span id="precios" className="absolute -top-24" aria-hidden />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div variants={fadeInUp} className="text-center max-w-3xl mx-auto mb-6">

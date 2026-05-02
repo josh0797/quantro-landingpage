@@ -436,11 +436,15 @@ export const SuccessStoriesSection = () => {
       id="success-stories"
       className="relative py-20 sm:py-28 px-5 sm:px-6 overflow-hidden"
       data-testid="success-stories-section"
+      data-section="casos-de-exito"
+      aria-label={isEs ? "Casos de éxito de empresas que usan Quantro" : "Success stories of companies running on Quantro"}
       style={{
         background:
           "radial-gradient(ellipse at 50% 0%, rgba(0,245,255,0.04) 0%, transparent 55%), #030712",
       }}
     >
+      {/* ES-friendly anchor alias for direct deep-linking / SEO */}
+      <span id="casos-de-exito" className="absolute -top-24" aria-hidden />
       <div className="relative max-w-4xl mx-auto">
         {/* Header */}
         <motion.div variants={fadeInUp} className="text-center mb-10 sm:mb-14">
