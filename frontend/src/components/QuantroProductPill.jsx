@@ -29,6 +29,7 @@ export const QuantroProductPill = () => {
   const isEs = language === "es";
   const [visible, setVisible] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("hero");
   const dropdownRef = useRef(null);
 
   // ── Show / hide on scroll ────────────────────────────────────────────
@@ -38,6 +39,44 @@ export const QuantroProductPill = () => {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ── Track the section currently in view (for menu highlight) ─────────
+  // Picks whichever target section's top is closest-to-but-still-above
+  // the pill (88px scroll-margin). Updates on scroll so opening the
+  // dropdown always shows the user's current location.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const ids = [
+      "hero",
+      "interactive-demo",
+      "comparison-summary",
+      "success-stories",
+      "switch",
+      "pricing",
+    ];
+    const updateActive = () => {
+      const y = window.scrollY + 120; // probe just under the pill
+      let bestId = "hero";
+      let bestTop = -Infinity;
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY;
+        if (top <= y && top > bestTop) {
+          bestTop = top;
+          bestId = id;
+        }
+      });
+      setActiveSection(bestId);
+    };
+    updateActive();
+    window.addEventListener("scroll", updateActive, { passive: true });
+    window.addEventListener("resize", updateActive);
+    return () => {
+      window.removeEventListener("scroll", updateActive);
+      window.removeEventListener("resize", updateActive);
+    };
   }, []);
 
   // ── Close dropdown on outside click / escape ─────────────────────────
@@ -182,22 +221,48 @@ export const QuantroProductPill = () => {
                   data-testid="pill-explore-menu"
                 >
                   <ul className="py-2">
-                    {items.map((it) => (
-                      <li key={it.id}>
-                        <button
-                          type="button"
-                          onClick={() => goTo(it.id)}
-                          className="w-full text-left px-4 py-2.5 text-[13.5px] text-slate-200 hover:text-white hover:bg-white/[0.06] transition-colors flex items-center justify-between group"
-                          data-testid={`pill-menu-${it.id}`}
-                          role="menuitem"
-                        >
-                          <span>{isEs ? it.labelEs : it.labelEn}</span>
-                          <span className="text-slate-600 group-hover:text-[#7FF5FF] transition-colors">
-                            →
-                          </span>
-                        </button>
-                      </li>
-                    ))}
+                    {items.map((it) => {
+                      const isActive = activeSection === it.id;
+                      return (
+                        <li key={it.id}>
+                          <button
+                            type="button"
+                            onClick={() => goTo(it.id)}
+                            className={`w-full text-left mx-2 my-0.5 px-3 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 flex items-center justify-between group ${
+                              isActive
+                                ? "font-semibold text-[#031018]"
+                                : "text-slate-200 hover:text-white hover:bg-white/[0.06]"
+                            }`}
+                            style={
+                              isActive
+                                ? {
+                                    background:
+                                      "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(127,245,255,0.95) 130%)",
+                                    width: "calc(100% - 16px)",
+                                    boxShadow:
+                                      "0 4px 14px -4px rgba(0, 245, 255, 0.35)",
+                                  }
+                                : { width: "calc(100% - 16px)" }
+                            }
+                            data-testid={`pill-menu-${it.id}`}
+                            data-active={isActive}
+                            role="menuitem"
+                            aria-current={isActive ? "true" : undefined}
+                          >
+                            <span>{isEs ? it.labelEs : it.labelEn}</span>
+                            <span
+                              className={
+                                isActive
+                                  ? "text-[#031018]"
+                                  : "text-slate-600 group-hover:text-[#7FF5FF] transition-colors"
+                              }
+                            >
+                              {isActive ? "•" : "→"}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </motion.div>
               )}

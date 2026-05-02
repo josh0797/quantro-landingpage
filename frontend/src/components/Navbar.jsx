@@ -13,6 +13,7 @@ import { UserAvatarPopover } from "./UserAvatarPopover";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [navHidden, setNavHidden] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language } = useLanguage();
   const { billingState, isAuthenticated, user, profile } = useUserBillingState();
@@ -20,8 +21,17 @@ export const Navbar = () => {
   const ctaLabel = getCTACopy(billingState, language);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    // Single listener tracks two thresholds:
+    //   • >20px → switch Navbar to its compact glass mode.
+    //   • >360px → fade the Navbar out so the floating product pill
+    //     becomes the sole nav (Apple keynote style takeover).
+    const handleScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 20);
+      setNavHidden(y > 360);
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -59,12 +69,22 @@ export const Navbar = () => {
       ? "bg-gradient-to-r from-amber-400 to-amber-500 text-[#0A0F1C] hover:shadow-lg hover:shadow-amber-400/25"
       : "bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] text-[#0A0F1C] hover:shadow-lg hover:shadow-[#00F5FF]/20";
 
+  // After the Apple-style product pill kicks in (scrollY > 360),
+  // fade the top Navbar so only the contextual pill follows the reader.
+  // Visitors that scroll back to the hero recover the full Navbar.
+
   return (
     <nav
-      className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`sticky top-0 left-0 right-0 z-40 transition-all duration-500 ease-out ${
         scrolled ? "glass-nav py-3" : "py-5"
       }`}
+      style={{
+        opacity: navHidden ? 0 : 1,
+        pointerEvents: navHidden ? "none" : "auto",
+        transform: navHidden ? "translateY(-8px)" : "translateY(0)",
+      }}
       data-testid="navbar"
+      aria-hidden={navHidden}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5" data-testid="logo">

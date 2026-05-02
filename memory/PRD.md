@@ -1048,6 +1048,47 @@ single contextual entry point to every key section, and routes the
 - Lint clean on the new component + App.js. No regressions on existing
   Navbar.
 
+## 2026-02-02 — Pill takeover + active section highlight
+
+### 1. Top Navbar fades for the floating pill (Apple keynote takeover)
+- `Navbar.jsx` now tracks two scroll thresholds in a single listener:
+  `> 20px` toggles glass mode, `> 360px` triggers full takeover.
+- When `navHidden` is true, the top Navbar transitions to
+  `opacity: 0`, `pointer-events: none`, `translateY(-8px)`, with
+  `aria-hidden="true"` — so only the floating product pill follows the
+  reader on long-form scroll, recreating the Apple iPhone keynote feel.
+- Scrolling back into the hero (≤360px) restores the full Navbar.
+- `z-index` rebalanced: Navbar `z-40`, product pill `z-50`.
+
+### 2. Active section highlight inside the Explorar dropdown
+- `QuantroProductPill.jsx` adds an `activeSection` state derived from
+  scroll position. A scroll listener probes the closest section above
+  `scrollY + 120` from a fixed list (`hero`, `interactive-demo`,
+  `comparison-summary`, `success-stories`, `switch`, `pricing`) and
+  updates the active id in real time.
+- Each menu item now branches its style:
+  - **Active**: white-to-cyan gradient pill
+    (`linear-gradient(135deg, rgba(255,255,255,0.95), rgba(127,245,255,0.95) 130%)`),
+    dark `#031018` text, soft cyan outer shadow, the trailing arrow
+    swaps from `→` to `•` — same metaphor as Apple's Highlights pill.
+  - **Inactive**: existing slate-200 with hover white/[0.06] and
+    arrow turning cyan on hover.
+- Items render `data-active` and `aria-current="true"` for both tests
+  and assistive tech.
+
+### Validated live
+- Navbar opacity: top → `1`, scrollY 700 → `0`. Pill visible and
+  interactive after takeover.
+- Active section follows scroll exactly:
+  • In `#comparison-summary` viewport → `pill-menu-comparison-summary
+    data-active="true"`, all others false.
+  • In `#pricing` viewport → `pill-menu-pricing data-active="true"`.
+  • Between sections (transition zone) → no item active (graceful).
+- Visual confirmation in the Comparison section: "Comparación" renders
+  as a bright white-cyan pill with the trailing dot, all other items
+  neutral — matching the spec screenshot 1:1.
+- Lint clean on both files.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
