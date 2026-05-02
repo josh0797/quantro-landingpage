@@ -107,12 +107,6 @@ export const HeroSection = () => {
 
   const comparisonPath = isEs ? "/comparacion" : "/comparison";
 
-  // Paired company names — 2 per line for a quieter row.
-  const companyPairs = [
-    ["Grupo Nexo", "Altura Retail"],
-    ["Nodo Studios", "Grupo OCP"],
-  ];
-
   return (
     <section
       id="hero"
@@ -212,8 +206,9 @@ export const HeroSection = () => {
               </button>
             </div>
 
-            {/* Social proof — paired rows, low opacity */}
-            <div className="space-y-2 opacity-70" data-testid="hero-social-proof">
+            {/* Social proof — single-line rating strip; the company roster
+                now lives inside the live SocialProofSection card. */}
+            <div className="opacity-70" data-testid="hero-social-proof">
               <div className="flex items-center gap-2.5 text-[13px] text-slate-200">
                 <span className="flex text-[#FACC15]/90" aria-label="5 stars">
                   {[0, 1, 2, 3, 4].map((i) => (
@@ -227,19 +222,6 @@ export const HeroSection = () => {
                     ? "Empresas que deciden mejor, usan Quantro"
                     : "Companies that decide better, run on Quantro"}
                 </span>
-              </div>
-
-              <div
-                className="text-[10.5px] tracking-[0.22em] uppercase text-slate-400 space-y-0.5"
-                data-testid="hero-social-companies"
-              >
-                {companyPairs.map((pair, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span>{pair[0]}</span>
-                    <span className="text-slate-500" aria-hidden>·</span>
-                    <span>{pair[1]}</span>
-                  </div>
-                ))}
               </div>
             </div>
 
