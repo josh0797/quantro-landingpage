@@ -459,24 +459,24 @@ export const SuccessStoriesSection = () => {
           >
             {isEs ? (
               <>
-                Resultados reales,{" "}
+                Resultados reales{" "}
                 <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
-                  no promesas.
+                  desde el primer día.
                 </span>
               </>
             ) : (
               <>
-                Real results,{" "}
+                Real results{" "}
                 <span className="bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent">
-                  not promises.
+                  from day one.
                 </span>
               </>
             )}
           </h2>
           <p className="text-[15px] text-slate-400 leading-[1.55] max-w-xl mx-auto mt-4">
             {isEs
-              ? "Empresas que pasaron de operar con herramientas a operar con Quantro."
-              : "Teams that moved from running on tools to running on Quantro."}
+              ? "Esto es lo que cambió cuando empezaron a operar con Quantro."
+              : "This is what changed when they started running on Quantro."}
           </p>
         </motion.div>
 

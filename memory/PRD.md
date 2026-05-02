@@ -935,6 +935,62 @@ day.
   `checkout_started` to compute "section reached before converting"
   metrics without custom SQL.
 
+## 2026-02-02 — Social Proof → Success Stories narrative handoff
+
+Transformed the static "127 empresas" strip into a live-feeling glass
+card that sets up the Success Stories block as a natural consequence
+instead of a separate section. The flow now reads:
+"Others already use it → here's how → here are the results."
+
+### SocialProofSection rebuilt (`components/sections/SocialProofSection.jsx`)
+- Fully overwritten (112 lines → 256 lines) using a premium glass card
+  with layered radial cyan top-glow + subtle outer shadow.
+- **Count-up hero**: big `clamp(28px, 5.4vw, 44px)` cyan gradient number
+  that tweens 0 → live count (from `/api/stripe/payments/count`, falls
+  back to 127) in 1s `easeOutCubic` once the card enters view.
+- **Momentum signals** below the headline:
+  - "+3 nuevas esta semana" (brand-cyan dot, subtle emphasis on the
+    number)
+  - "Actualizado hace un momento" / "Updated moments ago"
+  - Both fade-up staggered at 1.0s / 1.15s after the count-up so the eye
+    travels naturally down.
+- **Customer names**: two rows of paired company names (Grupo Nexo ·
+  Altura Retail / Nodo Studios · Grupo OCP) with 0.45s + 0.22s delta
+  staggered fade-ups, gentle `ease [0.22, 1, 0.36, 1]`.
+- **Interactive handoff**: the entire card is a `<button>` with
+  `data-testid="social-proof-cta"` that scrolls smoothly to
+  `#casos-de-exito`. On hover/focus the card reveals a hidden
+  "Ver cómo operan →" hint with a bouncing `ArrowDown` icon.
+- **Apple-style continuity**: `useScroll` + `useTransform` ease the card
+  opacity from `1 → 0.55` and `y: 0 → -12px` as the visitor scrolls
+  past, so the reader feels the narrative pass the baton to the next
+  section instead of landing on an abrupt cut.
+- Tracks `cta_click` with label `social_proof_to_cases` for funnel
+  analysis.
+- Preserves the existing live pulse dot on the "EN VIVO" eyebrow.
+
+### Success Stories headline refined (`SuccessStoriesSection.jsx`)
+- Headline copy:
+  - ES: "Resultados reales, no promesas." → **"Resultados reales desde
+    el primer día."**
+  - EN: "Real results, not promises." → **"Real results from day one."**
+- Subheadline copy:
+  - ES: "Empresas que pasaron de operar con herramientas a operar con
+    Quantro." → **"Esto es lo que cambió cuando empezaron a operar con
+    Quantro."**
+  - EN: **"This is what changed when they started running on Quantro."**
+- Semantic accent on "desde el primer día." / "from day one." inside
+  the existing cyan gradient `<span>` — typography hierarchy untouched.
+
+### Validated live
+- Full card inner-text confirmed: "EN VIVO" / "127 empresas ya se
+  unieron a Quantro" / "+3 nuevas esta semana" / "Actualizado hace un
+  momento" / company pairs / "Ver cómo operan".
+- CTA click-through: `window.scrollY` advanced from 811 → 12003 and
+  `#casos-de-exito` rect settled at `top: 11.8px`, i.e. perfectly
+  anchored in the viewport.
+- Lint clean, no regressions on adjacent sections.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE
