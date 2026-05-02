@@ -991,6 +991,63 @@ instead of a separate section. The flow now reads:
   anchored in the viewport.
 - Lint clean, no regressions on adjacent sections.
 
+## 2026-02-02 — Apple-style sticky product pill nav
+
+Added a floating product navigation pill inspired by the Apple iPhone 17
+Pro keynote sub-nav. It complements (does not replace) the existing
+top Navbar — appears once the visitor scrolls past the hero, gives a
+single contextual entry point to every key section, and routes the
+"Comenzar" CTA straight to the registration flow.
+
+### New component (`components/QuantroProductPill.jsx`)
+- `position: fixed; top: 12px;` centered with `max-width: 1080px` and
+  height `52–58px`. Hidden on the hero, slides into view via Framer
+  Motion (`y: -16 → 0`, 0.35s easeOut) once `window.scrollY > 360`.
+- Glass pill: `backdrop-blur-xl` + `rgba(8, 12, 24, 0.62)` background +
+  `1px solid rgba(255, 255, 255, 0.10)` border + soft outer shadow +
+  inner highlight (`inset 0 1px 0 rgba(255,255,255,0.04)`).
+- **Left**: "Quantro OS" label with a cyan live-dot
+  (`box-shadow: 0 0 8px rgba(0, 245, 255, 0.85)`). Click → smooth-scroll
+  to top.
+- **Right**:
+  - "Explorar / Explore" outline pill (`rgba(255,255,255,0.04)` bg,
+    `0.14` border) with a `ChevronDown` that rotates 180° on open.
+  - "Comenzar / Get started" cyan gradient pill
+    (`#00F5FF → #22D3EE`) with subtle outer glow + inset cyan ring,
+    `hover: scale-[1.02]`.
+- **Dropdown**: 260px glass panel anchored to the right edge of the
+  pill. Items: Cómo funciona / Comparación / Casos de éxito / Cámbiate
+  a Quantro / Precios → smooth scroll to `#interactive-demo`,
+  `#comparison-summary`, `#success-stories`, `#switch`, `#pricing`.
+  Each row reveals a `→` arrow that brightens to cyan on hover.
+- Click-outside + `Escape` close the menu. `aria-haspopup`,
+  `aria-expanded`, `role="menu"` for accessibility.
+- All interactions emit GA events (`pill_brand`, `pill_explore_*`,
+  `pill_start`) so we can read pill engagement separately from the top
+  Navbar.
+
+### Scroll offset (`App.css`)
+- Added a 88px `scroll-margin-top` rule for `[data-section]` and the
+  Spanish anchor IDs (`#comparacion`, `#casos-de-exito`,
+  `#switch-quantro`, `#cambiate-a-quantro`, `#precios`, `#hero`) so
+  pill-driven smooth scrolls land below the floating nav, not under it.
+
+### Wiring (`App.js`)
+- `<QuantroProductPill />` mounted right after `<Navbar />`. Both
+  share the same `usePlatformAccess` hook so "Comenzar" opens the
+  registration modal exactly like the existing top CTA.
+
+### Validated live
+- `data-testid="quantro-product-pill"` is **null** on the hero, **present**
+  after `scrollY > 360`. Inner text: "Quantro OS | Explorar | Comenzar".
+- Dropdown opens with the 5 expected items.
+- Click "Casos de éxito" → `#success-stories.getBoundingClientRect().top = 93px`
+  (right below the pill — `scroll-margin-top` working).
+- Click "Comenzar" → platform access modal opens
+  (`COMENZAR_OPENED_MODAL: true`).
+- Lint clean on the new component + App.js. No regressions on existing
+  Navbar.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

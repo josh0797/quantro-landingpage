@@ -22,6 +22,7 @@ import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import QuantroProductPill from "@/components/QuantroProductPill";
 import useSectionDepthTracker from "@/hooks/useSectionDepthTracker";
 
 /**
@@ -41,6 +42,7 @@ const LandingShell = () => {
 
     <AnnouncementBanner />
     <Navbar />
+    <QuantroProductPill />
 
     {/* Hook */}
     <HeroSection />

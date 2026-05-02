@@ -1,5 +1,24 @@
 /* Additional App-specific styles */
 
+/* ====== STICKY PRODUCT PILL — scroll offset ======
+   The Apple-style floating pill (`QuantroProductPill`) sits at top:12px
+   with a height of ~58px, so destination sections need ~88px of
+   scroll-margin so deep-link / smooth-scroll lands below the pill, not
+   underneath it. */
+[data-section] {
+  scroll-margin-top: 88px;
+}
+section[id],
+[id="comparacion"],
+[id="casos-de-exito"],
+[id="switch-quantro"],
+[id="cambiate-a-quantro"],
+[id="precios"],
+[id="hero"] {
+  scroll-margin-top: 88px;
+}
+
+
 /* ====== FUTURISTIC HERO STYLES ====== */
 
 /* Void background */
