@@ -73,3 +73,31 @@ export const trackCheckoutCancelled = ({ sessionId } = {}) => {
     session_id: sessionId,
   });
 };
+
+// ─────────────────────────────────────────────────────────────────────────
+// Section-depth tracking
+// Fires `section_view` the first time each landing section comes into view,
+// plus `scroll_depth_section` with the deepest section reached (dispatched
+// once when the tab is hidden / unloaded). Reading `section_view` as a
+// funnel in GA4 shows exactly what % of visitors reach each stage
+// (hero → problem → pricing → faq).
+// ─────────────────────────────────────────────────────────────────────────
+export const trackSectionView = ({ section, index, total }) => {
+  gtag("event", "section_view", {
+    event_category: "engagement",
+    section_id: section,
+    section_index: index,
+    section_total: total,
+    section_pct: total ? Math.round(((index + 1) / total) * 100) : undefined,
+  });
+};
+
+export const trackMaxSectionDepth = ({ section, index, total }) => {
+  gtag("event", "scroll_depth_section", {
+    event_category: "engagement",
+    section_id: section,
+    section_index: index,
+    section_total: total,
+    section_pct: total ? Math.round(((index + 1) / total) * 100) : undefined,
+  });
+};

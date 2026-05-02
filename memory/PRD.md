@@ -888,6 +888,53 @@ Lint clean on both files. Self-tested via screenshot tool.
   links; the old `quantro-os-overview.pdf` is left in place as a legacy
   redirect target.
 
+## 2026-02-02 — GA4 section-depth funnel telemetry
+
+Added end-to-end scroll-depth-by-section tracking that lights up a real
+funnel in GA4 using the `data-section` attributes added earlier the same
+day.
+
+### Analytics helpers (`lib/analytics.js`)
+- New `trackSectionView({ section, index, total })` — fires the GA4
+  `section_view` event with `section_id`, `section_index`, `section_total`
+  and a pre-computed `section_pct` (percentile position in the funnel).
+- New `trackMaxSectionDepth({ section, index, total })` — fires the GA4
+  `scroll_depth_section` event once per session with the deepest section
+  the visitor reached.
+
+### Custom hook (`hooks/useSectionDepthTracker.js`)
+- Mounts a single `IntersectionObserver` that watches every
+  `[data-section]` element. Fires `section_view` the first time each
+  node crosses 50% visibility (`rootMargin: "0px 0px -10% 0px"`,
+  `threshold: 0.5`).
+- Tracks the deepest section reached in a closure ref. On `pagehide` OR
+  `visibilitychange → hidden` it flushes `scroll_depth_section` so the
+  deepest point is captured even on tab close.
+- DOM order freezes the funnel: section index reflects the reading order
+  at hook mount, so `section_pct` values are stable between deploys.
+- Cleans up observer + listeners on unmount.
+
+### Wired from `App.js`
+- `LandingShell` now converts to a function component so it can call
+  `useSectionDepthTracker()` — single call, no args, sensible defaults.
+
+### Validated live
+- Playwright run on the home route stubbed window.gtag, then verified
+  the real GA4 script pushes to `window.dataLayer`. Observed events:
+    `section_view` → hero (pct=17%) → interactive-demo (pct=33%) →
+    casos-de-exito (pct=50%)
+    `scroll_depth_section` → casos-de-exito (pct=50%)
+- All events carry the expected payload. Lint clean on all touched
+  files.
+
+### What this unlocks in GA4
+- Build a funnel report using `section_view` + the `section_id` param:
+  compare conversion between hero → pricing, detect drop-offs after
+  specific sections, A/B-test section order.
+- Correlate `scroll_depth_section.section_pct` with
+  `checkout_started` to compute "section reached before converting"
+  metrics without custom SQL.
+
 ## Prioritized Backlog
 
 ### P0/P1/P2/P3 DONE

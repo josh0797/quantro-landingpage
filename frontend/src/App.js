@@ -22,14 +22,21 @@ import PricingSection from "@/components/sections/PricingSection";
 import FAQSection from "@/components/sections/FAQSection";
 import Footer from "@/components/sections/Footer";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
+import useSectionDepthTracker from "@/hooks/useSectionDepthTracker";
 
 /**
  * Landing page (routed at "/").
  * LanguageProvider + PlatformAccessProvider + AuthRouteBoot + Router live in index.js.
  */
 
-const LandingShell = () => (
-  <div className="min-h-screen bg-[#030712]">
+const LandingShell = () => {
+  // GA4 funnel telemetry — fires `section_view` once per section the first
+  // time it crosses 50% visibility, and a final `scroll_depth_section` when
+  // the tab is hidden. Needs `[data-section]` on target <section> nodes.
+  useSectionDepthTracker();
+
+  return (
+    <div className="min-h-screen bg-[#030712]">
     <div className="noise-overlay" />
 
     <AnnouncementBanner />
@@ -82,7 +89,8 @@ const LandingShell = () => (
     <PaymentReturnModal />
     <SupportChatWidget />
   </div>
-);
+  );
+};
 
 const AppContent = () => <LandingShell />;
 
