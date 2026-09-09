@@ -41,8 +41,12 @@ export default function TermsPage() {
 
       <Section title="Prueba de $1 USD">
         <p>
-          Ofrecemos un acceso de prueba por <strong className="text-white">$1 USD</strong>, un cargo único no reembolsable que da acceso al producto por un período limitado.
-          Al finalizar la prueba podrás elegir un plan mensual o anual, o simplemente no continuar.
+          Ofrecemos un acceso de prueba por <strong className="text-white">$1 USD</strong>, un cargo único no reembolsable que descuenta tu primer mes del plan Essential.
+        </p>
+        <p>
+          <strong className="text-white">La suscripción se renueva automáticamente a precio completo</strong> (Essential, $59 USD/mes) al terminar el mes de prueba, cargado al mismo método de pago, salvo que canceles antes de esa fecha desde Ajustes → Plan y Facturación o escribiendo a{" "}
+          <a href="mailto:soporte@quantroos.com" className="text-[#00F5FF]">soporte@quantroos.com</a>.
+          Si no quieres continuar, debes cancelar antes de que termine el período de prueba para evitar el cargo del segundo mes.
         </p>
       </Section>
 
