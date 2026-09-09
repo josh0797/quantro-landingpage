@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { resolvePriceId } from "./platformRoutes";
+import { resolvePriceId, isTrialEligible, TRIAL_COUPON_ID } from "./platformRoutes";
 
 /**
  * Checkout flow for Quantro.
@@ -29,6 +29,14 @@ const CHECKOUT_ENDPOINT = `${SUPABASE_URL}/functions/v1/create-checkout-session`
  * @param {string}  opts.email          - optional customer email
  * @param {string}  opts.language       - 'es' | 'en' — forwarded as locale
  * @param {string}  opts.origin         - override for success/cancel URL origin
+ * @param {boolean} opts.wantsTrial     - true to request the $1 trial (see
+ *                                        TermsPage.jsx / platformRoutes.js).
+ *                                        Only ever takes effect for
+ *                                        essential/monthly — resolved here,
+ *                                        not trusted from the caller, so a
+ *                                        stray true elsewhere can't attach
+ *                                        the coupon to a price it doesn't
+ *                                        apply to in Stripe.
  *
  * @throws Error if the plan/billing combo is invalid or the function errors.
  * Redirects the browser to Stripe on success. Never returns on the happy path.
@@ -39,6 +47,7 @@ export async function startStripeCheckout({
   email = null,
   language = "es",
   origin = null,
+  wantsTrial = false,
 } = {}) {
   const priceId = resolvePriceId(plan, billingCycle);
   if (!priceId) {
@@ -46,6 +55,8 @@ export async function startStripeCheckout({
       `[stripe] No priceId configured for plan=${plan} cycle=${billingCycle}`
     );
   }
+  const couponId =
+    wantsTrial && isTrialEligible(plan, billingCycle) ? TRIAL_COUPON_ID : undefined;
 
   const baseOrigin = origin || window.location.origin;
   const successUrl = `${baseOrigin}/?checkout=success`;
@@ -69,6 +80,7 @@ export async function startStripeCheckout({
     cancelUrl,
     locale: language === "en" ? "en" : "es",
     customerEmail: email || sessionData?.session?.user?.email || undefined,
+    couponId,
   };
 
   const response = await fetch(CHECKOUT_ENDPOINT, {

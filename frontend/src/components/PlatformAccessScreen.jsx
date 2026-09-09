@@ -202,6 +202,10 @@ export const PlatformAccessScreen = ({ open, onClose, initial = null }) => {
         billingCycle: "monthly",
         email: user.email,
         language,
+        // Only takes effect for essential/monthly — startStripeCheckout
+        // re-checks eligibility itself, so this is safe to pass for every
+        // tier rather than duplicating the plan check here too.
+        wantsTrial: true,
       });
     } catch (err) {
       // eslint-disable-next-line no-console

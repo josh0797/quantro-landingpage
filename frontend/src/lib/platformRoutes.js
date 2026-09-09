@@ -64,6 +64,23 @@ export const resolvePriceId = (plan, billingCycle = "monthly") => {
 };
 
 /**
+ * The real $1 USD trial promised on /terminos (TermsPage.jsx): a Stripe
+ * coupon ("QUANTROTRIAL1", id xvxhaIea) that's a fixed $58 discount,
+ * "once" duration, scoped in Stripe to the Quantro Essential product only
+ * — $59/mes - $58 = $1 on the first invoice, full price from the second
+ * month on unless the customer cancels via the portal first. It does NOT
+ * apply to Pro or Enterprise (the coupon isn't attached to those prices in
+ * Stripe, so sending it there would just fail to discount anything — never
+ * show "$1" pricing for a tier other than essential/monthly).
+ */
+export const TRIAL_COUPON_ID = "xvxhaIea";
+export const TRIAL_ELIGIBLE_PLAN = "essential";
+export const TRIAL_ELIGIBLE_BILLING_CYCLE = "monthly";
+
+export const isTrialEligible = (plan, billingCycle = "monthly") =>
+  plan === TRIAL_ELIGIBLE_PLAN && billingCycle === TRIAL_ELIGIBLE_BILLING_CYCLE;
+
+/**
  * Visual Pricing tier → internal plan identifier stored in profiles.plan.
  * profiles.plan ∈ { 'essential' | 'pro' | 'enterprise' | null }
  */

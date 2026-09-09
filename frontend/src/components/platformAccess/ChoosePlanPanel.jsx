@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
+import { isTrialEligible } from "../../lib/platformRoutes";
 
 /**
  * Plan picker panel — only used when the flow was triggered from Pricing
@@ -126,10 +127,12 @@ export const ChoosePlanPanel = ({ isEs, onPickTier, loading }) => {
           >
             {loading ? (
               <Loader2 size={12} className="animate-spin inline" />
+            ) : isTrialEligible(tier.plan, "monthly") ? (
+              isEs ? "Empezar por $1" : "Start for $1"
             ) : isEs ? (
-              "Empezar por $1"
+              `Elegir ${tier.name}`
             ) : (
-              "Start for $1"
+              `Choose ${tier.name}`
             )}
           </div>
         </motion.button>
