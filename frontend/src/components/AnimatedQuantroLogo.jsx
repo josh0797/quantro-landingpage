@@ -195,7 +195,7 @@ export const AnimatedQuantroLogo = ({
 
         {/* Q tail — draws after the ring; flashes on complete */}
         <motion.path
-          d="M39 38.5 L47 47"
+          d="M39.2 38.5 L47.5 48"
           stroke="url(#aqm-grad)"
           strokeWidth="3"
           strokeLinecap="round"
@@ -239,8 +239,9 @@ const StaticMark = ({ size = 32, className = "", "aria-label": ariaLabel = "Quan
         </linearGradient>
       </defs>
       <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#aqm-static-bg)" stroke="url(#aqm-static-grad)" strokeWidth="1.15" strokeOpacity="0.4" />
-      <circle cx="32" cy="31" r="11" stroke="url(#aqm-static-grad)" strokeWidth="3" fill="none" />
-      <path d="M39 38.5 L47 47" stroke="url(#aqm-static-grad)" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="31" cy="30" r="13" stroke="url(#aqm-static-grad)" strokeWidth="3.2" fill="none" />
+      <circle cx="31" cy="30" r="6.5" fill="url(#aqm-static-grad)" opacity="0.14" />
+      <path d="M39.2 38.5 L47.5 48" stroke="url(#aqm-static-grad)" strokeWidth="3.4" strokeLinecap="round" />
     </svg>
   </span>
 );
