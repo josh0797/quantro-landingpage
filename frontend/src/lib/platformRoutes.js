@@ -67,7 +67,7 @@ export const resolvePriceId = (plan, billingCycle = "monthly") => {
  * The real $1 USD trial promised on /terminos (TermsPage.jsx): a Stripe
  * coupon ("QUANTROTRIAL1", id xvxhaIea) that's a fixed $58 discount,
  * "once" duration, scoped in Stripe to the Quantro Essential product only
- * — $59/mes - $58 = $1 on the first invoice, full price from the second
+ * — $79/mes — cupón legacy QUANTRO1/$58 off may need Stripe update for new Essential price on the first invoice, full price from the second
  * month on unless the customer cancels via the portal first. It does NOT
  * apply to Pro or Enterprise (the coupon isn't attached to those prices in
  * Stripe, so sending it there would just fail to discount anything — never

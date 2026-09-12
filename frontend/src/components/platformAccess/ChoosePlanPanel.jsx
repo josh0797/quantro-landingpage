@@ -13,7 +13,7 @@ const buildTiers = (isEs) => [
     key: "essential",
     plan: "essential",
     name: "Essential",
-    price: "$59",
+    price: "$79",
     period: isEs ? "/mes" : "/mo",
     tagline: isEs ? "Deja el caos atrás y gana claridad" : "Leave the chaos behind",
     features: isEs

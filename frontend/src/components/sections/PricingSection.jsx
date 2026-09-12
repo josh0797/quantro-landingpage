@@ -43,35 +43,33 @@ export const PricingSection = () => {
       subtagline: isEs
         ? "Perfecto para comenzar con claridad operativa"
         : "Perfect to start with operational clarity",
-      prices: { monthly: "$59", annual: "$590" },
+      prices: { monthly: "$79", annual: "$790" },
       periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
       description: isEs
-        ? "Para emprendedores que quieren dejar el caos y empezar a operar como sistema."
-        : "For founders who want to leave chaos behind and start operating as a system.",
+        ? "Para emprendedores que quieren dejar el caos y operar como sistema. El plan es software; lo fiscal variable se cobra aparte."
+        : "For founders who want to leave chaos behind and operate as a system. Software plan; variable fiscal usage billed separately.",
       features: isEs
         ? [
-            "Quantro OS + Flow + Intelligence incluidos",
+            "Quantro OS + Flow incluidos",
             "Dashboard en tiempo real",
             "Scorecard semanal inteligente",
             "To-Dos + seguimiento básico",
             "CRM + Inbox con ejecución automática",
-            "AI Coach (10 consultas/mes)",
             "Automatizaciones básicas",
-            "Insights iniciales de negocio",
             "Contabilidad básica con categorización automática",
-            "Integraciones CFDI 4.0",
+            "Conectores CFDI / bancos",
+            "Timbres CFDI y e-recibos se cobran aparte",
           ]
         : [
-            "Quantro OS + Flow + Intelligence included",
+            "Quantro OS + Flow included",
             "Real-time dashboard",
             "Smart weekly scorecard",
             "To-Dos + basic follow-up",
             "CRM + Inbox with automated execution",
-            "AI Coach (10 queries/mo)",
             "Basic automations",
-            "Initial business insights",
             "Basic accounting with auto-categorization",
-            "CFDI 4.0 integrations",
+            "CFDI / bank connectors",
+            "CFDI stamps & e-receipts billed separately",
           ],
       highlighted: false,
       accent: "#94A3B8",
@@ -101,7 +99,7 @@ export const PricingSection = () => {
             "Automatizaciones avanzadas",
             "Multiusuario (3 asientos)",
             "Contabilidad avanzada con categorización impulsada por Quantro Intelligence",
-            "Integraciones CFDI 4.0",
+            "CFDI conectado — timbres/recibos se cobran aparte",
           ]
         : [
             "Everything in Essential",
@@ -111,7 +109,7 @@ export const PricingSection = () => {
             "Advanced automations",
             "Multi-user (3 seats)",
             "Advanced accounting powered by Quantro Intelligence",
-            "CFDI 4.0 integrations",
+            "CFDI connected — stamps/e-receipts billed separately",
           ],
       highlighted: true,
       accent: "#00F5FF",
