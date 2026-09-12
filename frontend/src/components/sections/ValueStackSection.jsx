@@ -353,7 +353,7 @@ const ComparisonCard = ({ isEs }) => (
             {isEs ? "Desde" : "From"}
           </span>
           <span className="font-satoshi font-bold text-5xl bg-gradient-to-r from-[#00F5FF] to-[#22D3EE] bg-clip-text text-transparent tabular-nums leading-none">
-            $59
+            $79
           </span>
           <span className="text-slate-500 text-sm">/mes</span>
         </div>
