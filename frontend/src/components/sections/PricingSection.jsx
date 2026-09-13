@@ -57,6 +57,7 @@ export const PricingSection = () => {
             "CRM + Inbox con ejecución automática",
             "Automatizaciones básicas",
             "Contabilidad básica con categorización automática",
+            "API de facturación marca blanca",
             "Conectores CFDI / bancos",
             "Timbres CFDI y e-recibos se cobran aparte",
           ]
@@ -68,6 +69,7 @@ export const PricingSection = () => {
             "CRM + Inbox with automated execution",
             "Basic automations",
             "Basic accounting with auto-categorization",
+            "White-label invoicing API",
             "CFDI / bank connectors",
             "CFDI stamps & e-receipts billed separately",
           ],
@@ -99,6 +101,8 @@ export const PricingSection = () => {
             "Automatizaciones avanzadas",
             "Multiusuario (3 asientos)",
             "Contabilidad avanzada con categorización impulsada por Quantro Intelligence",
+            "Portal público de autofactura incluido",
+            "API de facturación marca blanca",
             "CFDI conectado — timbres/recibos se cobran aparte",
           ]
         : [
@@ -109,6 +113,8 @@ export const PricingSection = () => {
             "Advanced automations",
             "Multi-user (3 seats)",
             "Advanced accounting powered by Quantro Intelligence",
+            "Public self-invoicing portal included",
+            "White-label invoicing API",
             "CFDI connected — stamps/e-receipts billed separately",
           ],
       highlighted: true,
@@ -136,6 +142,7 @@ export const PricingSection = () => {
       features: isEs
         ? [
             "Todo lo de Pro",
+            "Portal público de autofactura incluido",
             "Motor de decisiones avanzado",
             "Simulación de escenarios (margen, pricing)",
             "Multiusuario ampliado (10 asientos)",
