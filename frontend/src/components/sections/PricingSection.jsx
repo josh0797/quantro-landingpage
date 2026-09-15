@@ -37,6 +37,43 @@ export const PricingSection = () => {
 
   const tiers = [
     {
+      key: "starter",
+      name: "Starter",
+      tagline: isEs ? "Entrada ligera" : "Light entry",
+      subtagline: isEs
+        ? "Dashboard + Action Center y Slack/WhatsApp"
+        : "Dashboard + Action Center and Slack/WhatsApp",
+      prices: { monthly: "$35", annual: "$350" },
+      periodSuffix: { monthly: isEs ? "/mes" : "/mo", annual: isEs ? "/año" : "/yr" },
+      description: isEs
+        ? "Para empezar a operar con el Action Center y alertas outbound. Sin contabilidad completa ni IA."
+        : "Start with Action Center and outbound alerts. No full accounting or AI.",
+      features: isEs
+        ? [
+            "Dashboard + Action Center",
+            "Conectores outbound Slack y WhatsApp",
+            "To-Dos básicos",
+            "Sin contabilidad completa ni agentes IA",
+            "Upgrade a Essential cuando necesites finanzas/CFDI",
+          ]
+        : [
+            "Dashboard + Action Center",
+            "Outbound Slack and WhatsApp connectors",
+            "Basic To-Dos",
+            "No full accounting or AI agents",
+            "Upgrade to Essential when you need finance/CFDI",
+          ],
+      highlighted: false,
+      accent: "#64748B",
+      microcopy: {
+        type: "text",
+        label: {
+          es: "El primer escalón antes de Essential",
+          en: "The first step before Essential",
+        },
+      },
+    },
+    {
       key: "essential",
       name: "Essential",
       tagline: isEs ? "Claridad + control" : "Clarity + control",
@@ -290,7 +327,7 @@ export const PricingSection = () => {
           </AnimatePresence>
         </motion.div>
 
-        {/* Cards — explicit order: Essential → Pro → Enterprise on every breakpoint */}
+        {/* Cards — order: Starter → Essential → Pro → Enterprise */}
         <div className="grid lg:grid-cols-3 gap-6 items-stretch">
           {tiers.map((tier, i) => {
             const isCurrentPlan = hasPaidPlan && currentPlan === tier.key;

@@ -22,6 +22,7 @@ const SIZE_CLASSES = {
 };
 
 const PLAN_LABELS = {
+  starter: { es: "Starter", en: "Starter" },
   essential: { es: "Essential", en: "Essential" },
   pro: { es: "Pro", en: "Pro" },
   enterprise: { es: "Enterprise", en: "Enterprise" },

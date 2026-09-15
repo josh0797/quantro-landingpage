@@ -43,9 +43,13 @@ export const PLATFORMS = {
  * The Edge Function + `stripe-webhook` are the sole authorities here.
  */
 export const STRIPE_PRICE_IDS = {
+  starter: {
+    monthly: "price_1UG2AVLJrc96wcWHZM61fdH0",
+    annual: "price_1UG2AVLJrc96wcWHNzzrD0O8",
+  },
   essential: {
-    monthly: "price_1TL8xMLJrc96wcWHzaaHtUOL",
-    annual: "price_1TL8xMLJrc96wcWHNYnS8VhY",
+    monthly: "price_1UEzGFLJrc96wcWHnvyYPZC3",
+    annual: "price_1UEzGFLJrc96wcWHgAnlh11G",
   },
   pro: {
     monthly: "price_1TL9BeLJrc96wcWHTspVOqBT",
