@@ -10,6 +10,19 @@ import { isTrialEligible } from "../../lib/platformRoutes";
 
 const buildTiers = (isEs) => [
   {
+    key: "starter",
+    plan: "starter",
+    name: "Starter",
+    price: "$35",
+    period: isEs ? "/mes" : "/mo",
+    tagline: isEs ? "Dashboard + Action Center" : "Dashboard + Action Center",
+    features: isEs
+      ? ["Action Center", "Slack / WhatsApp outbound", "To-Dos básicos"]
+      : ["Action Center", "Outbound Slack / WhatsApp", "Basic To-Dos"],
+    highlighted: false,
+    accent: "#64748B",
+  },
+  {
     key: "essential",
     plan: "essential",
     name: "Essential",
